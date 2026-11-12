@@ -18,6 +18,7 @@ internal class AnimatedNpcHandle(
     private var transform: NpcRenderTransform,
     private val effects: NpcSoundSink,
     private val config: NpcRenderConfig,
+    private val audience: NpcRenderAudience = NpcRenderAudience.Shared,
 ) : NpcEngineHandle {
     private val movements = HashSet<java.util.concurrent.CompletableFuture<Void>>()
     private val movementTasks = HashSet<Task>()
@@ -47,6 +48,9 @@ internal class AnimatedNpcHandle(
     private var renderInterval = 500L
     private var headLook = NpcVector3(0.0, 0.0, 0.0)
     private var pendingHeadLook = headLook
+    private var sampledClip: String? = null
+    private var sampledSeconds = 0.0
+    private var externalFrame: NpcSampleFrame? = null
     private var previousPose: List<NpcMatrix>? = null
     private var previousTransform: NpcRenderTransform? = null
 
@@ -95,6 +99,29 @@ internal class AnimatedNpcHandle(
         }
     }
 
+    fun sampleFrame(): NpcSampleFrame =
+        synchronized(lock) {
+            NpcSampleFrame(sampledClip, sampledSeconds, headLook)
+        }
+
+    fun refreshAudience() = update { if (!closed) refreshViewers() }
+
+    fun renderFrame(frame: NpcSampleFrame) = update {
+        if (closed) return
+        require(frame.seconds.isFinite() && frame.seconds >= 0)
+        require(frame.clipId == null || frame.clipId in model.animations)
+        externalFrame = frame
+        headLook = frame.headLook
+        pendingHeadLook = frame.headLook
+        sampledClip = frame.clipId
+        sampledSeconds = frame.seconds
+        refreshViewers()
+        if (viewerIntervals.isNotEmpty()) {
+            render(frame.clipId, frame.seconds)
+            flushViewerUpdates(elapsed, true)
+        }
+    }
+
     fun snapshot(): NpcAnchorSnapshot =
         synchronized(lock) { NpcAnchorSnapshot(transform.root, headLookOrigin) }
 
@@ -109,15 +136,16 @@ internal class AnimatedNpcHandle(
         val admittedPlayers = linkedMapOf<UUID, Player>()
         var fastestInterval = 500L
         val next = buildMap {
-            instance.players.forEach { player ->
+            audience.candidates(instance).forEach { player ->
                 val distance = policy.distanceSquared(player, instance, anchor)
                 if (
-                    policy.canView(
-                        player,
-                        instance,
-                        anchor,
-                        player.uuid in viewerIntervals && viewerPlayers[player.uuid] === player,
-                    )
+                    audience.accepts(player) &&
+                        policy.canView(
+                            player,
+                            instance,
+                            anchor,
+                            player.uuid in viewerIntervals && viewerPlayers[player.uuid] === player,
+                        )
                 ) {
                     if (viewerPlayers[player.uuid] !== player) playersChanged = true
                     val previous =
@@ -150,7 +178,8 @@ internal class AnimatedNpcHandle(
             // collection with toList() also resolves every player ID during size() calls.
             val previousViewers = display.viewers.iterator()
             display.updateViewableRule { player ->
-                player.instance === instance &&
+                audience.accepts(player) &&
+                    player.instance === instance &&
                     player.uuid in viewerIntervals &&
                     (viewerPlayers[player.uuid] === player ||
                         policy.canView(player, instance, anchor, false))
@@ -170,11 +199,14 @@ internal class AnimatedNpcHandle(
     private fun viewersUnchanged(instance: Instance, anchor: NpcVector3): Boolean {
         var admitted = 0
         var fastestInterval = 500L
-        for (player in instance.players) {
+        for (player in audience.candidates(instance)) {
             val previous =
                 viewerIntervals[player.uuid].takeIf { viewerPlayers[player.uuid] === player }
             val distance = policy.distanceSquared(player, instance, anchor)
-            if (policy.canView(player, instance, anchor, previous != null)) {
+            if (
+                audience.accepts(player) &&
+                    policy.canView(player, instance, anchor, previous != null)
+            ) {
                 if (
                     previous == null ||
                         viewerPlayers[player.uuid] !== player ||
@@ -343,7 +375,45 @@ internal class AnimatedNpcHandle(
         val seeking = time < elapsed
         elapsed = time
         if (updateViewers) refreshViewers()
-        if (viewerIntervals.isEmpty()) return
+        val personal = externalFrame
+        if (personal != null) {
+            headLook = personal.headLook
+            sampledClip = personal.clipId
+            sampledSeconds = personal.seconds
+            if (viewerIntervals.isNotEmpty()) {
+                render(personal.clipId, personal.seconds, !flush)
+                if (flush) flushViewerUpdates(time, force || seeking)
+            }
+            return
+        }
+        if (viewerIntervals.isEmpty()) {
+            commitHeadLook()
+            sampledClip = requested
+            sampledSeconds = time / 1000.0
+            val clip = requested?.let(model.animations::get)
+            if (
+                clip != null &&
+                    clip.loop == "once" &&
+                    sampledSeconds >= clip.length &&
+                    config.idleClip in model.animations
+            ) {
+                sampledClip = config.idleClip
+                sampledSeconds -= clip.length
+            }
+            val variation = variationStarted
+            if (
+                sampledClip == config.idleClip &&
+                    variation != null &&
+                    config.variationClip in model.animations
+            ) {
+                val age = (time - variation) / 1000.0
+                if (age in 0.0..<model.animations.getValue(config.variationClip!!).length) {
+                    sampledClip = config.variationClip
+                    sampledSeconds = age
+                }
+            }
+            return
+        }
         val interval = renderInterval
         if (
             !force &&
@@ -423,6 +493,7 @@ internal class AnimatedNpcHandle(
     }
 
     private fun playSound(name: String) {
+        if (audience !== NpcRenderAudience.Shared) return
         model.sounds[name]?.let {
             pendingSounds += SoundEmission(displays.first().instance, transform.root.position, it)
         }
@@ -459,6 +530,8 @@ internal class AnimatedNpcHandle(
     }
 
     private fun render(name: String?, seconds: Double, deferUpdates: Boolean = false) {
+        sampledClip = name
+        sampledSeconds = seconds
         val pose = displayPoses.sample(name, seconds, headLook)
         val unchangedRoot = previousTransform == transform
         val previous = previousPose
