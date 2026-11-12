@@ -9,7 +9,7 @@
 | Numeric content | Existing schema 1; original synthetic fixtures only |
 | Scene/Lobby integration | Local draft suites pass; release/client acceptance still pending |
 | Real 26.3 client | Visual acceptance still pending |
-| Anonymous public download | Not released; no claim of public availability |
+| Distribution | GitHub Packages selected by owner; authenticated retrieval required; anonymous Maven not configured |
 
 The public build requires Maven Central and JDK 25, with no Grounds credentials.
 Java 25 is required by the Minestom dependency even though the extracted Kotlin

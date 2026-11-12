@@ -10,14 +10,15 @@ jobs:
   public-consumers:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew check publishAllPublicationsToReviewRepository
       - run: python3 tools/verify_public_artifacts.py
+      - run: python3 tools/verify_consumer_origin.py
       - run: ./gradlew -p fixtures/java-consumer run -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
       - run: ./gradlew -p fixtures/kotlin-consumer run -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
       - run: ./gradlew -p examples/standalone-minestom test run --args=--smoke demoPack -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
