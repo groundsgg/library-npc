@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/groundsgg/library-npc/compare/v0.1.0...v0.2.0) (2026-11-12)
+
+
+### Features
+
+* add player-private NPC presentations ([81a6c31](https://github.com/groundsgg/library-npc/commit/81a6c31b028512e8b35342e7c41caf9dcbb4fb92))
+
 ## 0.1.0 (2026-11-12)
 
 
