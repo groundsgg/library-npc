@@ -14,6 +14,7 @@ internal class NpcPersonalPlayback(
     private var clipId: String? = null
     private var startedNanos = 0L
     private var elapsedNanos = 0L
+    private var initialFrame = false
     private var head = NpcVector3.ZERO
 
     fun play(clip: String) {
@@ -23,6 +24,7 @@ internal class NpcPersonalPlayback(
             clipId = clip
             startedNanos = now
             elapsedNanos = 0
+            initialFrame = true
             clipMode = NpcPresentationChannel.PRIVATE
         }
     }
@@ -33,6 +35,7 @@ internal class NpcPersonalPlayback(
             clipId = options.idleClip
             startedNanos = now
             elapsedNanos = 0
+            initialFrame = true
             clipMode = NpcPresentationChannel.PRIVATE
         }
     }
@@ -54,7 +57,9 @@ internal class NpcPersonalPlayback(
 
     fun compose(common: NpcSampleFrame): NpcSampleFrame {
         val needsClock =
-            synchronized(lock) { clipMode == NpcPresentationChannel.PRIVATE && clipId != null }
+            synchronized(lock) {
+                clipMode == NpcPresentationChannel.PRIVATE && clipId != null && !initialFrame
+            }
         val now = if (needsClock) options.clock.nanoTime() else 0L
         return synchronized(lock) {
             var selected = common.clipId
@@ -63,7 +68,8 @@ internal class NpcPersonalPlayback(
                 selected = clipId
                 if (selected == null) seconds = 0.0
                 else {
-                    elapsedNanos = maxOf(elapsedNanos, maxOf(0L, now - startedNanos))
+                    if (!initialFrame)
+                        elapsedNanos = maxOf(elapsedNanos, maxOf(0L, now - startedNanos))
                     seconds = elapsedNanos / 1_000_000_000.0
                     val clip = model.animations.getValue(selected)
                     if (
@@ -76,6 +82,7 @@ internal class NpcPersonalPlayback(
                     }
                 }
             }
+            initialFrame = false
             NpcSampleFrame(
                 selected,
                 seconds,

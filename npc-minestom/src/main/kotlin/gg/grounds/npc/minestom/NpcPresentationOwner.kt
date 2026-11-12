@@ -4,8 +4,14 @@ import java.util.IdentityHashMap
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import net.minestom.server.entity.Player
+import net.minestom.server.event.EventListener
+import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 
 internal interface NpcPresentationCopyControl {
+    fun inheritViewerAdmissionNow(player: Player)
+
+    fun viewerAdmissionNow(player: Player): Boolean?
+
     fun renderPresentationNow(frame: NpcSampleFrame)
 
     fun applyPersonalVisualNow(player: Player, state: NpcViewerState)
@@ -35,6 +41,17 @@ internal class NpcPresentationOwner(
     private val failures = ArrayList<Throwable>()
     private var additionalParts = 0
     @Volatile private var closing = false
+
+    // One listener per parent with personal ownership, never one per display part.
+    private val departures =
+        EventListener.of(RemoveEntityFromInstanceEvent::class.java) { event ->
+            val personal = synchronized(lock) { reservations[event.entity] }
+            personal?.connectionDeparted()
+        }
+
+    init {
+        request.instance.eventNode().addListener(departures)
+    }
 
     fun isCurrent() = !closing && current()
 
@@ -107,9 +124,18 @@ internal class NpcPresentationOwner(
             else if (error !== problem) error!!.addSuppressed(problem)
         }
         try {
-            if (engine.ownsSuppression(personal.options.player, personal)) {
+            if (
+                !personal.hasDeparted() && engine.ownsSuppression(personal.options.player, personal)
+            ) {
                 runIfCurrent(
-                    Runnable { engine.releaseSuppression(personal.options.player, personal, true) }
+                    Runnable {
+                        engine.releaseSuppression(
+                            personal.options.player,
+                            personal,
+                            true,
+                            personal.restorationAdmission(),
+                        )
+                    }
                 )
             }
         } catch (problem: Throwable) {
@@ -148,6 +174,7 @@ internal class NpcPresentationOwner(
                 closing = true
                 owned.toList()
             }
+        request.instance.eventNode().removeListener(departures)
         pending.forEach { it.cancel() }
         val result = CompletableFuture<Void>()
         CompletableFuture.allOf(*pending.map { it.closed }.toTypedArray()).whenComplete { _, failure

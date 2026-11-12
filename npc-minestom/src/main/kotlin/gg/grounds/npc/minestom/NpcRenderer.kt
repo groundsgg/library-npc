@@ -145,13 +145,15 @@ private class PreparedNpc(
         } catch (error: Throwable) {
             failure = error
         }
-        parts.forEach { part ->
-            try {
-                part.remove()
-            } catch (error: Throwable) {
-                if (failure == null) failure = error else failure!!.addSuppressed(error)
+        // A live engine owns parts until its accepted movement I/O/events have drained.
+        if (closingEngine == null || failure != null)
+            parts.forEach { part ->
+                try {
+                    part.remove()
+                } catch (error: Throwable) {
+                    if (failure == null) failure = error else failure!!.addSuppressed(error)
+                }
             }
-        }
         ready.complete(
             NpcPrepareResult.Rejected(
                 listOf(NpcProblem("NPC_CANCELLED", "$", "NPC start cancelled"))
@@ -300,6 +302,16 @@ private class PreparedNpc(
                 checkNotNull(engine)
             }
         target.renderFrame(frame)
+    }
+
+    override fun inheritViewerAdmissionNow(player: Player) {
+        val target = synchronized(lock) { checkNotNull(engine) }
+        target.inheritViewerAdmission(player)
+    }
+
+    override fun viewerAdmissionNow(player: Player): Boolean? {
+        val target = synchronized(lock) { engine }
+        return target?.viewerAdmission(player)
     }
 
     override fun applyPersonalVisualNow(player: Player, state: NpcViewerState) {

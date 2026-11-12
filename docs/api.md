@@ -84,7 +84,13 @@ common NPC. Use the additive `NpcRenderer.prepare(request, limits)` overload to
 raise limits deliberately. There is no full-player scan per private copy.
 
 Distance/chunk reentry preserves the current private clock and sends no duplicate
-cue. Disconnect and instance changes invalidate the handle; cleanup runs on its
-owned task or an earlier explicit close. A new connection with the same UUID
+cue. Connection expiry is owned from reservation onward, including hidden starts.
+An instance departure is latched even if the same Player returns between samples.
+Active commands, sampling and sound delivery recheck the personal generation guard
+outside NPC monitors; denied work closes the private group. Disconnect and instance
+changes invalidate the handle through the owned departure listener/task. A new connection with the same UUID
 inherits nothing. Never transfer live handles, Player references or Entity IDs
 across servers/proxies.
+
+Personal profiles above500ms currently retain the shared engine's500ms interpolation
+cap. The verified default remains50ms. See compatibility for deferred limitations.

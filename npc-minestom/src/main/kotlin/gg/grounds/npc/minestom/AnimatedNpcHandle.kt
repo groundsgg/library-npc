@@ -3,6 +3,7 @@ package gg.grounds.npc.minestom
 
 import gg.grounds.npc.core.*
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
 import kotlin.math.abs
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
@@ -22,6 +23,9 @@ internal class AnimatedNpcHandle(
 ) : NpcEngineHandle {
     private val movements = HashSet<java.util.concurrent.CompletableFuture<Void>>()
     private val movementTasks = HashSet<Task>()
+    private val externalMovements = HashSet<java.util.concurrent.CompletableFuture<Void>>()
+    private val movementFailures = ArrayList<Throwable>()
+    private val closedCleanup = java.util.concurrent.CompletableFuture<Void>()
 
     private data class SoundEmission(
         val instance: Instance,
@@ -33,6 +37,7 @@ internal class AnimatedNpcHandle(
     private val displayPoses = NpcDisplayPoses(model)
     private var closed = false
     private var published = false
+    private var inheritedAdmission: Player? = null
     private val policy = NpcRenderPolicy(config)
     private var revision = 0L
     private var requested: String? = null
@@ -98,10 +103,34 @@ internal class AnimatedNpcHandle(
         update {
             if (!closed) {
                 published = true
-                refreshViewers()
+                try {
+                    refreshViewers()
+                } finally {
+                    inheritedAdmission = null
+                }
             }
         }
     }
+
+    fun inheritViewerAdmission(player: Player) =
+        synchronized(lock) {
+            if (!closed && !published) inheritedAdmission = player
+        }
+
+    fun viewerAdmission(player: Player): Boolean? =
+        synchronized(lock) {
+            if (closed || !published) null
+            else
+                policy.canView(
+                    player,
+                    displays.first().instance,
+                    transform.root.position,
+                    retaining(player),
+                )
+        }
+
+    private fun retaining(player: Player) =
+        viewerPlayers[player.uuid] === player || inheritedAdmission === player
 
     fun currentTransform(): NpcRenderTransform = synchronized(lock) { transform }
 
@@ -119,7 +148,7 @@ internal class AnimatedNpcHandle(
                     player,
                     displays.first().instance,
                     transform.root.position,
-                    viewerPlayers[player.uuid] === player,
+                    retaining(player),
                 )
         }
 
@@ -140,7 +169,12 @@ internal class AnimatedNpcHandle(
             suppressed?.get(player)?.lease === lease
         }
 
-    fun releaseSuppression(player: Player, lease: Any, restore: Boolean) = update {
+    fun releaseSuppression(
+        player: Player,
+        lease: Any,
+        restore: Boolean,
+        admission: Boolean? = null,
+    ) = update {
         val hidden = suppressed ?: return
         val previous = hidden[player] ?: return
         if (previous.lease !== lease) return
@@ -148,11 +182,21 @@ internal class AnimatedNpcHandle(
         if (hidden.isEmpty()) suppressed = null
         if (!closed && restore) {
             if (
-                previous.previousRate != null &&
+                (admission ?: (previous.previousRate != null)) &&
                     player.isOnline &&
                     player.instance === displays.first().instance
             ) {
-                viewerIntervals = viewerIntervals + (player.uuid to previous.previousRate)
+                viewerIntervals =
+                    viewerIntervals +
+                        (player.uuid to
+                            policy.viewerRate(
+                                policy.distanceSquared(
+                                    player,
+                                    displays.first().instance,
+                                    transform.root.position,
+                                ),
+                                previous.previousRate,
+                            ))
                 viewerPlayers = viewerPlayers + (player.uuid to player)
             }
             refreshViewers(true)
@@ -207,7 +251,7 @@ internal class AnimatedNpcHandle(
                             player,
                             instance,
                             anchor,
-                            player.uuid in viewerIntervals && viewerPlayers[player.uuid] === player,
+                            retaining(player),
                         )
                 ) {
                     if (viewerPlayers[player.uuid] !== player) playersChanged = true
@@ -266,7 +310,7 @@ internal class AnimatedNpcHandle(
             val previous =
                 viewerIntervals[player.uuid].takeIf { viewerPlayers[player.uuid] === player }
             val distance = policy.distanceSquared(player, instance, anchor)
-            if (accepts(player) && policy.canView(player, instance, anchor, previous != null)) {
+            if (accepts(player) && policy.canView(player, instance, anchor, retaining(player))) {
                 if (
                     previous == null ||
                         viewerPlayers[player.uuid] !== player ||
@@ -282,9 +326,17 @@ internal class AnimatedNpcHandle(
     }
 
     fun drainMovements(): java.util.concurrent.CompletionStage<Void> =
-        synchronized(lock) {
-            java.util.concurrent.CompletableFuture.allOf(*movements.toTypedArray())
+        if (synchronized(lock) { closed }) closedCleanup.minimalCompletionStage()
+        else movementDrain()
+
+    private fun movementDrain(): java.util.concurrent.CompletionStage<Void> {
+        val (pending, failure) =
+            synchronized(lock) { movements.toList() to movementFailures.firstOrNull() }
+        return java.util.concurrent.CompletableFuture.allOf(*pending.toTypedArray()).thenCompose {
+            if (failure == null) java.util.concurrent.CompletableFuture.completedFuture<Void>(null)
+            else java.util.concurrent.CompletableFuture.failedFuture<Void>(failure)
         }
+    }
 
     override fun applyTransform(
         transform: NpcRenderTransform
@@ -302,10 +354,21 @@ internal class AnimatedNpcHandle(
                 return java.util.concurrent.CompletableFuture.completedFuture(null)
             }
             movements += result
+            externalMovements += result
             revision
         }
-        result.whenComplete { _, _ -> synchronized(lock) { movements.remove(result) } }
+        result.whenComplete { _, failure ->
+            synchronized(lock) {
+                movements.remove(result)
+                externalMovements.remove(result)
+                if (failure != null) movementFailures += failure
+            }
+        }
         val anchor = transform.root.position
+        if (synchronized(lock) { closed || token != revision }) {
+            result.complete(null)
+            return result.minimalCompletionStage()
+        }
         try {
             displays
                 .first()
@@ -322,11 +385,20 @@ internal class AnimatedNpcHandle(
                             result,
                             token,
                             {
-                                val moved = displays.map {
-                                    it.teleport(Pos(anchor.x, anchor.y, anchor.z))
+                                val moved =
+                                    ArrayList<java.util.concurrent.CompletableFuture<Void>>()
+                                for (display in displays) {
+                                    if (synchronized(lock) { closed || token != revision }) break
+                                    try {
+                                        moved += display.teleport(Pos(anchor.x, anchor.y, anchor.z))
+                                    } catch (problem: Throwable) {
+                                        moved += CompletableFuture.failedFuture<Void>(problem)
+                                        break
+                                    }
                                 }
                                 java.util.concurrent.CompletableFuture.allOf(*moved.toTypedArray())
                             },
+                            foreign = true,
                         ) {
                             queueMovement(
                                 result,
@@ -354,11 +426,14 @@ internal class AnimatedNpcHandle(
         result: java.util.concurrent.CompletableFuture<Void>,
         token: Long,
         action: () -> java.util.concurrent.CompletionStage<Void>,
+        foreign: Boolean = false,
         after: () -> Unit,
     ) {
         var skipped = false
         var failure: Throwable? = null
         synchronized(lock) {
+            // Atomically hand completed I/O ownership to a cancellable owner continuation.
+            externalMovements.remove(result)
             if (closed || token != revision || result.isDone) skipped = true
             else
                 try {
@@ -369,21 +444,40 @@ internal class AnimatedNpcHandle(
                             .instance
                             .scheduler()
                             .buildTask {
-                                synchronized(lock) { movementTasks.remove(holder[0]) }
-                                try {
-                                    val stage = update {
-                                        if (closed || token != revision || result.isDone) null
-                                        else action()
-                                    }
-                                    if (stage == null) result.complete(null)
-                                    else
-                                        stage.whenComplete { _, error ->
-                                            if (error != null) result.completeExceptionally(error)
-                                            else after()
+                                val accepted =
+                                    synchronized(lock) {
+                                        movementTasks.remove(holder[0])
+                                        if (closed || token != revision || result.isDone) false
+                                        else {
+                                            externalMovements += result
+                                            true
                                         }
-                                } catch (error: Throwable) {
-                                    result.completeExceptionally(error)
-                                }
+                                    }
+                                if (!accepted) result.complete(null)
+                                else
+                                    try {
+                                        // Teleports invoke host event listeners: reserve under
+                                        // lock, execute outside.
+                                        val stage =
+                                            if (foreign) action()
+                                            else
+                                                update {
+                                                    if (
+                                                        closed || token != revision || result.isDone
+                                                    )
+                                                        null
+                                                    else action()
+                                                }
+                                        if (stage == null) result.complete(null)
+                                        else
+                                            stage.whenComplete { _, error ->
+                                                if (error != null)
+                                                    result.completeExceptionally(error)
+                                                else after()
+                                            }
+                                    } catch (error: Throwable) {
+                                        result.completeExceptionally(error)
+                                    }
                             }
                             .delay(TaskSchedule.tick(1))
                             .schedule()
@@ -393,7 +487,6 @@ internal class AnimatedNpcHandle(
                     failure = error
                 }
         }
-        // Completing futures can invoke foreign code, so also do it outside the ownership lock.
         if (skipped) result.complete(null)
         if (failure != null) result.completeExceptionally(failure!!)
     }
@@ -433,6 +526,10 @@ internal class AnimatedNpcHandle(
         flush: Boolean = true,
     ) {
         val seeking = time < elapsed
+        if (seeking && variationStarted?.let { time < it } == true) {
+            variationStarted = null
+            nextVariation = time + config.variationDelayMillis
+        }
         elapsed = time
         if (updateViewers) refreshViewers()
         val personal = externalFrame
@@ -590,9 +687,9 @@ internal class AnimatedNpcHandle(
     }
 
     private fun render(name: String?, seconds: Double, deferUpdates: Boolean = false) {
+        val pose = displayPoses.sample(name, seconds, headLook)
         sampledClip = name
         sampledSeconds = seconds
-        val pose = displayPoses.sample(name, seconds, headLook)
         val unchangedRoot = previousTransform == transform
         val previous = previousPose
         val duration = (renderInterval / 50).toInt()
@@ -681,25 +778,32 @@ internal class AnimatedNpcHandle(
                 pendingSounds.clear()
                 viewerVisuals.clear()
                 suppressed = null
+                inheritedAdmission = null
                 viewerIntervals = emptyMap()
                 viewerPlayers = emptyMap()
                 viewerGroups = emptyMap()
                 nextViewerUpdate.clear()
-                movements.toList().also { movements.clear() }
+                movements.filter { it !in externalMovements }
             }
-        try {
-            synchronized(lock) {
-                displays.forEach {
-                    it.viewerState = null
-                    it.visualState = null
-                    it.clearUpdates()
-                    it.remove()
+        // Queued owner work needs no further tick; accepted I/O/events must actually settle.
+        pending.forEach { it.complete(null) }
+        movementDrain().whenComplete { _, movementFailure ->
+            var failure = movementFailure
+            displays.forEach { display ->
+                try {
+                    synchronized(lock) {
+                        display.viewerState = null
+                        display.visualState = null
+                        display.clearUpdates()
+                    }
+                    display.remove()
+                } catch (problem: Throwable) {
+                    if (failure == null) failure = problem
+                    else if (failure !== problem) failure!!.addSuppressed(problem)
                 }
             }
-        } finally {
-            // A queued owner continuation cannot require another tick after cancellation.
-            // Late chunk completion observes closed/revision before scheduling or touching parts.
-            pending.forEach { it.complete(null) }
+            if (failure == null) closedCleanup.complete(null)
+            else closedCleanup.completeExceptionally(failure!!)
         }
     }
 }

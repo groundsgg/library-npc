@@ -3,7 +3,7 @@
 | Target | Local evidence |
 | --- | --- |
 | Core | JDK 25; Kotlin 2.2.20; Java/Kotlin JVM 24 bytecode; 14 tests |
-| Public adapter | Minestom 2026.10.07-26.2; Java 25 runtime; 105 renderer tests and standalone smoke |
+| Public adapter | Minestom 2026.10.07-26.2; Java 25 runtime; 117 renderer tests and standalone smoke |
 | Grounds adapter | Compiles/tests pass against 2026.11.08-26.3-grounds; standalone startup/move/close smoke passes |
 | Java/Kotlin consumers | Separate Gradle projects resolving the local Maven candidate; both run |
 | Numeric content | Existing schema 1; original synthetic fixtures only |
@@ -27,8 +27,8 @@ in, downloaded or embedded in publication metadata. Its separate lockfile is loc
 under `.evidence`. This profile proves compilation and server-side tests, not client
 visual parity, two-player behaviour or cross-proxy transfer acceptance.
 
-Known follow-ups from the independent review: custom shared sampling intervals
-above 500 ms remain capped at 500 ms; the original 200/250/500 ms
+Known follow-ups from the independent review: custom shared and private sampling intervals
+above 500 ms retain a 500 ms interpolation cap; the original 200/250/500 ms
 Grounds profile is verified. The synchronous parity-test tick driver can block
 after its timeout, and the Lobby operator README still mentions the old substituted
 content module. These are recorded minor follow-ups; they do not change release
@@ -46,3 +46,7 @@ player enumeration stayed constant. Measured allocations on the test thread were
 approximately 2/14/55 KB per tick for 1/8/32 two-part groups and 336/533 KB for
 20/32 fifty-part groups. The latter 32-group case explicitly raised the budget to
 1600 parts. These are observations of the fixture, not production capacity promises.
+
+The user confirmed neutral two-client private visual/sound isolation and common
+restoration on Grounds26.3. Licensed-content and real proxy/backend transfer gates
+remain open. The final review added12 lifecycle/timing/movement regressions.

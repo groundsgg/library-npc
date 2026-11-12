@@ -18,12 +18,15 @@ internal class NpcPersonalPresentation(
     private val ready = CompletableFuture<NpcPresentationResult>()
     val closed = CompletableFuture<Void>()
     private val closing = AtomicBoolean()
+    private val departed = AtomicBoolean()
     @Volatile private var phase = NpcPresentationPhase.PREPARING
     private var preparation: Task? = null
     private var constructing = false
     private var constructionDone = false
     private var copy: NpcPresentationCopy? = null
     private var cleanupStarted = false
+    private var admissionCaptured = false
+    @Volatile private var restoreAdmission: Boolean? = null
     private val playback = NpcPersonalPlayback(owner.request.model, options)
     private var sampling: Task? = null
     private var inFlightSounds = 0
@@ -35,6 +38,7 @@ internal class NpcPersonalPresentation(
 
     fun begin() {
         try {
+            startSampling()
             synchronized(lock) {
                 if (closing.get()) {
                     constructionDone = true
@@ -107,7 +111,33 @@ internal class NpcPersonalPresentation(
         }
     }
 
-    private fun live() = !closing.get() && owner.valid(options.player)
+    fun connectionDeparted() {
+        departed.set(true)
+        cancel()
+    }
+
+    fun hasDeparted() = departed.get()
+
+    private fun live() = !closing.get() && !departed.get() && owner.valid(options.player)
+
+    /** Foreign generation guards run only outside NPC monitors, never in the audience predicate. */
+    private fun runCurrent(action: () -> Unit): Boolean {
+        if (!live()) return false
+        var ran = false
+        owner.runIfCurrent(
+            Runnable {
+                options.publicationGuard.runIfCurrent(
+                    Runnable {
+                        if (live()) {
+                            action()
+                            ran = true
+                        }
+                    }
+                )
+            }
+        )
+        return ran
+    }
 
     private fun handover(operation: Runnable): Boolean {
         if (!live()) return false
@@ -122,6 +152,8 @@ internal class NpcPersonalPresentation(
                         val renderer =
                             synchronized(lock) { copy }
                                 ?: throw IllegalStateException("Private renderer unavailable")
+                        if (owner.engine.canPresentTo(options.player))
+                            renderer.control.inheritViewerAdmissionNow(options.player)
                         renderer.control.applyPersonalVisualNow(options.player, visual)
                         renderNow()
                         if (!owner.engine.suppressViewer(options.player, this) { live() })
@@ -147,7 +179,10 @@ internal class NpcPersonalPresentation(
     }
 
     override fun publish(): CompletionStage<Void> {
-        if (!live()) return failed("Personal presentation is unavailable")
+        if (!live()) {
+            cancel()
+            return failed("Personal presentation is unavailable")
+        }
         if (phase == NpcPresentationPhase.ACTIVE) return CompletableFuture.completedFuture(null)
         if (phase != NpcPresentationPhase.READY_HIDDEN)
             return failed("Personal presentation is not ready")
@@ -173,8 +208,15 @@ internal class NpcPersonalPresentation(
             check(phase == NpcPresentationPhase.ACTIVE && live()) {
                 "Personal presentation is not active"
             }
-            action()
-            renderNow()
+            if (
+                !runCurrent {
+                    action()
+                    renderNow()
+                }
+            ) {
+                cancel()
+                throw CancellationException("Personal generation expired")
+            }
             afterRender()
         }
     }
@@ -187,9 +229,9 @@ internal class NpcPersonalPresentation(
                     .scheduler()
                     .buildTask {
                         if (!live()) cancel()
-                        else
+                        else if (phase == NpcPresentationPhase.ACTIVE)
                             try {
-                                renderNow()
+                                if (!runCurrent { renderNow() }) cancel()
                             } catch (problem: Throwable) {
                                 synchronized(lock) {
                                     if (runtimeFailure == null) runtimeFailure = problem
@@ -227,7 +269,7 @@ internal class NpcPersonalPresentation(
             }
         if (!accepted) return
         try {
-            if (live()) options.sounds.playFor(options.player, origin, sound)
+            if (!runCurrent { options.sounds.playFor(options.player, origin, sound) }) cancel()
         } finally {
             synchronized(lock) { inFlightSounds-- }
             completeClose()
@@ -316,8 +358,17 @@ internal class NpcPersonalPresentation(
 
     override fun closeAsync() = cancel()
 
+    fun restorationAdmission() = restoreAdmission
+
     override fun cancel(): CompletionStage<Void> {
-        closing.set(true)
+        if (closing.compareAndSet(false, true)) {
+            val target = synchronized(lock) { copy }
+            try {
+                restoreAdmission = target?.control?.viewerAdmissionNow(options.player)
+            } finally {
+                synchronized(lock) { admissionCaptured = true }
+            }
+        }
         synchronized(lock) {
             if (phase != NpcPresentationPhase.CLOSED) phase = NpcPresentationPhase.CLOSING
             preparation?.cancel()
@@ -355,7 +406,8 @@ internal class NpcPersonalPresentation(
     private fun finishClose() {
         val child =
             synchronized(lock) {
-                if (!closing.get() || !constructionDone || cleanupStarted) return
+                if (!closing.get() || !admissionCaptured || !constructionDone || cleanupStarted)
+                    return
                 cleanupStarted = true
                 copy
             }
