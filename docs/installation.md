@@ -37,8 +37,10 @@ dependencies {
 `npc-core` is platform independent. `npc-minestom` deliberately uses compile-only
 Minestom, so it does not replace the host's server dependency. Java 25 is required
 for the supported Minestom baseline; see [compatibility](compatibility.md).
-The independent Java/Kotlin consumers and standalone example can use a published
-version through `-PnpcVersion=0.1.0 -PnpcRepository=...` using the published release.
+The independent Java/Kotlin consumers and standalone example select a version
+through `-PnpcVersion=... -PnpcRepository=...`. The N7 branch requires its local
+candidate until the matching release exists; personal APIs are absent from0.1.0.
+Do not infer a new published version from these examples.
 
 An anonymous Maven endpoint and Maven Central publication are not configured.
 This is an explicit initial choice to follow the other Grounds libraries.
