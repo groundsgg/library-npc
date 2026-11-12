@@ -5,10 +5,10 @@
 | Core | JDK 25; Kotlin 2.2.20; Java/Kotlin JVM 24 bytecode; 14 tests |
 | Public adapter | Minestom 2026.10.07-26.2; Java 25 runtime; 117 renderer tests and standalone smoke |
 | Grounds adapter | Compiles/tests pass against 2026.11.08-26.3-grounds; standalone startup/move/close smoke passes |
-| Java/Kotlin consumers | Separate Gradle projects resolving the local Maven candidate; both run |
+| Java/Kotlin consumers | Separate Gradle projects resolving local candidates and published0.2.0 artifacts; both run |
 | Numeric content | Existing schema 1; original synthetic fixtures only |
-| Scene/Lobby integration | Updated local suites pass; integration PRs open; licensed-content/multiplayer/transfer gates remain |
-| Real 26.3 client | Neutral two-part demo and commands confirmed by user; private models and multiplayer still pending |
+| Scene/Lobby integration | Updated local suites pass; integration PRs open; licensed-content and real backend/proxy-transfer gates remain |
+| Real 26.3 client | Neutral two-client private visuals/sound/restoration confirmed by user; licensed content and real transfers remain pending |
 | Distribution | GitHub Packages selected by owner; authenticated retrieval required; anonymous Maven not configured |
 
 The public build requires Maven Central and JDK 25, with no Grounds credentials.

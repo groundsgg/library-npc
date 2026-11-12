@@ -29,5 +29,5 @@ The optional Scene adapter exposes `PersonalNpcRenderedAssetHandle`, obtained fr
 the concrete generation-bound factory handle. Existing Scene SPI methods remain
 unchanged. The common NPC owns private cleanup, so the existing Scene drain also
 waits for private preparation and cleanup failures. The new Scene branch requires
-the explicit local N7 candidate until an actual NPC release is published; it is
-not a released product dependency yet. Dialogue actor lookup remains future work.
+the published NPC0.2.0 artifacts. The adapter is still an open Scene integration
+PR, independently of that completed NPC release. Dialogue actor lookup remains future work.
