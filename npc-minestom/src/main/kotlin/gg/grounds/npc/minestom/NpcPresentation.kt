@@ -94,6 +94,9 @@ interface NpcPresentationHandle {
 
     fun snapshot(): NpcPresentationSnapshot
 
+    /** Observe expiry or failure without initiating cancellation. */
+    fun closed(): CompletionStage<Void>
+
     fun closeAsync(): CompletionStage<Void>
 }
 
