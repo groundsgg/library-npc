@@ -5,8 +5,9 @@ The public model API has no Scene, lobby, catalogue, database or Minestom depend
 
 `npc-core` provides the neutral evaluator. `npc-minestom` owns hidden preparation,
 guarded publication, animation, head look, viewer scale/glow and asynchronous
-cleanup. Scene integration is a separate optional module. No external release has
-been published.
+cleanup. Scene integration is a separate optional module. The first release is
+[0.1.0](https://github.com/groundsgg/library-npc/releases/tag/v0.1.0), published to
+GitHub Packages; see [installation](docs/installation.md) for token requirements.
 
 ## Build
 

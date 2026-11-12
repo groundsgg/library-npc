@@ -19,5 +19,7 @@ Product models, animations, textures and other licensed content are excluded.
 The existing Scene and Lobby projects retain their own licensing; an optional
 adapter does not change the independent NPC library's MIT licence.
 
-External publication is a separate action and has not occurred. Future outside
-contributions must have compatible licensing and preserve provenance/notices.
+The project owner subsequently authorized GitHub publication and selected the
+existing Grounds Release Please / GitHub Packages process. Release 0.1.0 is
+published under MIT. Future outside contributions must have compatible licensing
+and preserve provenance/notices.
