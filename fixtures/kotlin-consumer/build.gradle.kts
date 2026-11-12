@@ -4,7 +4,29 @@ plugins {
 }
 
 repositories {
-    providers.gradleProperty("npcRepository").orNull?.let { maven { url = uri(it) } }
+    providers.gradleProperty("npcRepository").orNull?.let { location ->
+        val npcArtifacts = maven {
+            name = "NpcArtifacts"
+            url = uri(location)
+            if (url.toString() == "https://maven.pkg.github.com/groundsgg/library-npc") {
+                credentials {
+                    username =
+                        providers.gradleProperty("github.user").orNull
+                            ?: System.getenv("GITHUB_ACTOR")
+                    password =
+                        providers.gradleProperty("github.token").orNull
+                            ?: System.getenv("GITHUB_TOKEN")
+                }
+            }
+        }
+        exclusiveContent {
+            forRepositories(npcArtifacts)
+            filter {
+                includeModule("gg.grounds", "npc-core")
+                includeModule("gg.grounds", "npc-minestom")
+            }
+        }
+    }
     mavenCentral()
 }
 
@@ -18,6 +40,10 @@ java {
     targetCompatibility = JavaVersion.VERSION_24
 }
 
-dependencies { implementation("gg.grounds:npc-core:0.1.0-SNAPSHOT") }
+dependencies {
+    implementation(
+        "gg.grounds:npc-core:${providers.gradleProperty("npcVersion").getOrElse("0.1.0-SNAPSHOT")}"
+    )
+}
 
 application { mainClass = "consumer.KotlinConsumerKt" }

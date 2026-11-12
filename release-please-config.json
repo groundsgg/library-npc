@@ -1,0 +1,7 @@
+{
+  "release-type": "simple",
+  "version-file": "version.txt",
+  "initial-version": "0.1.0",
+  "include-component-in-tag": false,
+  "packages": { ".": {} }
+}

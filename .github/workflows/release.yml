@@ -1,0 +1,40 @@
+name: Publish Release Packages
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    uses: groundsgg/.github/.github/workflows/gradle-publish.yml@main
+    permissions:
+      contents: read
+      packages: write
+
+  verify-published-consumers:
+    needs: publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    env:
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Resolve released packages from independent consumers
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          repository="https://maven.pkg.github.com/groundsgg/library-npc"
+          ./gradlew -p fixtures/java-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
+          ./gradlew -p fixtures/kotlin-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
+          ./gradlew -p examples/standalone-minestom test run --args=--smoke -PnpcVersion="$version" -PnpcRepository="$repository"

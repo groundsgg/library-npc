@@ -4,7 +4,7 @@ plugins { kotlin("jvm") version "2.2.20" apply false }
 
 group = "gg.grounds"
 
-version = "0.1.0-SNAPSHOT"
+version = providers.gradleProperty("versionOverride").orElse("0.1.0-SNAPSHOT").get()
 
 repositories { mavenCentral() }
 
@@ -55,6 +55,14 @@ subprojects {
             maven {
                 name = "Review"
                 url = rootProject.layout.projectDirectory.dir(".evidence/maven").asFile.toURI()
+            }
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/groundsgg/library-npc")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
             }
         }
     }
