@@ -7,8 +7,8 @@
 | Grounds adapter | Compiles/tests pass against 2026.11.08-26.3-grounds; standalone startup/move/close smoke passes |
 | Java/Kotlin consumers | Separate Gradle projects resolving the local Maven candidate; both run |
 | Numeric content | Existing schema 1; original synthetic fixtures only |
-| Scene/Lobby integration | Local draft suites pass; release/client acceptance still pending |
-| Real 26.3 client | Visual acceptance still pending |
+| Scene/Lobby integration | Updated local suites pass; integration PRs open; licensed-content/multiplayer/transfer gates remain |
+| Real 26.3 client | Neutral two-part demo and commands confirmed by user; private models and multiplayer still pending |
 | Distribution | GitHub Packages selected by owner; authenticated retrieval required; anonymous Maven not configured |
 
 The public build requires Maven Central and JDK 25, with no Grounds credentials.

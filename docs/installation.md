@@ -1,8 +1,7 @@
 # Installation
 
-Releases use GitHub Packages, matching the other Grounds libraries. The first
-release is prepared through Release Please; do not assume a version exists until
-the release publishing workflow succeeds.
+Releases use GitHub Packages, matching the other Grounds libraries. Version 0.1.0
+was generated through Release Please and published by the shared Gradle workflow.
 
 GitHub Packages requires authentication even when the repository and package are
 public. A personal access token (classic) with `read:packages` is required for
@@ -39,7 +38,7 @@ dependencies {
 Minestom, so it does not replace the host's server dependency. Java 25 is required
 for the supported Minestom baseline; see [compatibility](compatibility.md).
 The independent Java/Kotlin consumers and standalone example can use a published
-version through `-PnpcVersion=0.1.0 -PnpcRepository=...` once that release exists.
+version through `-PnpcVersion=0.1.0 -PnpcRepository=...` using the published release.
 
 An anonymous Maven endpoint and Maven Central publication are not configured.
 This is an explicit initial choice to follow the other Grounds libraries.
