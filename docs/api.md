@@ -46,7 +46,7 @@ serialization so unchanged fields do not restart interpolation. ItemDisplay mesh
 facing correction lives only in the renderer; it is absent from core poses.
 
 
-## Personal presentations (N7 candidate)
+## Personal presentations (since0.2.0)
 
 Retain `NpcPresentations.prepare(parent, new NpcPresentationOptions(player))`
 immediately. Its `NpcPresentationStart` owns cancellation while preparation is

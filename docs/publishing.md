@@ -3,8 +3,8 @@
 Releases follow the other Grounds libraries: Release Please owns versions and
 Git tags, and the shared Grounds Gradle publishing workflow publishes tagged
 artifacts to GitHub Packages. Never create release tags or edit generated release
-PRs by hand. The initial intended release is 0.1.0; only a successful publishing
-workflow makes its artifacts available.
+PRs by hand. The current release is0.2.0, including personal presentations;
+only a successful publishing workflow makes its artifacts available.
 
 GitHub Packages requires a GitHub token even for public packages. This is the
 project owner's chosen initial distribution method; anonymous retrieval is no
@@ -24,8 +24,9 @@ python3 tools/verify_public_artifacts.py
 The project owner selected MIT on 2026-11-12; see [licensing decision](license-decision.md).
 Binary/source JARs include MIT and provenance notices; POM metadata declares MIT.
 Third-party dependencies retain their licences. The independent implementation
-review and neutral 26.3 demo acceptance are complete; private content, multiplayer
-and proxy/server transfer acceptance remain required for product integration.
+review and neutral26.3 two-client private rendering/sound/restoration acceptance
+are complete. Licensed content and actual proxy/server transfer acceptance remain
+required for product integration.
 
 After package publication, the release workflow runs both separate consumer
 projects against GitHub Packages using only its read-scoped GITHUB_TOKEN and the
