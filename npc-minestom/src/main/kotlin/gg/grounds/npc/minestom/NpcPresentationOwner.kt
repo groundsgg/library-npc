@@ -130,6 +130,18 @@ internal class NpcPresentationOwner(
         return error
     }
 
+    fun followTransform(): CompletionStage<Void> {
+        val targets = synchronized(lock) { owned.toList() }
+        return CompletableFuture.allOf(
+            *targets.map { it.followTransform().toCompletableFuture() }.toTypedArray()
+        )
+    }
+
+    fun followViewerState(player: Player): CompletionStage<Void> {
+        val target = synchronized(lock) { reservations[player] }
+        return target?.followViewerState() ?: CompletableFuture.completedFuture(null)
+    }
+
     fun closeAll(): CompletionStage<Void> {
         val pending =
             synchronized(lock) {

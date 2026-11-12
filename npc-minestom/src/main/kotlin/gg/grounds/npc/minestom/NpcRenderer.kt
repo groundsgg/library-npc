@@ -314,7 +314,11 @@ private class PreparedNpc(
     override fun submitPresentation(action: (AnimatedNpcHandle) -> Unit) = submit(action)
 
     override fun applyTransform(transform: NpcRenderTransform) = submitAsync {
-        it.applyTransform(transform)
+        val target = it
+        target.applyTransform(transform).thenCompose {
+            val owner = synchronized(lock) { presentations }
+            owner?.followTransform() ?: CompletableFuture.completedFuture<Void>(null)
+        }
     }
 
     override fun startAnimation(clipId: String, elapsedMillis: Long) = submit {
@@ -334,12 +338,18 @@ private class PreparedNpc(
         it.applyHeadLook(yaw, pitch)
     }
 
-    override fun applyViewerState(player: Player, state: NpcViewerState) = submit {
+    override fun applyViewerState(player: Player, state: NpcViewerState) = submitAsync {
         require(player.isOnline && player.instance === request.instance)
         it.applyViewerState(player, state)
+        val owner = synchronized(lock) { presentations }
+        owner?.followViewerState(player) ?: CompletableFuture.completedFuture<Void>(null)
     }
 
-    override fun clearViewerState(player: Player) = submit { it.clearViewerState(player) }
+    override fun clearViewerState(player: Player) = submitAsync {
+        it.clearViewerState(player)
+        val owner = synchronized(lock) { presentations }
+        owner?.followViewerState(player) ?: CompletableFuture.completedFuture<Void>(null)
+    }
 
     override fun snapshot(): NpcAnchorSnapshot =
         synchronized(lock) { checkNotNull(engine).snapshot() }

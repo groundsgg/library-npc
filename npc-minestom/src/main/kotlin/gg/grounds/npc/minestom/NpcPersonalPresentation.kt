@@ -234,6 +234,56 @@ internal class NpcPersonalPresentation(
         }
     }
 
+    fun followTransform(): CompletionStage<Void> = propagate { child ->
+        child.handle.applyTransform(owner.engine.currentTransform())
+    }
+
+    fun followViewerState(): CompletionStage<Void> {
+        if (phase != NpcPresentationPhase.ACTIVE) return CompletableFuture.completedFuture(null)
+        return propagate { child ->
+            child.control.submitPresentation {
+                child.control.applyPersonalVisualNow(
+                    options.player,
+                    owner.engine.viewerStateFor(options.player),
+                )
+            }
+        }
+    }
+
+    /** Wait for owned preparation, but treat an intentional child close as a drained update. */
+    private fun propagate(
+        action: (NpcPresentationCopy) -> CompletionStage<Void>
+    ): CompletionStage<Void> {
+        val result = CompletableFuture<Void>()
+        fun finish(problem: Throwable?) {
+            if (problem == null) result.complete(null)
+            else if (closing.get())
+                closed.whenComplete { _, failure ->
+                    if (failure == null) result.complete(null)
+                    else result.completeExceptionally(failure)
+                }
+            else {
+                synchronized(lock) { if (runtimeFailure == null) runtimeFailure = problem }
+                cancel().whenComplete { _, failure ->
+                    result.completeExceptionally(failure ?: problem)
+                }
+            }
+        }
+        ready.whenComplete { _, problem ->
+            if (closing.get()) {
+                closed.whenComplete { _, failure -> finish(failure) }
+            } else if (problem != null) finish(problem)
+            else
+                try {
+                    val child = synchronized(lock) { checkNotNull(copy) }
+                    action(child).whenComplete { _, failure -> finish(failure) }
+                } catch (failure: Throwable) {
+                    finish(failure)
+                }
+        }
+        return result.minimalCompletionStage()
+    }
+
     override fun playClip(clipId: String) =
         command(afterRender = { playSound(clipId) }) { playback.play(clipId) }
 
