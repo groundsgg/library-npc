@@ -1,0 +1,14 @@
+{
+  "pack": {
+    "pack_format": 97,
+    "min_format": [
+      97,
+      1
+    ],
+    "max_format": [
+      97,
+      1
+    ],
+    "description": "Original NPC library demo (Grounds 26.3)"
+  }
+}

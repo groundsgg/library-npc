@@ -1,0 +1,16 @@
+NPC Library
+Copyright (c) 2026 Lukas Jost
+Licensed under the MIT License; see LICENSE.
+
+NPC model evaluation originates from Grounds resourcepacks, tag v1.3.0,
+commit c92fcaffe95e02bf4a6badba700a4c40b5724016.
+ItemDisplay rendering and shared affine/TRSR implementation originate from
+Grounds minestom-lobby, commit 020a370ff414f85bb6ac495785605a8789ffbb19.
+
+These sources were originally provided under AGPL-3.0. The extracted library
+is offered under MIT following the project owner's approval on 2026-11-12.
+The source provenance remains recorded in docs/source-provenance.md and
+licensing decision in docs/license-decision.md. This does not change the
+licence of earlier source releases or third-party dependencies.
+
+No third-party model, animation or texture payload is included.
