@@ -42,7 +42,15 @@ java {
 
 dependencies {
     implementation(
-        "gg.grounds:npc-core:${providers.gradleProperty("npcVersion").getOrElse("0.1.0-SNAPSHOT")}"
+        "gg.grounds:npc-minestom:${providers.gradleProperty("npcVersion").getOrElse("0.1.0-SNAPSHOT")}"
+    )
+    implementation("net.minestom:minestom:2026.10.07-26.2")
+}
+
+configurations.configureEach {
+    attributes.attribute(
+        org.gradle.api.attributes.java.TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+        25,
     )
 }
 

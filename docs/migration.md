@@ -24,5 +24,10 @@ Scene drain checks and a real Grounds 26.3 client check. Keep the previous compl
 distribution for rollback, including matching content/catalogue/client-pack pins.
 Never transfer live entity IDs or viewer overrides to another connection/backend.
 
-Independent private clip/head/sound presentation is a follow-up after extraction
-parity. Scale/glow support does not provide that capability.
+N7 adds independent private clip/head/sound presentations through additive APIs.
+The optional Scene adapter exposes `PersonalNpcRenderedAssetHandle`, obtained from
+the concrete generation-bound factory handle. Existing Scene SPI methods remain
+unchanged. The common NPC owns private cleanup, so the existing Scene drain also
+waits for private preparation and cleanup failures. The new Scene branch requires
+the explicit local N7 candidate until an actual NPC release is published; it is
+not a released product dependency yet. Dialogue actor lookup remains future work.

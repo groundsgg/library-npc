@@ -47,7 +47,11 @@ dependencies {
 
 application { mainClass = "example.NpcDemo" }
 
-tasks.withType<JavaExec>().configureEach { systemProperty("java.net.preferIPv4Stack", "true") }
+tasks.withType<JavaExec>().configureEach {
+    systemProperty("java.net.preferIPv4Stack", "true")
+    providers.gradleProperty("npcPort").orNull?.let { systemProperty("npc.port", it) }
+    providers.gradleProperty("npcPackPort").orNull?.let { systemProperty("npc.packPort", it) }
+}
 
 tasks.register<Zip>("demoPack") {
     from("pack")

@@ -36,7 +36,7 @@ The default sound sink emits nothing. The library discovers no product assets.
 
 `applyViewerState` supports connection-specific scale and glow; state is attached
 to the actual Player connection and instance, not a reusable account UUID.
-It is not an independent per-player animation clock or private head pose.
+Private clip/head channels use the separate additive presentation API below.
 `NpcAnchorSnapshot` exposes the immutable root and optional model-local head origin.
 Hosts choose dialogue text anchors separately.
 
@@ -44,3 +44,53 @@ Hosts choose dialogue text anchors separately.
 bounds or model/world matrices. Its boolean reports changes after float
 serialization so unchanged fields do not restart interpolation. ItemDisplay mesh
 facing correction lives only in the renderer; it is absent from core poses.
+
+
+## Personal presentations (N7 candidate)
+
+Retain `NpcPresentations.prepare(parent, new NpcPresentationOptions(player))`
+immediately. Its `NpcPresentationStart` owns cancellation while preparation is
+pending. `ready()` yields `NpcPresentationResult.Ready` or `Rejected`; the Ready
+handle remains hidden until its queued `publish()` succeeds. Hosts must observe
+stages and retain `cancel()` in their shutdown drain. The common parent also owns
+all pending/active copies and retains their cleanup failures.
+
+Clip and head start in `FOLLOW_SHARED`, using the actual common sample (including
+seek, pause and stop). `playClip` switches only the clip to `PRIVATE` and starts
+local monotonic time at zero. `applyHeadLook` switches only the head. A one-shot
+or `stopClip` enters the configured private idle, otherwise rest; it stays private.
+`followSharedClip` and `followSharedHeadLook` release their channels explicitly.
+The private task samples every 50 ms by default; no host advance calls are needed.
+`snapshot()` is diagnostic; `closed()` observes automatic expiry or runtime errors.
+
+The default personal sound sink is silent. Supply `NpcViewerSoundSink` to deliver
+one-shot cues exclusively to its concrete Player, with no spatial fallback.
+Only explicit private clip starts emit cues. Reentry, snapshots, common movement,
+scale/glow and channel changes emit none. Existing shared sounds keep their
+existing spatial behavior. Removing a presentation does not stop already delivered
+client audio. Callback completion is drained without holding NPC locks.
+
+Root/local transforms and that participant's scale/glow follow the common parent,
+without resetting private channels. A successful parent move waits for still-owned
+copies too. There is no private position/collider API. Only the owner sees the
+private group; observers retain the common group. Close removes private parts
+before restoring the current common pose, only for the still-valid connection and
+parent generation. A superseded lease cannot release a newer lease.
+
+Only one pending/active presentation per concrete parent/Player is admitted.
+Default `NpcPresentationLimits` are 32 presentations and 1024 additional parts;
+50-part models therefore admit 20 groups, and reject the 21st before hiding the
+common NPC. Use the additive `NpcRenderer.prepare(request, limits)` overload to
+raise limits deliberately. There is no full-player scan per private copy.
+
+Distance/chunk reentry preserves the current private clock and sends no duplicate
+cue. Connection expiry is owned from reservation onward, including hidden starts.
+An instance departure is latched even if the same Player returns between samples.
+Active commands, sampling and sound delivery recheck the personal generation guard
+outside NPC monitors; denied work closes the private group. Disconnect and instance
+changes invalidate the handle through the owned departure listener/task. A new connection with the same UUID
+inherits nothing. Never transfer live handles, Player references or Entity IDs
+across servers/proxies.
+
+Personal profiles above500ms currently retain the shared engine's500ms interpolation
+cap. The verified default remains50ms. See compatibility for deferred limitations.
