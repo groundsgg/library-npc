@@ -11,16 +11,27 @@ import net.minestom.server.timer.TaskSchedule
 object NpcRenderer {
     @JvmStatic
     fun prepare(request: NpcSpawnRequest): NpcStart = PreparedNpc(request).also { it.begin() }
+
+    @JvmStatic
+    fun prepare(request: NpcSpawnRequest, limits: NpcPresentationLimits): NpcStart =
+        PreparedNpc(request, limits).also { it.begin() }
 }
 
-private class PreparedNpc(private val request: NpcSpawnRequest) : NpcStart, NpcHandle {
+private class PreparedNpc(
+    private val request: NpcSpawnRequest,
+    private val limits: NpcPresentationLimits = NpcPresentationLimits(),
+    private val audience: NpcRenderAudience = NpcRenderAudience.Shared,
+    private val personalCopy: Boolean = false,
+) : NpcStart, NpcHandle, NpcPresentationParent, NpcPresentationCopyControl {
     private val lock = Any()
     private val ready = CompletableFuture<NpcPrepareResult>()
     private val closed = CompletableFuture<Void>()
     private val commands = HashSet<CompletableFuture<Void>>()
     private val parts = ArrayList<NpcItemDisplay>()
     private var attachmentsDone = false
-    private var stopping = false
+    @Volatile private var stopping = false
+    @Volatile private var published = false
+    private var presentations: NpcPresentationOwner? = null
     private var cleanupStarted = false
     private var engine: AnimatedNpcHandle? = null
 
@@ -88,6 +99,7 @@ private class PreparedNpc(private val request: NpcSpawnRequest) : NpcStart, NpcH
                                     request.transform,
                                     request.sounds,
                                     request.config,
+                                    audience,
                                 )
                             true
                         } catch (problem: Throwable) {
@@ -122,6 +134,12 @@ private class PreparedNpc(private val request: NpcSpawnRequest) : NpcStart, NpcH
                 engine
             }
         var failure: Throwable? = null
+        val personalCleanup =
+            try {
+                presentations?.closeAll() ?: CompletableFuture.completedFuture(null)
+            } catch (problem: Throwable) {
+                CompletableFuture.failedFuture<Void>(problem)
+            }
         try {
             closingEngine?.close()
         } catch (error: Throwable) {
@@ -140,12 +158,16 @@ private class PreparedNpc(private val request: NpcSpawnRequest) : NpcStart, NpcH
             )
         )
         val cleanupFailure = failure
-        (closingEngine?.drainMovements() ?: CompletableFuture.completedFuture(null)).whenComplete {
-            _,
-            movementFailure ->
-            val problem = cleanupFailure ?: movementFailure
-            if (problem == null) closed.complete(null) else closed.completeExceptionally(problem)
-        }
+        CompletableFuture.allOf(
+                (closingEngine?.drainMovements() ?: CompletableFuture.completedFuture(null))
+                    .toCompletableFuture(),
+                personalCleanup.toCompletableFuture(),
+            )
+            .whenComplete { _, movementFailure ->
+                val problem = cleanupFailure ?: movementFailure
+                if (problem == null) closed.complete(null)
+                else closed.completeExceptionally(problem)
+            }
     }
 
     override fun ready(): CompletionStage<NpcPrepareResult> = ready.minimalCompletionStage()
@@ -207,11 +229,89 @@ private class PreparedNpc(private val request: NpcSpawnRequest) : NpcStart, NpcH
     }
 
     override fun publish(): CompletionStage<Void> = submit { handle ->
-        if (!request.publicationGuard.runIfCurrent(Runnable { handle.publishVisible() })) {
+        if (
+            !request.publicationGuard.runIfCurrent(
+                Runnable {
+                    handle.publishVisible()
+                    published = !stopping
+                }
+            )
+        ) {
             cancel()
             throw java.util.concurrent.CancellationException("NPC host generation changed")
         }
     }
+
+    override fun preparePresentation(options: NpcPresentationOptions): NpcPresentationStart {
+        if (personalCopy)
+            return rejectedPresentation(
+                "NPC_PRESENTATION_UNSUPPORTED",
+                "Private renderers cannot own presentations",
+            )
+        val owner =
+            synchronized(lock) {
+                val target = engine
+                if (stopping || !published || target == null) null
+                else
+                    presentations
+                        ?: NpcPresentationOwner(
+                                request,
+                                target,
+                                limits,
+                                { !stopping && published },
+                                { operation -> request.publicationGuard.runIfCurrent(operation) },
+                                { options, guard, current ->
+                                    val config =
+                                        request.config.copy(
+                                            nearIntervalMillis = options.sampleIntervalMillis,
+                                            midIntervalMillis = options.sampleIntervalMillis,
+                                            farIntervalMillis = options.sampleIntervalMillis,
+                                            idleClip = null,
+                                            variationClip = null,
+                                        )
+                                    val child =
+                                        PreparedNpc(
+                                            request.copy(
+                                                transform = target.currentTransform(),
+                                                publicationGuard = guard,
+                                                sounds = NpcSoundSink { _, _, _ -> },
+                                                config = config,
+                                            ),
+                                            limits,
+                                            NpcRenderAudience.Personal(options.player, current),
+                                            true,
+                                        )
+                                    NpcPresentationCopy(child.also { it.begin() }, child, child)
+                                },
+                            )
+                            .also { presentations = it }
+            }
+                ?: return rejectedPresentation(
+                    "NPC_PRESENTATION_PARENT_GONE",
+                    "Parent is not published or has closed",
+                )
+        return owner.prepare(options)
+    }
+
+    override fun renderPresentationNow(frame: NpcSampleFrame) {
+        val target =
+            synchronized(lock) {
+                check(!stopping)
+                checkNotNull(engine)
+            }
+        target.renderFrame(frame)
+    }
+
+    override fun applyPersonalVisualNow(player: Player, state: NpcViewerState) {
+        val target =
+            synchronized(lock) {
+                check(!stopping)
+                checkNotNull(engine)
+            }
+        target.applyViewerState(player, state)
+    }
+
+    override fun submitPresentation(action: (AnimatedNpcHandle) -> Unit) = submit(action)
 
     override fun applyTransform(transform: NpcRenderTransform) = submitAsync {
         it.applyTransform(transform)

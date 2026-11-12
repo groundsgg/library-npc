@@ -23,12 +23,13 @@ internal sealed interface NpcRenderAudience {
         override fun accepts(player: Player) = true
     }
 
-    class Personal(private val player: Player) : NpcRenderAudience {
+    class Personal(private val player: Player, private val valid: () -> Boolean = { true }) :
+        NpcRenderAudience {
         private val candidate = listOf(player)
 
         override fun candidates(instance: Instance): Collection<Player> = candidate
 
         override fun accepts(player: Player) =
-            this.player === player && player.isOnline && !player.isRemoved
+            this.player === player && player.isOnline && !player.isRemoved && valid()
     }
 }

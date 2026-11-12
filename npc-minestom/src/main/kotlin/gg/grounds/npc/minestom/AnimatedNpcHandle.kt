@@ -51,6 +51,10 @@ internal class AnimatedNpcHandle(
     private var sampledClip: String? = null
     private var sampledSeconds = 0.0
     private var externalFrame: NpcSampleFrame? = null
+
+    private data class Suppression(val lease: Any, val previousRate: NpcViewerRate?)
+
+    private var suppressed: java.util.IdentityHashMap<Player, Suppression>? = null
     private var previousPose: List<NpcMatrix>? = null
     private var previousTransform: NpcRenderTransform? = null
 
@@ -99,6 +103,65 @@ internal class AnimatedNpcHandle(
         }
     }
 
+    fun currentTransform(): NpcRenderTransform = synchronized(lock) { transform }
+
+    fun viewerStateFor(player: Player): NpcViewerState =
+        synchronized(lock) {
+            val state = viewerVisuals[player] ?: DEFAULT_NPC_VISUAL
+            NpcViewerState(state.first, state.second)
+        }
+
+    fun canPresentTo(player: Player): Boolean =
+        synchronized(lock) {
+            !closed &&
+                published &&
+                policy.canView(
+                    player,
+                    displays.first().instance,
+                    transform.root.position,
+                    viewerPlayers[player.uuid] === player,
+                )
+        }
+
+    fun suppressViewer(player: Player, lease: Any, current: () -> Boolean): Boolean = update {
+        if (closed || !published || !current()) return false
+        val hidden =
+            suppressed ?: java.util.IdentityHashMap<Player, Suppression>().also { suppressed = it }
+        val previous = hidden[player]
+        if (previous != null) return previous.lease === lease
+        val rate = viewerIntervals[player.uuid].takeIf { viewerPlayers[player.uuid] === player }
+        hidden[player] = Suppression(lease, rate)
+        refreshViewers(true)
+        true
+    }
+
+    fun ownsSuppression(player: Player, lease: Any): Boolean =
+        synchronized(lock) {
+            suppressed?.get(player)?.lease === lease
+        }
+
+    fun releaseSuppression(player: Player, lease: Any, restore: Boolean) = update {
+        val hidden = suppressed ?: return
+        val previous = hidden[player] ?: return
+        if (previous.lease !== lease) return
+        hidden.remove(player)
+        if (hidden.isEmpty()) suppressed = null
+        if (!closed && restore) {
+            if (
+                previous.previousRate != null &&
+                    player.isOnline &&
+                    player.instance === displays.first().instance
+            ) {
+                viewerIntervals = viewerIntervals + (player.uuid to previous.previousRate)
+                viewerPlayers = viewerPlayers + (player.uuid to player)
+            }
+            refreshViewers(true)
+        }
+    }
+
+    private fun accepts(player: Player) =
+        audience.accepts(player) && suppressed?.containsKey(player) != true
+
     fun sampleFrame(): NpcSampleFrame =
         synchronized(lock) {
             NpcSampleFrame(sampledClip, sampledSeconds, headLook)
@@ -125,13 +188,13 @@ internal class AnimatedNpcHandle(
     fun snapshot(): NpcAnchorSnapshot =
         synchronized(lock) { NpcAnchorSnapshot(transform.root, headLookOrigin) }
 
-    private fun refreshViewers() {
+    private fun refreshViewers(force: Boolean = false) {
         if (!published) return
         // Overrides belong to the actual connection, not a future login with the same UUID.
         viewerVisuals.keys.removeIf { it.isRemoved || it.instance !== displays.first().instance }
         val instance = displays.first().instance
         val anchor = transform.root.position
-        if (viewersUnchanged(instance, anchor)) return
+        if (!force && viewersUnchanged(instance, anchor)) return
         var playersChanged = false
         val admittedPlayers = linkedMapOf<UUID, Player>()
         var fastestInterval = 500L
@@ -139,7 +202,7 @@ internal class AnimatedNpcHandle(
             audience.candidates(instance).forEach { player ->
                 val distance = policy.distanceSquared(player, instance, anchor)
                 if (
-                    audience.accepts(player) &&
+                    accepts(player) &&
                         policy.canView(
                             player,
                             instance,
@@ -160,7 +223,7 @@ internal class AnimatedNpcHandle(
             }
         }
         renderInterval = fastestInterval
-        if (next == viewerIntervals && !playersChanged) return
+        if (!force && next == viewerIntervals && !playersChanged) return
         val previous = viewerIntervals
         val resuming = previous.isEmpty() && next.isNotEmpty()
         viewerIntervals = next
@@ -171,14 +234,14 @@ internal class AnimatedNpcHandle(
         intervals.forEach { nextViewerUpdate.putIfAbsent(it, elapsed + it.interval(config)) }
         displays.forEach { it.configureUpdates(intervals) }
         // Refresh the shared target before snapshots without forcing unrelated cohorts to send.
-        if (resuming || next.any { (id, interval) -> previous[id] != interval })
+        if (force || resuming || next.any { (id, interval) -> previous[id] != interval })
             advance(elapsed, true, false, false)
         displays.forEach { display ->
             // Minestom's iterator already owns a stable per-display snapshot. Copying the
             // collection with toList() also resolves every player ID during size() calls.
             val previousViewers = display.viewers.iterator()
             display.updateViewableRule { player ->
-                audience.accepts(player) &&
+                accepts(player) &&
                     player.instance === instance &&
                     player.uuid in viewerIntervals &&
                     (viewerPlayers[player.uuid] === player ||
@@ -203,10 +266,7 @@ internal class AnimatedNpcHandle(
             val previous =
                 viewerIntervals[player.uuid].takeIf { viewerPlayers[player.uuid] === player }
             val distance = policy.distanceSquared(player, instance, anchor)
-            if (
-                audience.accepts(player) &&
-                    policy.canView(player, instance, anchor, previous != null)
-            ) {
+            if (accepts(player) && policy.canView(player, instance, anchor, previous != null)) {
                 if (
                     previous == null ||
                         viewerPlayers[player.uuid] !== player ||
@@ -620,6 +680,7 @@ internal class AnimatedNpcHandle(
                 movementTasks.clear()
                 pendingSounds.clear()
                 viewerVisuals.clear()
+                suppressed = null
                 viewerIntervals = emptyMap()
                 viewerPlayers = emptyMap()
                 viewerGroups = emptyMap()
