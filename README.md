@@ -53,7 +53,7 @@ Source provenance and third-party dependency notices remain separate.
 
 ## Standalone server
 
-See [API](docs/api.md), [compatibility](docs/compatibility.md),
+See [installation](docs/installation.md), [API](docs/api.md), [compatibility](docs/compatibility.md),
 [migration](docs/migration.md) and [candidate publication](docs/publishing.md).
 The independent application in `examples/standalone-minestom` uses the public API,
 an original two-bone model and a neutral demo resourcepack. The server offers its original demo pack automatically on localhost:25574.
