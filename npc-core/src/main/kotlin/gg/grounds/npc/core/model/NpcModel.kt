@@ -5,6 +5,7 @@ import gg.grounds.npc.core.internal.NpcModelEvaluator
 import gg.grounds.npc.core.internal.NpcModelValidator
 import gg.grounds.npc.core.internal.immutableList
 import gg.grounds.npc.core.internal.immutableMap
+import gg.grounds.npc.core.io.NpcDecodeLimits
 
 /**
  * Validated immutable numeric NPC definition. Inputs are defensively copied; invalid IDs,
@@ -20,7 +21,8 @@ import gg.grounds.npc.core.internal.immutableMap
  * @property sounds Immutable cues keyed by existing clip IDs.
  * @property headBone The unique case-insensitive head bone, or null when absent/ambiguous.
  */
-public class NpcModel(
+public class NpcModel
+internal constructor(
     /** Namespaced asset identity, at most 256 characters. */
     public val id: String,
     /** Authored model-local bounds. */
@@ -29,7 +31,18 @@ public class NpcModel(
     parts: List<NpcPart>,
     animations: Map<String, NpcClip>,
     sounds: Map<String, NpcClipSound>,
+    limits: NpcDecodeLimits,
 ) {
+    /** Construct an immutable definition validated against the hard schema limits. */
+    public constructor(
+        id: String,
+        bounds: NpcBounds,
+        bones: List<NpcBone>,
+        parts: List<NpcPart>,
+        animations: Map<String, NpcClip>,
+        sounds: Map<String, NpcClipSound>,
+    ) : this(id, bounds, bones, parts, animations, sounds, NpcDecodeLimits())
+
     /** Immutable bones in parent-before-child order, at most 256. */
     public val bones: List<NpcBone> = immutableList(bones)
     /** Immutable model parts or sampled matrices in authored order, at most 1024 model parts. */
@@ -40,7 +53,7 @@ public class NpcModel(
     public val sounds: Map<String, NpcClipSound> = immutableMap(sounds)
 
     init {
-        NpcModelValidator.validate(this)
+        NpcModelValidator.validate(this, limits)
     }
 
     /** The unique bone named head, ignoring case; null if absent or ambiguous. */

@@ -22,6 +22,8 @@ The 0.3.0 API-review candidate intentionally breaks source and JVM signatures. R
 | Clip/keyframe `.length` / `.time` | `.lengthSeconds` / `.timeSeconds` |
 | Package constants/operators and public `sampleNpcTrack` | `NpcVector3.ZERO/ONE`, member operators and internal track sampling |
 
+Rejected preparation results also copy their diagnostics and require at least one problem; they no longer expose data-class `copy` or destructuring.
+
 Regular immutable option classes replace extensible `data class` configuration. Fixed mathematical value types retain their value semantics. Public `NpcHandle.closed()` observes final cleanup without closing. Argument errors stay in command stages; operation errors preserve their cause. Delegating handles can forward personal preparation directly.
 
 Schema-1 JSON, resource IDs, authored units, interpolation curves, sounds and host asset catalogue checks remain unchanged. Existing models/resource packs do not need a schema conversion. Runtime interval limitations recorded in compatibility still apply.

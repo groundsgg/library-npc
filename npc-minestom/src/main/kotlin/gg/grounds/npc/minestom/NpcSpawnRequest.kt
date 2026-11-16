@@ -121,8 +121,9 @@ public class NpcSpawnRequest private constructor(builder: Builder) {
         public fun meshes(value: NpcMeshResolver): Builder = apply { meshes = value }
 
         /**
-         * Configure Immutable cues keyed by existing clip IDs. Validation occurs at build; returns
-         * this builder for chaining.
+         * Shared spatial cue callback; defaults to silent. The callback runs outside the NPC
+         * ownership monitor and must return before shutdown completes. Returns this builder for
+         * chaining.
          */
         public fun sounds(value: NpcSoundSink): Builder = apply { sounds = value }
 

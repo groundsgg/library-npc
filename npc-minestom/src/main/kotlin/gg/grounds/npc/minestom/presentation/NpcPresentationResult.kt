@@ -1,6 +1,7 @@
 package gg.grounds.npc.minestom.presentation
 
 import gg.grounds.npc.core.validation.NpcProblem
+import java.util.Collections
 
 /**
  * Hidden private preparation outcome. Rejected groups never hide the common NPC; a Ready handle
@@ -22,5 +23,15 @@ public sealed interface NpcPresentationResult {
      *
      * @property problems Stable diagnostics describing the rejection.
      */
-    public data class Rejected(val problems: List<NpcProblem>) : NpcPresentationResult
+    public class Rejected(problems: List<NpcProblem>) : NpcPresentationResult {
+        /** Nonempty immutable snapshot of the rejection diagnostics. */
+        public val problems: List<NpcProblem> = Collections.unmodifiableList(ArrayList(problems))
+
+        init {
+            require(this.problems.isNotEmpty()) { "Rejection requires at least one problem" }
+        }
+
+        /** Describe the stable rejection diagnostics for logs. */
+        override fun toString(): String = "Rejected(problems=$problems)"
+    }
 }

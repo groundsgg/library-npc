@@ -10,9 +10,6 @@ import kotlin.math.sin
  * @property values Defensive row-major 16-element matrix snapshot; changing it never changes this
  *   matrix.
  * @property IDENTITY Identity 4×4 matrix; use read-only access or defensive snapshots.
- * @property x Finite X component.
- * @property y Finite Y component.
- * @property z Finite Z component.
  */
 public class NpcMatrix(values: DoubleArray) {
     private val matrix = values.copyOf().also { require(it.size == 16 && it.all(Double::isFinite)) }

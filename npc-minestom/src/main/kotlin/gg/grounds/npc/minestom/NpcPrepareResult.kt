@@ -1,6 +1,7 @@
 package gg.grounds.npc.minestom
 
 import gg.grounds.npc.core.validation.NpcProblem
+import java.util.Collections
 
 /**
  * Preparation outcome. Ready parts are still hidden; only a successful guarded publish makes them
@@ -22,5 +23,15 @@ public sealed interface NpcPrepareResult {
      *
      * @property problems Stable diagnostics describing the rejection.
      */
-    public data class Rejected(val problems: List<NpcProblem>) : NpcPrepareResult
+    public class Rejected(problems: List<NpcProblem>) : NpcPrepareResult {
+        /** Nonempty immutable snapshot of the rejection diagnostics. */
+        public val problems: List<NpcProblem> = Collections.unmodifiableList(ArrayList(problems))
+
+        init {
+            require(this.problems.isNotEmpty()) { "Rejection requires at least one problem" }
+        }
+
+        /** Describe the stable rejection diagnostics for logs. */
+        override fun toString(): String = "Rejected(problems=$problems)"
+    }
 }

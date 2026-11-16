@@ -55,7 +55,7 @@ internal object NpcModelValidator {
             id(part.model, "$.parts[$i].model", true)
         }
         model.animations.forEach { (name, clip) ->
-            val path = "$.animations.$name"
+            val path = NpcJsonPath.member("$.animations", name)
             id(name, path)
             expect(
                 clip.lengthSeconds.isFinite() &&
@@ -65,7 +65,7 @@ internal object NpcModelValidator {
                 "Clip duration must be finite and in (0, ${limits.maxClipSeconds}] seconds",
             )
             clip.tracks.forEach { (bone, track) ->
-                val trackPath = "$path.tracks.$bone"
+                val trackPath = NpcJsonPath.member("$path.tracks", bone)
                 expect(bone in known, trackPath, "Unknown track bone: $bone")
                 track.channels().forEach { (channel, keys) ->
                     val channelPath = "$trackPath.$channel"
@@ -92,7 +92,7 @@ internal object NpcModelValidator {
             }
         }
         model.sounds.forEach { (clip, sound) ->
-            val path = "$.sounds.$clip"
+            val path = NpcJsonPath.member("$.sounds", clip)
             expect(clip in model.animations, path, "Unknown sound clip: $clip")
             id(sound.key, "$path.key", true)
             expect(

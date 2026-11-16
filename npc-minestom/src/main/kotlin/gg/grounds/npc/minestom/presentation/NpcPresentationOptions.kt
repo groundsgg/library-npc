@@ -97,8 +97,8 @@ public class NpcPresentationOptions private constructor(builder: Builder) {
         }
 
         /**
-         * Configure Immutable cues keyed by existing clip IDs. Validation occurs at build; returns
-         * this builder for chaining.
+         * Exclusive cue callback for this concrete viewer connection; defaults to silent without
+         * shared fallback. Returns this builder for chaining.
          */
         public fun sounds(value: NpcViewerSoundSink): Builder = apply { sounds = value }
 

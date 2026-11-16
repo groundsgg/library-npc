@@ -37,6 +37,9 @@ internal class NpcRenderEngine(
     )
 
     private val pendingSounds = ArrayList<SoundEmission>()
+    private val soundDrain = CompletableFuture<Void>()
+    private var activeSoundBatches = 0
+    private var soundFailure: Throwable? = null
     private val renderer = NpcDisplayRenderer(model, displays)
     private var closed = false
     private var published = false
@@ -277,9 +280,36 @@ internal class NpcRenderEngine(
                     return
                 }
                 if (pendingSounds.isEmpty()) return
+                activeSoundBatches++
                 pendingSounds.toList().also { pendingSounds.clear() }
             }
-        emissions.forEach { effects.playNear(it.instance, it.origin, it.sound) }
+        var failure: Throwable? = null
+        try {
+            emissions.forEach { effects.playNear(it.instance, it.origin, it.sound) }
+        } catch (problem: Throwable) {
+            failure = problem
+            throw problem
+        } finally {
+            synchronized(lock) {
+                activeSoundBatches--
+                failure?.let { problem ->
+                    if (soundFailure == null) soundFailure = problem
+                    else if (soundFailure !== problem) soundFailure!!.addSuppressed(problem)
+                }
+            }
+            completeSoundDrain()
+        }
+    }
+
+    private fun completeSoundDrain() {
+        val failure =
+            synchronized(lock) {
+                if (!closed || activeSoundBatches != 0) return
+                soundFailure
+            }
+        // Completion may invoke host continuations; never hold the ownership monitor here.
+        if (failure == null) soundDrain.complete(null)
+        else soundDrain.completeExceptionally(failure)
     }
 
     private fun commitHeadLook() {
@@ -306,7 +336,10 @@ internal class NpcRenderEngine(
             Unit
         }
         // Queued owner work needs no further tick; accepted I/O/events must actually settle.
-        movement.close().whenComplete { _, movementFailure ->
+        completeSoundDrain()
+        CompletableFuture.allOf(movement.close().toCompletableFuture(), soundDrain).whenComplete {
+            _,
+            movementFailure ->
             var failure = movementFailure
             displays.forEach { display ->
                 try {

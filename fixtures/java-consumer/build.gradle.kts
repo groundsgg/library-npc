@@ -34,7 +34,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
 
 dependencies {
     implementation(
-        "gg.grounds:npc-minestom:${providers.gradleProperty("npcVersion").getOrElse(file("../../version.txt").readText().trim())}"
+        "gg.grounds:npc-minestom:${providers.gradleProperty("npcVersion").orElse(providers.fileContents(layout.projectDirectory.file("../../version.txt")).asText.map { it.trim() }).get()}"
     )
     implementation("net.minestom:minestom:2026.10.07-26.2")
 }

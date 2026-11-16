@@ -227,6 +227,15 @@ class NpcLifecycleTest {
 
     @Test
     fun `injected sound sink cannot hold the NPC ownership lock during cancellation`(env: Env) {
+        assertSoundDrain(env, false)
+    }
+
+    @Test
+    fun `sound failure after cancellation remains observable from closed`(env: Env) {
+        assertSoundDrain(env, true)
+    }
+
+    private fun assertSoundDrain(env: Env, failDelivery: Boolean) {
         val instance = env.createFlatInstance()
         env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
         val hostLock = java.util.concurrent.locks.ReentrantLock()
@@ -248,7 +257,12 @@ class NpcLifecycleTest {
                         NpcSoundSink { _, _, _ ->
                             entered.countDown()
                             hostLock.lock()
-                            try {} finally {
+                            try {
+                                if (failDelivery)
+                                    throw IllegalStateException(
+                                        "shared sink failed after cancellation"
+                                    )
+                            } finally {
                                 hostLock.unlock()
                             }
                         }
@@ -269,17 +283,42 @@ class NpcLifecycleTest {
             assertTrue(entered.await(3, java.util.concurrent.TimeUnit.SECONDS))
             cancelling = java.util.concurrent.CompletableFuture.supplyAsync { start.cancel() }
             try {
-                cancelling.get(500, java.util.concurrent.TimeUnit.MILLISECONDS)
+                val drain =
+                    cancelling
+                        .get(500, java.util.concurrent.TimeUnit.MILLISECONDS)
+                        .toCompletableFuture()
                 returned = true
+                assertFalse(drain.isDone, "Cancellation must drain an accepted sound callback")
+                assertFalse(
+                    handle.closed().toCompletableFuture().isDone,
+                    "Closed must await accepted sound delivery",
+                )
             } catch (_: java.util.concurrent.TimeoutException) {}
         } finally {
             hostLock.unlock()
         }
         ticking.get(3, java.util.concurrent.TimeUnit.SECONDS)
-        cancelling!!
-            .get(3, java.util.concurrent.TimeUnit.SECONDS)
-            .toCompletableFuture()
-            .get(3, java.util.concurrent.TimeUnit.SECONDS)
+        val drained =
+            cancelling!!.get(3, java.util.concurrent.TimeUnit.SECONDS).toCompletableFuture()
+        if (failDelivery) {
+            assertThrows(java.util.concurrent.ExecutionException::class.java) {
+                drained.get(3, java.util.concurrent.TimeUnit.SECONDS)
+            }
+            val failure =
+                assertThrows(java.util.concurrent.ExecutionException::class.java) {
+                    handle
+                        .closed()
+                        .toCompletableFuture()
+                        .get(3, java.util.concurrent.TimeUnit.SECONDS)
+                }
+            assertTrue(
+                generateSequence<Throwable>(failure) { it.cause }
+                    .any {
+                        it is IllegalStateException &&
+                            it.message == "shared sink failed after cancellation"
+                    }
+            )
+        } else drained.get(3, java.util.concurrent.TimeUnit.SECONDS)
         assertTrue(returned, "Host sound callback must run outside the NPC ownership lock")
     }
 
