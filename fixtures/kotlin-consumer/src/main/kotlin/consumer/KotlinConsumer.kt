@@ -3,7 +3,6 @@ package consumer
 import gg.grounds.npc.minestom.NpcHandle
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationResult
-import gg.grounds.npc.minestom.presentation.NpcPresentations
 
 import gg.grounds.npc.core.animation.NpcPoseSampler
 import gg.grounds.npc.core.math.NpcVector3
@@ -16,7 +15,7 @@ import java.util.concurrent.CompletionStage
 import net.minestom.server.entity.Player
 
 fun gesture(parent: NpcHandle, player: Player): CompletionStage<Void> {
-    val start = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(player).build())
+    val start = parent.preparePresentation(NpcPresentationOptions.builder(player).build())
     return start.ready().thenCompose { result ->
         when (result) {
             is NpcPresentationResult.Ready ->

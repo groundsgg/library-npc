@@ -6,7 +6,6 @@ import gg.grounds.npc.minestom.presentation.NpcPresentationLimits
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationPhase
 import gg.grounds.npc.minestom.presentation.NpcPresentationResult
-import gg.grounds.npc.minestom.presentation.NpcPresentations
 import gg.grounds.npc.minestom.spi.NpcMonotonicClock
 import gg.grounds.npc.minestom.spi.NpcPublicationGuard
 import gg.grounds.npc.minestom.spi.NpcViewerSoundSink
@@ -38,7 +37,7 @@ class NpcPresentationReviewRegressionTest {
             repeat(25) { f.fixture.instance.tick(0) }
             assertEquals(NpcPresentationPhase.CLOSED, hidden.snapshot().phase)
             assertEquals(2, f.parts().size)
-            val replacement = NpcPresentations.prepare(f.parent, NpcPresentationOptions.builder(f.other).build())
+            val replacement = f.parent.preparePresentation(NpcPresentationOptions.builder(f.other).build())
             assertInstanceOf(
                 NpcPresentationResult.Ready::class.java,
                 drive(f.fixture, replacement.ready()),
@@ -65,7 +64,7 @@ class NpcPresentationReviewRegressionTest {
     @Test
     fun `departure before construction releases its reservation without another tick`() {
         setup(limits = NpcPresentationLimits(1, 2)).use { f ->
-            val pending = NpcPresentations.prepare(f.parent, NpcPresentationOptions.builder(f.player).build())
+            val pending = f.parent.preparePresentation(NpcPresentationOptions.builder(f.player).build())
             f.player.remove()
             assertInstanceOf(
                 NpcPresentationResult.Rejected::class.java,
@@ -77,7 +76,7 @@ class NpcPresentationReviewRegressionTest {
                 NpcPresentationResult.Ready::class.java,
                 drive(
                     f.fixture,
-                    NpcPresentations.prepare(f.parent, NpcPresentationOptions.builder(f.other).build()).ready(),
+                    f.parent.preparePresentation(NpcPresentationOptions.builder(f.other).build()).ready(),
                 ),
             )
         }
@@ -165,11 +164,11 @@ class NpcPresentationReviewRegressionTest {
                 val personal = f.personal()
                 drive(f.fixture, personal.publish())
                 drive(f.fixture, personal.applyHeadLook(20.0, 0.0))
-                drive(f.fixture, f.parent.startAnimation("idle", 0))
-                drive(f.fixture, f.parent.advanceAnimation(100))
+                drive(f.fixture, f.parent.playClip("idle", 0))
+                drive(f.fixture, f.parent.advanceClipTo(100))
                 f.fixture.instance.tick(0)
                 assertEquals("wave", personal.snapshot().clipId)
-                drive(f.fixture, f.parent.advanceAnimation(50))
+                drive(f.fixture, f.parent.advanceClipTo(50))
                 f.fixture.instance.tick(0)
                 assertEquals(NpcPresentationPhase.ACTIVE, personal.snapshot().phase)
                 assertEquals("idle", personal.snapshot().clipId)
@@ -348,7 +347,7 @@ class NpcPresentationReviewRegressionTest {
         val other: TestPlayer,
     ) : AutoCloseable {
         fun personal(options: NpcPresentationOptions = NpcPresentationOptions.builder(player).build()) =
-            (drive(fixture, NpcPresentations.prepare(parent, options).ready())
+            (drive(fixture, parent.preparePresentation(options).ready())
                     as NpcPresentationResult.Ready)
                 .handle
 

@@ -125,13 +125,13 @@ private class SynchronousHandle(private val handle: NpcHandle, private val insta
     override fun applyHeadLook(yawDegrees: Double, pitchDegrees: Double) =
         wait(handle.applyHeadLook(yawDegrees, pitchDegrees))
 
-    override fun startAnimation(animation: String, elapsedMillis: Long) =
-        wait(handle.startAnimation(animation, elapsedMillis))
+    override fun playClip(animation: String, elapsedMillis: Long) =
+        wait(handle.playClip(animation, elapsedMillis))
 
-    override fun stopAnimation(animation: String?) = wait(handle.stopAnimation(animation))
+    override fun stopClipIfPlaying(animation: String?) = wait(if (animation == null) handle.stopClip() else handle.stopClipIfPlaying(animation))
 
-    override fun advanceAnimation(elapsedMillis: Long) =
-        wait(handle.advanceAnimation(elapsedMillis))
+    override fun advanceClipTo(elapsedMillis: Long) =
+        wait(handle.advanceClipTo(elapsedMillis))
 
     override fun applyViewerState(player: Player, state: NpcViewerState) =
         wait(handle.applyViewerState(player, state))

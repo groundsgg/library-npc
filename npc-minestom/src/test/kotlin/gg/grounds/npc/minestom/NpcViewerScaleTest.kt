@@ -41,8 +41,8 @@ class NpcViewerScaleTest {
                     fixture.instance.entities.filterIsInstance<NpcItemDisplay>().sortedBy {
                         it.entityId
                     }
-                handle.startAnimation(LocalId("idle"), 0)
-                handle.advanceAnimation(200)
+                handle.playClip(LocalId("idle"), 0)
+                handle.advanceClipTo(200)
                 // Both began at ten ticks before admission. Only the animated torso
                 // subsequently received the nearby viewer's four-tick animation duration.
                 assertEquals(
@@ -144,9 +144,9 @@ class NpcViewerScaleTest {
                     .last()
             val translation = MetadataDef.Display.TRANSLATION.index()
             val scale = MetadataDef.Display.SCALE.index()
-            handle.startAnimation(LocalId("wave"), 0)
+            handle.playClip(LocalId("wave"), 0)
             handle.applyViewerState(first, SceneViewerVisualState(2.0, true))
-            handle.advanceAnimation(500)
+            handle.advanceClipTo(500)
             fixture.instance.tick(500)
             assertEquals(3.0, value(first, translation).y(), 1e-6)
             assertEquals(1.5, value(second, translation).y(), 1e-6)
@@ -154,7 +154,7 @@ class NpcViewerScaleTest {
             assertEquals(1.0, value(second, scale).x(), 1e-6)
             assertEquals(1.5, (display.entityMeta as ItemDisplayMeta).translation.y(), 1e-6)
             handle.applyTransform(sceneTransform(Vec3(10.0, 0.0, 20.0)))
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             fixture.instance.tick(1000)
             assertEquals(4.0, value(first, translation).y(), 1e-6)
             assertEquals(2.0, value(second, translation).y(), 1e-6)

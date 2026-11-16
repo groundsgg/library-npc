@@ -18,11 +18,13 @@ internal interface NpcEngineHandle : AutoCloseable {
 
     fun applyTransform(transform: NpcRenderTransform): CompletionStage<Void>
 
-    fun startAnimation(animation: String, elapsedMillis: Long)
+    fun playClip(animation: String, elapsedMillis: Long)
 
-    fun stopAnimation(animation: String?)
+    fun stopClip(): Unit = stopClipIfPlaying(null)
 
-    fun advanceAnimation(elapsedMillis: Long)
+    fun stopClipIfPlaying(animation: String?)
+
+    fun advanceClipTo(elapsedMillis: Long)
 
     fun applyHeadLook(yawDegrees: Double, pitchDegrees: Double)
 

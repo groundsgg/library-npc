@@ -16,13 +16,13 @@ final class NpcDemoPlayback {
 
     synchronized CompletionStage<Void> tick() {
         if (closed) return CompletableFuture.completedFuture(null);
-        return npc.advanceAnimation(elapsed += 50);
+        return npc.advanceClipTo(elapsed += 50);
     }
 
     synchronized CompletionStage<Void> start(String clip) {
         if (closed) return CompletableFuture.failedFuture(new IllegalStateException("Demo NPC removed"));
         elapsed = 0;
-        return npc.startAnimation(clip,0);
+        return npc.playClip(clip,0);
     }
 
     void onRemoval(Runnable cancelTicks) {

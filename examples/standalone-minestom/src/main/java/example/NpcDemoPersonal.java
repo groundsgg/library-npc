@@ -5,7 +5,6 @@ import gg.grounds.npc.minestom.presentation.NpcPresentationHandle;
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions;
 import gg.grounds.npc.minestom.presentation.NpcPresentationResult;
 import gg.grounds.npc.minestom.presentation.NpcPresentationStart;
-import gg.grounds.npc.minestom.presentation.NpcPresentations;
 
 import gg.grounds.npc.minestom.*;
 import java.util.IdentityHashMap;
@@ -34,7 +33,7 @@ final class NpcDemoPersonal {
             sessions.put(player,session);
         }
         try {
-            var start = NpcPresentations.prepare(parent,options.apply(player));
+            var start = parent.preparePresentation(options.apply(player));
             session.start.complete(start);
             start.ready().thenCompose(result -> {
                 if(session.closing.get()) return CompletableFuture.<NpcPresentationHandle>failedFuture(new CancellationException("Demo closed"));

@@ -151,7 +151,7 @@ internal class NpcRenderEngine(
 
     override fun applyTransform(transform: NpcRenderTransform): java.util.concurrent.CompletionStage<Void> = movement.applyTransform(transform)
 
-    override fun startAnimation(animation: String, elapsedMillis: Long) {
+    override fun playClip(animation: String, elapsedMillis: Long) {
         update {
             if (closed) return
             playback.start(animation, elapsedMillis)
@@ -160,7 +160,7 @@ internal class NpcRenderEngine(
         }
     }
 
-    override fun stopAnimation(animation: String?) {
+    override fun stopClipIfPlaying(animation: String?) {
         update {
             if (closed || !playback.stop(animation)) return
             commitHeadLook()
@@ -169,7 +169,7 @@ internal class NpcRenderEngine(
         }
     }
 
-    override fun advanceAnimation(elapsedMillis: Long) {
+    override fun advanceClipTo(elapsedMillis: Long) {
         update { if (!closed) advance(elapsedMillis, false) }
     }
 

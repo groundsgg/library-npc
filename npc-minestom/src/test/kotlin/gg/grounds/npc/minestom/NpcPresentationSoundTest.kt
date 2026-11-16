@@ -3,7 +3,6 @@ package gg.grounds.npc.minestom
 import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationResult
-import gg.grounds.npc.minestom.presentation.NpcPresentations
 import gg.grounds.npc.minestom.spi.NpcMonotonicClock
 import gg.grounds.npc.minestom.spi.NpcSoundSink
 import gg.grounds.npc.minestom.spi.NpcViewerSoundSink
@@ -42,15 +41,9 @@ class NpcPresentationSoundTest {
         val clock = AtomicLong(10_000_000_000)
         val sink = NpcViewerSoundSink { player, _, sound -> personalSounds += player to sound.key }
         val sa =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions.builder(a).sounds(sink).idleClip("idle").clock(NpcMonotonicClock(clock::get)).build(),
-            )
+            parent.preparePresentation(NpcPresentationOptions.builder(a).sounds(sink).idleClip("idle").clock(NpcMonotonicClock(clock::get)).build())
         val sb =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions.builder(b).sounds(sink).idleClip("idle").clock(NpcMonotonicClock(clock::get)).build(),
-            )
+            parent.preparePresentation(NpcPresentationOptions.builder(b).sounds(sink).idleClip("idle").clock(NpcMonotonicClock(clock::get)).build())
         try {
             val ha = (await(env, sa.ready()) as NpcPresentationResult.Ready).handle
             val hb = (await(env, sb.ready()) as NpcPresentationResult.Ready).handle
@@ -67,7 +60,7 @@ class NpcPresentationSoundTest {
             await(env, ha.applyHeadLook(20.0, 10.0))
             await(env, ha.followSharedHeadLook())
             assertEquals(2, personalSounds.size)
-            await(env, parent.startAnimation("wave", 0))
+            await(env, parent.playClip("wave", 0))
             assertEquals(listOf("demo:wave"), sharedSounds.toList())
             assertEquals(2, personalSounds.size)
             await(env, ha.playClip("wave"))
@@ -94,10 +87,7 @@ class NpcPresentationSoundTest {
         val parent = (await(env, parentStart.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
         val start =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions.builder(a).sounds(NpcViewerSoundSink { _, _, _ -> sounds++ }).build(),
-            )
+            parent.preparePresentation(NpcPresentationOptions.builder(a).sounds(NpcViewerSoundSink { _, _, _ -> sounds++ }).build())
         try {
             val personal = (await(env, start.ready()) as NpcPresentationResult.Ready).handle
             await(env, personal.publish())
@@ -125,9 +115,7 @@ class NpcPresentationSoundTest {
         val parent = (await(env, parentStart.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
         val start =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions.builder(a).sounds(NpcViewerSoundSink { _, _, _ ->
+            parent.preparePresentation(NpcPresentationOptions.builder(a).sounds(NpcViewerSoundSink { _, _, _ ->
                             entered.countDown()
                             hostLock.lock()
                             try {
@@ -135,8 +123,7 @@ class NpcPresentationSoundTest {
                             } finally {
                                 hostLock.unlock()
                             }
-                        }).build(),
-            )
+                        }).build())
         val personal = (await(env, start.ready()) as NpcPresentationResult.Ready).handle
         await(env, personal.publish())
         hostLock.lock()
@@ -174,13 +161,10 @@ class NpcPresentationSoundTest {
         val common = instance.entities.filterIsInstance<NpcItemDisplay>().toSet()
         var failing = false
         val start =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions.builder(a).clock(NpcMonotonicClock {
+            parent.preparePresentation(NpcPresentationOptions.builder(a).clock(NpcMonotonicClock {
                             check(!failing) { "original synthetic clock failure" }
                             10_000_000_000
-                        }).build(),
-            )
+                        }).build())
         val personal = (await(env, start.ready()) as NpcPresentationResult.Ready).handle
         await(env, personal.publish())
         await(env, personal.playClip("wave"))

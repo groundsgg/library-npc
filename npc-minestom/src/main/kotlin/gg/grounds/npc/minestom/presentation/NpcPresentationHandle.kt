@@ -16,7 +16,7 @@ interface NpcPresentationHandle {
 
     fun followSharedClip(): CompletionStage<Void>
 
-    fun applyHeadLook(yaw: Double, pitch: Double): CompletionStage<Void>
+    fun applyHeadLook(yawDegrees: Double, pitchDegrees: Double): CompletionStage<Void>
 
     fun followSharedHeadLook(): CompletionStage<Void>
 

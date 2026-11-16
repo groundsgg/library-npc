@@ -1,5 +1,7 @@
 package gg.grounds.npc.minestom.internal.lifecycle
 
+import gg.grounds.npc.minestom.error.NpcOperationException
+
 import gg.grounds.npc.minestom.NpcHandle
 import gg.grounds.npc.minestom.NpcPrepareResult
 import gg.grounds.npc.minestom.NpcSpawnRequest
@@ -7,7 +9,6 @@ import gg.grounds.npc.minestom.NpcStart
 import gg.grounds.npc.minestom.internal.presentation.NpcPresentationCopy
 import gg.grounds.npc.minestom.internal.presentation.NpcPresentationCopyControl
 import gg.grounds.npc.minestom.internal.presentation.NpcPresentationOwner
-import gg.grounds.npc.minestom.internal.presentation.NpcPresentationParent
 import gg.grounds.npc.minestom.internal.presentation.rejectedPresentation
 import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.internal.rendering.NpcRenderAudience
@@ -43,7 +44,7 @@ internal class PreparedNpc(
     private val limits: NpcPresentationLimits = NpcPresentationLimits(),
     private val audience: NpcRenderAudience = NpcRenderAudience.Shared,
     private val personalCopy: Boolean = false,
-) : NpcStart, NpcHandle, NpcPresentationParent, NpcPresentationCopyControl {
+) : NpcStart, NpcHandle, NpcPresentationCopyControl {
     private val lock = Any()
     private val ready = CompletableFuture<NpcPrepareResult>()
     private val closed = CompletableFuture<Void>()
@@ -210,6 +211,8 @@ internal class PreparedNpc(
 
     override fun closeAsync() = cancel()
 
+    override fun closed(): CompletionStage<Void> = closed.minimalCompletionStage()
+
     private fun submit(action: (NpcRenderEngine) -> Unit): CompletionStage<Void> = submitAsync {
         action(it)
         CompletableFuture.completedFuture(null)
@@ -221,7 +224,7 @@ internal class PreparedNpc(
         val result = CompletableFuture<Void>()
         synchronized(lock) {
             if (stopping || engine == null)
-                return CompletableFuture.failedFuture(IllegalStateException("NPC unavailable"))
+                return CompletableFuture.failedFuture(NpcOperationException("NPC_UNAVAILABLE", "NPC has closed or is not ready"))
             commands += result
         }
         try {
@@ -235,10 +238,10 @@ internal class PreparedNpc(
                         action(target).whenComplete { _, error ->
                             synchronized(lock) { commands.remove(result) }
                             if (error == null) result.complete(null)
-                            else result.completeExceptionally(error)
+                            else result.completeExceptionally(operationFailure(error))
                         }
                     } catch (error: Throwable) {
-                        result.completeExceptionally(error)
+                        result.completeExceptionally(operationFailure(error))
                         synchronized(lock) { commands.remove(result) }
                     }
                 }
@@ -246,7 +249,7 @@ internal class PreparedNpc(
                 .schedule()
         } catch (error: Throwable) {
             synchronized(lock) { commands.remove(result) }
-            result.completeExceptionally(error)
+            result.completeExceptionally(operationFailure(error))
         }
         return result.minimalCompletionStage()
     }
@@ -343,21 +346,23 @@ internal class PreparedNpc(
         }
     }
 
-    override fun startAnimation(clipId: String, elapsedMillis: Long) = submit {
+    override fun playClip(clipId: String, elapsedMillis: Long) = submit {
         require(elapsedMillis >= 0)
-        it.startAnimation(clipId, elapsedMillis)
+        it.playClip(clipId, elapsedMillis)
     }
 
-    override fun stopAnimation(clipId: String?) = submit { it.stopAnimation(clipId) }
+    override fun stopClip(): CompletionStage<Void> = submit { it.stopClip() }
 
-    override fun advanceAnimation(elapsedMillis: Long) = submit {
+    override fun stopClipIfPlaying(clipId: String): CompletionStage<Void> = submit { it.stopClipIfPlaying(clipId) }
+
+    override fun advanceClipTo(elapsedMillis: Long) = submit {
         require(elapsedMillis >= 0)
-        it.advanceAnimation(elapsedMillis)
+        it.advanceClipTo(elapsedMillis)
     }
 
-    override fun applyHeadLook(yaw: Double, pitch: Double) = submit {
-        require(yaw.isFinite() && pitch.isFinite())
-        it.applyHeadLook(yaw, pitch)
+    override fun applyHeadLook(yawDegrees: Double, pitchDegrees: Double) = submit {
+        require(yawDegrees.isFinite() && pitchDegrees.isFinite())
+        it.applyHeadLook(yawDegrees, pitchDegrees)
     }
 
     override fun applyViewerState(player: Player, state: NpcViewerState) = submitAsync {

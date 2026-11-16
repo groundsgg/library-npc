@@ -6,7 +6,6 @@ import gg.grounds.npc.minestom.presentation.NpcPresentationHandle
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationResult
 import gg.grounds.npc.minestom.presentation.NpcPresentationStart
-import gg.grounds.npc.minestom.presentation.NpcPresentations
 import gg.grounds.npc.minestom.spi.NpcMonotonicClock
 
 import gg.grounds.npc.core.animation.NpcBoneTrack
@@ -64,19 +63,19 @@ class NpcPresentationPlaybackTest {
     fun `private head follows real shared seek and pause until clip override`(env: Env) {
         val fixture = setup(env)
         try {
-            await(env, fixture.parent.startAnimation("wave", 250))
+            await(env, fixture.parent.playClip("wave", 250))
             val personal = fixture.open()
             await(env, personal.applyHeadLook(35.0, -10.0))
             assertEquals(NpcPresentationChannel.PRIVATE, personal.snapshot().headMode)
             assertEquals(NpcPresentationChannel.FOLLOW_SHARED, personal.snapshot().clipMode)
-            await(env, fixture.parent.advanceAnimation(100))
+            await(env, fixture.parent.advanceClipTo(100))
             fixture.clock.set(10_600_000_000)
             env.tick()
             assertEquals(0.1, personal.snapshot().clipSeconds, 0.000001)
             repeat(3) { env.tick() }
             assertEquals(0.1, personal.snapshot().clipSeconds, 0.000001)
             await(env, fixture.parent.applyHeadLook(-20.0, 10.0))
-            await(env, fixture.parent.advanceAnimation(400))
+            await(env, fixture.parent.advanceClipTo(400))
             env.tick()
             val privateHead = fixture.privateParts()[1].entityMeta as ItemDisplayMeta
             val commonHead = fixture.common[1].entityMeta as ItemDisplayMeta
@@ -131,7 +130,7 @@ class NpcPresentationPlaybackTest {
             assertEquals("idle", personal.snapshot().clipId)
             assertEquals(0.25, personal.snapshot().clipSeconds, 0.000001)
             assertEquals(NpcPresentationChannel.PRIVATE, personal.snapshot().clipMode)
-            await(env, fixture.parent.startAnimation("wave", 500))
+            await(env, fixture.parent.playClip("wave", 500))
             env.tick()
             assertEquals("idle", personal.snapshot().clipId)
             await(env, personal.playClip("loop"))
@@ -199,10 +198,7 @@ class NpcPresentationPlaybackTest {
 
         fun open(): NpcPresentationHandle {
             start =
-                NpcPresentations.prepare(
-                    parent,
-                    NpcPresentationOptions.builder(player).idleClip("idle").clock(NpcMonotonicClock(clock::get)).build(),
-                )
+                parent.preparePresentation(NpcPresentationOptions.builder(player).idleClip("idle").clock(NpcMonotonicClock(clock::get)).build())
             val handle = (await(env, start!!.ready()) as NpcPresentationResult.Ready).handle
             await(env, handle.publish())
             return handle

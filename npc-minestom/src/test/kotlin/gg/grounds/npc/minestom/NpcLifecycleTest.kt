@@ -246,7 +246,7 @@ class NpcLifecycleTest {
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
         val handle = (ready.join() as NpcPrepareResult.Ready).handle
         hostLock.lock()
-        handle.startAnimation("wave", 0)
+        handle.playClip("wave", 0)
         val ticking = java.util.concurrent.CompletableFuture.runAsync { env.tick() }
         var returned = false
         var cancelling:

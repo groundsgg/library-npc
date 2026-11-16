@@ -16,8 +16,8 @@ class NpcDemoPlaybackTest {
         var stops = new AtomicInteger();
         NpcHandle handle = (NpcHandle) Proxy.newProxyInstance(NpcHandle.class.getClassLoader(),new Class<?>[]{NpcHandle.class},(proxy,method,args) -> {
             switch (method.getName()) {
-                case "startAnimation" -> starts.add((Long)args[1]);
-                case "advanceAnimation" -> advances.add((Long)args[0]);
+                case "playClip" -> starts.add((Long)args[1]);
+                case "advanceClipTo" -> advances.add((Long)args[0]);
                 case "closeAsync" -> closes.incrementAndGet();
                 default -> throw new AssertionError("Unexpected call: " + method);
             }

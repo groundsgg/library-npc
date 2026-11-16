@@ -5,7 +5,6 @@ import gg.grounds.npc.minestom.presentation.NpcPresentationHandle
 import gg.grounds.npc.minestom.presentation.NpcPresentationLimits
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationResult
-import gg.grounds.npc.minestom.presentation.NpcPresentations
 import gg.grounds.npc.minestom.spi.NpcMonotonicClock
 
 
@@ -54,10 +53,7 @@ class NpcPresentationPerformanceTest {
                 for (count in listOf(1, 8, 32)) {
                     while (handles.size < count) {
                         val start =
-                            NpcPresentations.prepare(
-                                parent,
-                                NpcPresentationOptions.builder(players[handles.size]).clock(NpcMonotonicClock { 10_000_000_000 }).build(),
-                            )
+                            parent.preparePresentation(NpcPresentationOptions.builder(players[handles.size]).clock(NpcMonotonicClock { 10_000_000_000 }).build())
                         val handle =
                             (drive(fixture, start.ready()) as NpcPresentationResult.Ready).handle
                         drive(fixture, handle.publish())
@@ -113,16 +109,13 @@ class NpcPresentationPerformanceTest {
                 try {
                     for (player in players.take(count)) {
                         val start =
-                            NpcPresentations.prepare(
-                                parent,
-                                NpcPresentationOptions.builder(player).clock(NpcMonotonicClock { 10_000_000_000 }).build(),
-                            )
+                            parent.preparePresentation(NpcPresentationOptions.builder(player).clock(NpcMonotonicClock { 10_000_000_000 }).build())
                         val handle =
                             (drive(fixture, start.ready()) as NpcPresentationResult.Ready).handle
                         drive(fixture, handle.publish())
                     }
                     val refused =
-                        NpcPresentations.prepare(parent, NpcPresentationOptions.builder(players.last()).build())
+                        parent.preparePresentation(NpcPresentationOptions.builder(players.last()).build())
                     assertInstanceOf(
                         NpcPresentationResult.Rejected::class.java,
                         refused

@@ -1,5 +1,7 @@
 package gg.grounds.npc.minestom.internal.presentation
 
+import gg.grounds.npc.minestom.error.NpcOperationException
+
 import gg.grounds.npc.minestom.NpcPrepareResult
 import gg.grounds.npc.minestom.internal.playback.NpcPersonalPlayback
 import gg.grounds.npc.minestom.internal.rendering.NpcSampleFrame
@@ -345,7 +347,7 @@ internal class NpcPersonalPresentation(
 
     override fun followSharedClip() = command { playback.followClip() }
 
-    override fun applyHeadLook(yaw: Double, pitch: Double) = command { playback.head(yaw, pitch) }
+    override fun applyHeadLook(yawDegrees: Double, pitchDegrees: Double) = command { playback.head(yawDegrees, pitchDegrees) }
 
     override fun followSharedHeadLook() = command { playback.followHead() }
 
@@ -463,5 +465,5 @@ internal class NpcPersonalPresentation(
     }
 
     private fun failed(message: String): CompletionStage<Void> =
-        CompletableFuture.failedFuture(IllegalStateException(message))
+        CompletableFuture.failedFuture(NpcOperationException("NPC_PRESENTATION_UNAVAILABLE", message))
 }

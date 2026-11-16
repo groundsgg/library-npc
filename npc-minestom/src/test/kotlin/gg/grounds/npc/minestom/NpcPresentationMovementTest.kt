@@ -4,7 +4,6 @@ import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.presentation.NpcPresentationChannel
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationResult
-import gg.grounds.npc.minestom.presentation.NpcPresentations
 import gg.grounds.npc.minestom.spi.NpcMonotonicClock
 import gg.grounds.npc.minestom.transform.NpcRenderTransform
 
@@ -37,10 +36,7 @@ class NpcPresentationMovementTest {
         await(env, parent.publish())
         val clock = AtomicLong(10_000_000_000)
         val personalStart =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions.builder(player).clock(NpcMonotonicClock(clock::get)).build(),
-            )
+            parent.preparePresentation(NpcPresentationOptions.builder(player).clock(NpcMonotonicClock(clock::get)).build())
         try {
             val personal = (await(env, personalStart.ready()) as NpcPresentationResult.Ready).handle
             await(env, personal.publish())
@@ -82,7 +78,7 @@ class NpcPresentationMovementTest {
             )
         val parent = (await(env, start.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
-        val personalStart = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(player).build())
+        val personalStart = parent.preparePresentation(NpcPresentationOptions.builder(player).build())
         try {
             val target = NpcRenderTransform(NpcTransform(NpcVector3(12.0, 42.0, 3.0)))
             await(env, parent.applyTransform(target))
@@ -108,7 +104,7 @@ class NpcPresentationMovementTest {
         val parent = (await(env, start.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
         val common = instance.entities.filterIsInstance<NpcItemDisplay>().toSet()
-        val personalStart = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(player).build())
+        val personalStart = parent.preparePresentation(NpcPresentationOptions.builder(player).build())
         val personal = (await(env, personalStart.ready()) as NpcPresentationResult.Ready).handle
         await(env, personal.publish())
         val entered = CountDownLatch(1)

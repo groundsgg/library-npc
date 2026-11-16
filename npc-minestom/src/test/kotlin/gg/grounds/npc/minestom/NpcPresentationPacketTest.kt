@@ -4,7 +4,6 @@ import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.presentation.NpcPresentationChannel
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationResult
-import gg.grounds.npc.minestom.presentation.NpcPresentations
 import gg.grounds.npc.minestom.spi.NpcMonotonicClock
 import gg.grounds.npc.minestom.spi.NpcViewerSoundSink
 import gg.grounds.npc.minestom.viewer.NpcViewerState
@@ -34,7 +33,7 @@ class NpcPresentationPacketTest {
             drive(fixture, parent.publish())
             drive(fixture, parent.applyViewerState(a, NpcViewerState(2.0, true)))
             val common = fixture.instance.entities.filterIsInstance<NpcItemDisplay>().toSet()
-            val personalStart = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(a).build())
+            val personalStart = parent.preparePresentation(NpcPresentationOptions.builder(a).build())
             try {
                 val personal =
                     (drive(fixture, personalStart.ready()) as NpcPresentationResult.Ready).handle
@@ -80,10 +79,7 @@ class NpcPresentationPacketTest {
             drive(fixture, parent.publish())
             val common = fixture.instance.entities.filterIsInstance<NpcItemDisplay>().toSet()
             val start =
-                NpcPresentations.prepare(
-                    parent,
-                    NpcPresentationOptions.builder(a).clock(NpcMonotonicClock(clock::get)).sounds(NpcViewerSoundSink { _, _, _ -> sounds++ }).build(),
-                )
+                parent.preparePresentation(NpcPresentationOptions.builder(a).clock(NpcMonotonicClock(clock::get)).sounds(NpcViewerSoundSink { _, _, _ -> sounds++ }).build())
             try {
                 val personal = (drive(fixture, start.ready()) as NpcPresentationResult.Ready).handle
                 drive(fixture, personal.publish())

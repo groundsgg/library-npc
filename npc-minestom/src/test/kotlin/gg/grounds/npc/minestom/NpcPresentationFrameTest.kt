@@ -47,15 +47,15 @@ class NpcPresentationFrameTest {
         val engine = create(env, instance)
         try {
             engine.publishVisible()
-            engine.startAnimation("wave", 0)
-            engine.advanceAnimation(250)
+            engine.playClip("wave", 0)
+            engine.advanceClipTo(250)
             assertEquals("wave", engine.sampleFrame().clipId)
             assertEquals(0.25, engine.sampleFrame().seconds, 0.000001)
-            engine.advanceAnimation(100)
+            engine.advanceClipTo(100)
             assertEquals(0.1, engine.sampleFrame().seconds, 0.000001)
             repeat(3) { engine.refreshAudience() }
             assertEquals(0.1, engine.sampleFrame().seconds, 0.000001)
-            engine.stopAnimation(null)
+            engine.stopClip()
             assertNull(engine.sampleFrame().clipId)
             assertEquals(0.0, engine.sampleFrame().seconds)
         } finally {
@@ -79,7 +79,7 @@ class NpcPresentationFrameTest {
         try {
             parent.publishVisible()
             child.publishVisible()
-            parent.startAnimation("wave", 250)
+            parent.playClip("wave", 250)
             val before = parent.sampleFrame()
             val parentHeadBefore = (parentParts[1].entityMeta as ItemDisplayMeta).translation
             val childHeadBefore = (childParts[1].entityMeta as ItemDisplayMeta).translation
