@@ -14,7 +14,6 @@ import gg.grounds.npc.core.model.NpcBone
 import gg.grounds.npc.core.model.NpcBounds
 import gg.grounds.npc.core.model.NpcModel
 import gg.grounds.npc.core.model.NpcPart
-
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -29,7 +28,12 @@ class NpcSamplingTest {
         val allocation = bean as com.sun.management.ThreadMXBean
         val bones =
             (0 until 12).map {
-                NpcBone("bone-$it", if (it == 0) null else "bone-${it - 1}", NpcVector3.ZERO, NpcVector3.ZERO)
+                NpcBone(
+                    "bone-$it",
+                    if (it == 0) null else "bone-${it - 1}",
+                    NpcVector3.ZERO,
+                    NpcVector3.ZERO,
+                )
             }
         val model =
             NpcModel(

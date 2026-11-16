@@ -8,7 +8,6 @@ import gg.grounds.npc.core.io.NpcModelJson
 import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.core.model.NpcBone
 import gg.grounds.npc.core.model.NpcModel
-
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

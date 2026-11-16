@@ -1,28 +1,15 @@
 package gg.grounds.npc.minestom.internal.audience
 
+import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.minestom.config.NpcRenderConfig
 import gg.grounds.npc.minestom.internal.rendering.DEFAULT_NPC_VISUAL
 import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.internal.rendering.NpcRenderAudience
 import gg.grounds.npc.minestom.transform.NpcRenderTransform
 import gg.grounds.npc.minestom.viewer.NpcViewerState
-
-import gg.grounds.npc.core.animation.NpcLoopMode
-import gg.grounds.npc.core.math.NpcMatrix
-import gg.grounds.npc.core.math.NpcVector3
-import gg.grounds.npc.core.model.NpcClipSound
-import gg.grounds.npc.core.model.NpcModel
-import gg.grounds.npc.core.validation.NpcProblem
 import java.util.UUID
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionStage
-import kotlin.math.abs
-import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.display.ItemDisplayMeta
 import net.minestom.server.instance.Instance
-import net.minestom.server.timer.Task
-import net.minestom.server.timer.TaskSchedule
 
 /** Connection-owned admission, visibility cohorts, metadata overrides and suppression leases. */
 internal class NpcViewerRegistry(
@@ -37,10 +24,18 @@ internal class NpcViewerRegistry(
     private val beforeAudienceChange: () -> Unit,
     private val afterUpdate: () -> Unit,
 ) {
-    private val closed get() = isClosed()
-    private val published get() = isPublished()
-    private val transform get() = currentTransform()
-    private val elapsed get() = clock()
+    private val closed
+        get() = isClosed()
+
+    private val published
+        get() = isPublished()
+
+    private val transform
+        get() = currentTransform()
+
+    private val elapsed
+        get() = clock()
+
     private val policy = NpcRenderPolicy(config)
     private var inheritedAdmission: Player? = null
     private val viewerVisuals = java.util.IdentityHashMap<Player, Pair<Double, Boolean>>()
@@ -49,6 +44,7 @@ internal class NpcViewerRegistry(
     private val nextViewerUpdate = mutableMapOf<NpcViewerRate, Long>()
     private var viewerGroups = emptyMap<NpcViewerRate, List<Player>>()
     var renderInterval = 500L
+
     private data class Suppression(val lease: Any, val previousRate: NpcViewerRate?)
 
     private var suppressed: java.util.IdentityHashMap<Player, Suppression>? = null
@@ -59,13 +55,26 @@ internal class NpcViewerRegistry(
             display.visualState = { player -> viewerVisuals[player] ?: DEFAULT_NPC_VISUAL }
         }
     }
-    fun clearInheritedAdmission() { inheritedAdmission = null }
-    fun hasViewers(): Boolean = viewerIntervals.isNotEmpty()
-    fun deferUpdate(time: Long): Boolean = nextViewerUpdate.size == 1 && time < nextViewerUpdate.values.first()
-    fun clear() {
-        viewerVisuals.clear(); suppressed = null; inheritedAdmission = null
-        viewerIntervals = emptyMap(); viewerPlayers = emptyMap(); viewerGroups = emptyMap(); nextViewerUpdate.clear()
+
+    fun clearInheritedAdmission() {
+        inheritedAdmission = null
     }
+
+    fun hasViewers(): Boolean = viewerIntervals.isNotEmpty()
+
+    fun deferUpdate(time: Long): Boolean =
+        nextViewerUpdate.size == 1 && time < nextViewerUpdate.values.first()
+
+    fun clear() {
+        viewerVisuals.clear()
+        suppressed = null
+        inheritedAdmission = null
+        viewerIntervals = emptyMap()
+        viewerPlayers = emptyMap()
+        viewerGroups = emptyMap()
+        nextViewerUpdate.clear()
+    }
+
     fun inheritViewerAdmission(player: Player) =
         synchronized(lock) {
             if (!closed && !published) inheritedAdmission = player
@@ -311,8 +320,11 @@ internal class NpcViewerRegistry(
         display.sendPoseState(player, viewerDuration(player))
     }
 
-
     private inline fun <T> update(action: () -> T): T {
-        try { return synchronized(lock) { action() } } finally { afterUpdate() }
+        try {
+            return synchronized(lock) { action() }
+        } finally {
+            afterUpdate()
+        }
     }
 }

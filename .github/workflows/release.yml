@@ -37,4 +37,4 @@ jobs:
           repository="https://maven.pkg.github.com/groundsgg/library-npc"
           ./gradlew -p fixtures/java-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
           ./gradlew -p fixtures/kotlin-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
-          ./gradlew -p examples/standalone-minestom test run --args=--smoke -PnpcVersion="$version" -PnpcRepository="$repository"
+          ./gradlew -p examples/standalone-minestom test smoke -PnpcVersion="$version" -PnpcRepository="$repository"

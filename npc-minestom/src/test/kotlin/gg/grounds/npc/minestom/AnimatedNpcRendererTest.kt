@@ -1,6 +1,5 @@
 package gg.grounds.npc.minestom
 
-
 import net.minestom.server.MinecraftServer
 import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.EntityType

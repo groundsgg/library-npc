@@ -1,6 +1,9 @@
 package gg.grounds.npc.core.io
 
-/** Optional stricter schema-1 decode budgets. Defaults equal the supported hard limits; budgets cannot exceed them. */
+/**
+ * Optional stricter schema-1 decode budgets. Defaults equal the supported hard limits; budgets
+ * cannot exceed them.
+ */
 data class NpcDecodeLimits
 @JvmOverloads
 constructor(
@@ -17,6 +20,8 @@ constructor(
         require(maxParts in 1..1024) { "maxParts must be in 1..1024" }
         require(maxClips in 1..128) { "maxClips must be in 1..128" }
         require(maxKeysPerTrack in 1..4096) { "maxKeysPerTrack must be in 1..4096" }
-        require(maxClipSeconds.isFinite() && maxClipSeconds > 0 && maxClipSeconds <= 300) { "maxClipSeconds must be finite and in (0, 300]" }
+        require(maxClipSeconds.isFinite() && maxClipSeconds > 0 && maxClipSeconds <= 300) {
+            "maxClipSeconds must be finite and in (0, 300]"
+        }
     }
 }

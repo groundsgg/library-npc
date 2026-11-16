@@ -1,10 +1,8 @@
 // Extracted from Grounds minestom-lobby, commit 020a370ff414f85bb6ac495785605a8789ffbb19.
 package gg.grounds.npc.minestom.internal.audience
 
-import gg.grounds.npc.minestom.config.NpcRenderConfig
-
 import gg.grounds.npc.core.math.NpcVector3
-
+import gg.grounds.npc.minestom.config.NpcRenderConfig
 import kotlin.math.abs
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance

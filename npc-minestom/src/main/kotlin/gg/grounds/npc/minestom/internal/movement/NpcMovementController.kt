@@ -2,21 +2,9 @@ package gg.grounds.npc.minestom.internal.movement
 
 import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.transform.NpcRenderTransform
-
-import gg.grounds.npc.core.animation.NpcLoopMode
-import gg.grounds.npc.core.math.NpcMatrix
-import gg.grounds.npc.core.math.NpcVector3
-import gg.grounds.npc.core.model.NpcClipSound
-import gg.grounds.npc.core.model.NpcModel
-import gg.grounds.npc.core.validation.NpcProblem
-import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
-import kotlin.math.abs
 import net.minestom.server.coordinate.Pos
-import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.display.ItemDisplayMeta
-import net.minestom.server.instance.Instance
 import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
 
@@ -34,6 +22,7 @@ internal class NpcMovementController(
     private val movementTasks = HashSet<Task>()
     private val externalMovements = HashSet<java.util.concurrent.CompletableFuture<Void>>()
     private val movementFailures = ArrayList<Throwable>()
+
     private fun movementDrain(): java.util.concurrent.CompletionStage<Void> {
         val (pending, failure) =
             synchronized(lock) { movements.toList() to movementFailures.firstOrNull() }
@@ -43,9 +32,7 @@ internal class NpcMovementController(
         }
     }
 
-    fun applyTransform(
-        transform: NpcRenderTransform
-    ): java.util.concurrent.CompletionStage<Void> {
+    fun applyTransform(transform: NpcRenderTransform): java.util.concurrent.CompletionStage<Void> {
         val result = java.util.concurrent.CompletableFuture<Void>()
         val token = update {
             if (closed)
@@ -194,22 +181,26 @@ internal class NpcMovementController(
         if (failure != null) result.completeExceptionally(failure!!)
     }
 
-
     fun drain(): java.util.concurrent.CompletionStage<Void> = movementDrain()
 
     fun close(): java.util.concurrent.CompletionStage<Void> {
-        val pending = synchronized(lock) {
-            closed = true
-            revision++
-            movementTasks.forEach(Task::cancel)
-            movementTasks.clear()
-            movements.filter { it !in externalMovements }
-        }
+        val pending =
+            synchronized(lock) {
+                closed = true
+                revision++
+                movementTasks.forEach(Task::cancel)
+                movementTasks.clear()
+                movements.filter { it !in externalMovements }
+            }
         pending.forEach { it.complete(null) }
         return movementDrain()
     }
 
     private inline fun <T> update(action: () -> T): T {
-        try { return synchronized(lock) { action() } } finally { afterUpdate() }
+        try {
+            return synchronized(lock) { action() }
+        } finally {
+            afterUpdate()
+        }
     }
 }

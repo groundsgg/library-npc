@@ -1,9 +1,7 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.minestom.internal.rendering.DisplayTransform
-
 import gg.grounds.npc.core.math.NpcMatrix
-
+import gg.grounds.npc.minestom.internal.rendering.DisplayTransform
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertNotSame
 import org.junit.jupiter.api.Test

@@ -1,12 +1,11 @@
 package gg.grounds.npc.minestom.internal.playback
 
-import gg.grounds.npc.minestom.internal.rendering.NpcSampleFrame
-import gg.grounds.npc.minestom.presentation.NpcPresentationChannel
-import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
-
 import gg.grounds.npc.core.animation.NpcLoopMode
 import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.core.model.NpcModel
+import gg.grounds.npc.minestom.internal.rendering.NpcSampleFrame
+import gg.grounds.npc.minestom.presentation.NpcPresentationChannel
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 
 /** Independent clip/head channels. No entity access and no clock callback under a state lock. */
 internal class NpcPersonalPlayback(

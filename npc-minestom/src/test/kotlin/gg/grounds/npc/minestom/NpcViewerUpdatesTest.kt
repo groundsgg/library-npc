@@ -1,8 +1,6 @@
 package gg.grounds.npc.minestom
 
 import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
-
-
 import java.util.UUID
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point

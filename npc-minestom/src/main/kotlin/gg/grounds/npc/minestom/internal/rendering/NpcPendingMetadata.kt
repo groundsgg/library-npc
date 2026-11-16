@@ -2,7 +2,6 @@
 package gg.grounds.npc.minestom.internal.rendering
 
 import gg.grounds.npc.minestom.internal.audience.NpcViewerRate
-
 import net.minestom.server.entity.Metadata
 import net.minestom.server.entity.MetadataDef
 

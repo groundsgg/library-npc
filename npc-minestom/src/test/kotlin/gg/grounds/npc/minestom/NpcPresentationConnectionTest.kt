@@ -1,5 +1,6 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.NpcPresentationPacketTest.Companion.drive
 import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationPhase
@@ -7,9 +8,6 @@ import gg.grounds.npc.minestom.presentation.NpcPresentationResult
 import gg.grounds.npc.minestom.spi.NpcMonotonicClock
 import gg.grounds.npc.minestom.spi.NpcPublicationGuard
 import gg.grounds.npc.minestom.spi.NpcViewerSoundSink
-
-
-import gg.grounds.npc.minestom.NpcPresentationPacketTest.Companion.drive
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
@@ -29,14 +27,23 @@ class NpcPresentationConnectionTest {
             val observer = fixture.player(Pos(1.0, 42.0, 0.0))
             val start =
                 NpcRenderer.prepare(
-                    NpcSpawnRequest.builder(fixture.instance, personalTestModel(true), NpcLifecycleTest.transform()).build()
+                    NpcSpawnRequest.builder(
+                            fixture.instance,
+                            personalTestModel(true),
+                            NpcLifecycleTest.transform(),
+                        )
+                        .build()
                 )
             val parent = (drive(fixture, start.ready()) as NpcPrepareResult.Ready).handle
             drive(fixture, parent.publish())
             val common = fixture.instance.entities.filterIsInstance<NpcItemDisplay>().toSet()
             val sounds = ArrayList<net.minestom.server.entity.Player>()
             val personalStart =
-                parent.preparePresentation(NpcPresentationOptions.builder(old).sounds(NpcViewerSoundSink { player, _, _ -> sounds += player }).build())
+                parent.preparePresentation(
+                    NpcPresentationOptions.builder(old)
+                        .sounds(NpcViewerSoundSink { player, _, _ -> sounds += player })
+                        .build()
+                )
             val personal =
                 (drive(fixture, personalStart.ready()) as NpcPresentationResult.Ready).handle
             drive(fixture, personal.publish())
@@ -71,12 +78,21 @@ class NpcPresentationConnectionTest {
                 var sounds = 0
                 val start =
                     NpcRenderer.prepare(
-                        NpcSpawnRequest.builder(fixture.instance, personalTestModel(true), NpcLifecycleTest.transform()).build()
+                        NpcSpawnRequest.builder(
+                                fixture.instance,
+                                personalTestModel(true),
+                                NpcLifecycleTest.transform(),
+                            )
+                            .build()
                     )
                 val parent = (drive(fixture, start.ready()) as NpcPrepareResult.Ready).handle
                 drive(fixture, parent.publish())
                 val personalStart =
-                    parent.preparePresentation(NpcPresentationOptions.builder(player).sounds(NpcViewerSoundSink { _, _, _ -> sounds++ }).build())
+                    parent.preparePresentation(
+                        NpcPresentationOptions.builder(player)
+                            .sounds(NpcViewerSoundSink { _, _, _ -> sounds++ })
+                            .build()
+                    )
                 val personal =
                     (drive(fixture, personalStart.ready()) as NpcPresentationResult.Ready).handle
                 drive(fixture, personal.publish())
@@ -112,13 +128,23 @@ class NpcPresentationConnectionTest {
             var sounds = 0
             val start =
                 NpcRenderer.prepare(
-                    NpcSpawnRequest.builder(fixture.instance, personalTestModel(true), NpcLifecycleTest.transform()).build()
+                    NpcSpawnRequest.builder(
+                            fixture.instance,
+                            personalTestModel(true),
+                            NpcLifecycleTest.transform(),
+                        )
+                        .build()
                 )
             val parent = (drive(fixture, start.ready()) as NpcPrepareResult.Ready).handle
             drive(fixture, parent.publish())
             val common = fixture.instance.entities.filterIsInstance<NpcItemDisplay>().toSet()
             val personalStart =
-                parent.preparePresentation(NpcPresentationOptions.builder(player).clock(NpcMonotonicClock(clock::get)).sounds(NpcViewerSoundSink { _, _, _ -> sounds++ }).build())
+                parent.preparePresentation(
+                    NpcPresentationOptions.builder(player)
+                        .clock(NpcMonotonicClock(clock::get))
+                        .sounds(NpcViewerSoundSink { _, _, _ -> sounds++ })
+                        .build()
+                )
             try {
                 val personal =
                     (drive(fixture, personalStart.ready()) as NpcPresentationResult.Ready).handle
@@ -160,13 +186,22 @@ class NpcPresentationConnectionTest {
             val player = fixture.player(Pos(0.0, 42.0, 0.0))
             val start =
                 NpcRenderer.prepare(
-                    NpcSpawnRequest.builder(fixture.instance, personalTestModel(), NpcLifecycleTest.transform()).build()
+                    NpcSpawnRequest.builder(
+                            fixture.instance,
+                            personalTestModel(),
+                            NpcLifecycleTest.transform(),
+                        )
+                        .build()
                 )
             val parent = (drive(fixture, start.ready()) as NpcPrepareResult.Ready).handle
             drive(fixture, parent.publish())
             val common = fixture.instance.entities.filterIsInstance<NpcItemDisplay>().toSet()
             val personalStart =
-                parent.preparePresentation(NpcPresentationOptions.builder(player).publicationGuard(NpcPublicationGuard { false }).build())
+                parent.preparePresentation(
+                    NpcPresentationOptions.builder(player)
+                        .publicationGuard(NpcPublicationGuard { false })
+                        .build()
+                )
             try {
                 val personal =
                     (drive(fixture, personalStart.ready()) as NpcPresentationResult.Ready).handle

@@ -1,8 +1,9 @@
 package gg.grounds.npc.minestom.internal.presentation
 
-import gg.grounds.npc.minestom.error.NpcOperationException
-
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.validation.NpcProblem
 import gg.grounds.npc.minestom.NpcPrepareResult
+import gg.grounds.npc.minestom.error.NpcOperationException
 import gg.grounds.npc.minestom.internal.playback.NpcPersonalPlayback
 import gg.grounds.npc.minestom.internal.rendering.NpcSampleFrame
 import gg.grounds.npc.minestom.presentation.NpcPresentationHandle
@@ -12,10 +13,6 @@ import gg.grounds.npc.minestom.presentation.NpcPresentationResult
 import gg.grounds.npc.minestom.presentation.NpcPresentationSnapshot
 import gg.grounds.npc.minestom.presentation.NpcPresentationStart
 import gg.grounds.npc.minestom.spi.NpcPublicationGuard
-
-import gg.grounds.npc.core.math.NpcVector3
-import gg.grounds.npc.core.validation.NpcProblem
-
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
@@ -347,7 +344,9 @@ internal class NpcPersonalPresentation(
 
     override fun followSharedClip() = command { playback.followClip() }
 
-    override fun applyHeadLook(yawDegrees: Double, pitchDegrees: Double) = command { playback.head(yawDegrees, pitchDegrees) }
+    override fun applyHeadLook(yawDegrees: Double, pitchDegrees: Double) = command {
+        playback.head(yawDegrees, pitchDegrees)
+    }
 
     override fun followSharedHeadLook() = command { playback.followHead() }
 
@@ -465,5 +464,7 @@ internal class NpcPersonalPresentation(
     }
 
     private fun failed(message: String): CompletionStage<Void> =
-        CompletableFuture.failedFuture(NpcOperationException("NPC_PRESENTATION_UNAVAILABLE", message))
+        CompletableFuture.failedFuture(
+            NpcOperationException("NPC_PRESENTATION_UNAVAILABLE", message)
+        )
 }

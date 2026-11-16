@@ -48,7 +48,12 @@ internal class NpcModelEvaluator(private val model: NpcModel) {
         val look = headLook?.takeUnless { it == NpcVector3.ZERO }?.let(NpcMatrix::rotation)
         for ((index, bone) in bones.withIndex()) {
             val channels = clip?.tracks?.get(bone.id)
-            if (channels == null || (channels.position.isEmpty() && channels.rotation.isEmpty() && channels.scale.isEmpty())) {
+            if (
+                channels == null ||
+                    (channels.position.isEmpty() &&
+                        channels.rotation.isEmpty() &&
+                        channels.scale.isEmpty())
+            ) {
                 val local =
                     if (index == headIndex && look != null) bindBones[index] * look
                     else bindBones[index]
@@ -56,11 +61,22 @@ internal class NpcModelEvaluator(private val model: NpcModel) {
                 continue
             }
             val position =
-                sampleNpcTrack(channels.position, time, NpcVector3.ZERO, clip?.loop == NpcLoopMode.LOOP)
+                sampleNpcTrack(
+                    channels.position,
+                    time,
+                    NpcVector3.ZERO,
+                    clip?.loop == NpcLoopMode.LOOP,
+                )
             val rotation =
                 bone.rotation +
-                    sampleNpcTrack(channels.rotation, time, NpcVector3.ZERO, clip?.loop == NpcLoopMode.LOOP)
-            val scale = sampleNpcTrack(channels.scale, time, NpcVector3.ONE, clip?.loop == NpcLoopMode.LOOP)
+                    sampleNpcTrack(
+                        channels.rotation,
+                        time,
+                        NpcVector3.ZERO,
+                        clip?.loop == NpcLoopMode.LOOP,
+                    )
+            val scale =
+                sampleNpcTrack(channels.scale, time, NpcVector3.ONE, clip?.loop == NpcLoopMode.LOOP)
             val local =
                 NpcMatrix.translation(
                     bone.origin - (bone.parent?.let(origins::get) ?: NpcVector3.ZERO) + position
@@ -76,8 +92,20 @@ internal class NpcModelEvaluator(private val model: NpcModel) {
             (world.getOrNull(partBones[index]) ?: NpcMatrix.IDENTITY) * local
         }
     }
-
 }
-internal fun NpcModel.pose(animation: String?, seconds: Double, headLook: NpcVector3? = null): List<NpcMatrix> = evaluation.pose(animation, seconds, headLook)
-internal fun NpcModel.transformedParts(postTransform: NpcMatrix): List<NpcMatrix> = evaluation.transformedParts(postTransform)
-internal fun NpcModel.samplePose(animation: String?, seconds: Double, headLook: NpcVector3?, parts: List<NpcMatrix>): List<NpcMatrix> = evaluation.samplePose(animation, seconds, headLook, parts)
+
+internal fun NpcModel.pose(
+    animation: String?,
+    seconds: Double,
+    headLook: NpcVector3? = null,
+): List<NpcMatrix> = evaluation.pose(animation, seconds, headLook)
+
+internal fun NpcModel.transformedParts(postTransform: NpcMatrix): List<NpcMatrix> =
+    evaluation.transformedParts(postTransform)
+
+internal fun NpcModel.samplePose(
+    animation: String?,
+    seconds: Double,
+    headLook: NpcVector3?,
+    parts: List<NpcMatrix>,
+): List<NpcMatrix> = evaluation.samplePose(animation, seconds, headLook, parts)

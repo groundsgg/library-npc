@@ -22,7 +22,10 @@ internal fun sampleNpcTrack(
     val b = keys[before + 1]
     if (a.interpolation == NpcInterpolation.STEP) return a.value
     val t = (time - a.timeSeconds) / (b.timeSeconds - a.timeSeconds)
-    if (a.interpolation != NpcInterpolation.CATMULL_ROM && b.interpolation != NpcInterpolation.CATMULL_ROM)
+    if (
+        a.interpolation != NpcInterpolation.CATMULL_ROM &&
+            b.interpolation != NpcInterpolation.CATMULL_ROM
+    )
         return a.value * (1 - t) + b.value * t
     val p0 =
         keys.getOrNull(before - 1)?.value

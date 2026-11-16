@@ -1,6 +1,9 @@
 // Extracted from Grounds minestom-lobby, commit 020a370ff414f85bb6ac495785605a8789ffbb19.
 package gg.grounds.npc.minestom.internal.rendering
 
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcClipSound
+import gg.grounds.npc.core.model.NpcModel
 import gg.grounds.npc.minestom.config.NpcRenderConfig
 import gg.grounds.npc.minestom.internal.audience.NpcViewerRegistry
 import gg.grounds.npc.minestom.internal.lifecycle.NpcEngineHandle
@@ -10,21 +13,10 @@ import gg.grounds.npc.minestom.spi.NpcSoundSink
 import gg.grounds.npc.minestom.transform.NpcAnchorSnapshot
 import gg.grounds.npc.minestom.transform.NpcRenderTransform
 import gg.grounds.npc.minestom.viewer.NpcViewerState
-
-import gg.grounds.npc.core.animation.NpcLoopMode
-import gg.grounds.npc.core.math.NpcMatrix
-import gg.grounds.npc.core.math.NpcVector3
-import gg.grounds.npc.core.model.NpcClipSound
-import gg.grounds.npc.core.model.NpcModel
-
-import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import kotlin.math.abs
-import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.display.ItemDisplayMeta
 import net.minestom.server.instance.Instance
-import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
 
 internal class NpcRenderEngine(
@@ -49,30 +41,66 @@ internal class NpcRenderEngine(
     private var closed = false
     private var published = false
     private val playback = NpcSharedPlayback(model, config, ::hasNearbyPlayer, ::playSound)
-    private val elapsed get() = playback.elapsed
+    private val elapsed
+        get() = playback.elapsed
+
     private var headLook = NpcVector3(0.0, 0.0, 0.0)
     private var pendingHeadLook = headLook
     private var sampledClip: String? = null
     private var sampledSeconds = 0.0
     private var externalFrame: NpcSampleFrame? = null
 
-
-    private val movement = NpcMovementController(lock, displays, { transform }, { next, moved ->
-        transform = next
-        if (moved || playback.requested == null) advance(elapsed, true)
-    }, ::dispatchSounds)
-    private val viewers = NpcViewerRegistry(lock, displays, config, audience, { transform }, { closed }, { published }, { elapsed },
-        { advance(elapsed, true, false, false) }, ::dispatchSounds)
+    private val movement =
+        NpcMovementController(
+            lock,
+            displays,
+            { transform },
+            { next, moved ->
+                transform = next
+                if (moved || playback.requested == null) advance(elapsed, true)
+            },
+            ::dispatchSounds,
+        )
+    private val viewers =
+        NpcViewerRegistry(
+            lock,
+            displays,
+            config,
+            audience,
+            { transform },
+            { closed },
+            { published },
+            { elapsed },
+            { advance(elapsed, true, false, false) },
+            ::dispatchSounds,
+        )
 
     fun currentTransform(): NpcRenderTransform = synchronized(lock) { transform }
+
     fun inheritViewerAdmission(player: Player) = viewers.inheritViewerAdmission(player)
+
     fun viewerAdmission(player: Player): Boolean? = viewers.viewerAdmission(player)
+
     fun viewerStateFor(player: Player): NpcViewerState = viewers.viewerStateFor(player)
+
     fun canPresentTo(player: Player): Boolean = viewers.canPresentTo(player)
-    fun suppressViewer(player: Player, lease: Any, current: () -> Boolean): Boolean = viewers.suppressViewer(player, lease, current)
-    fun ownsSuppression(player: Player, lease: Any): Boolean = viewers.ownsSuppression(player, lease)
-    fun releaseSuppression(player: Player, lease: Any, restore: Boolean, admission: Boolean? = null) = viewers.releaseSuppression(player, lease, restore, admission)
-    override fun applyViewerState(player: Player, state: NpcViewerState) = viewers.applyViewerState(player, state)
+
+    fun suppressViewer(player: Player, lease: Any, current: () -> Boolean): Boolean =
+        viewers.suppressViewer(player, lease, current)
+
+    fun ownsSuppression(player: Player, lease: Any): Boolean =
+        viewers.ownsSuppression(player, lease)
+
+    fun releaseSuppression(
+        player: Player,
+        lease: Any,
+        restore: Boolean,
+        admission: Boolean? = null,
+    ) = viewers.releaseSuppression(player, lease, restore, admission)
+
+    override fun applyViewerState(player: Player, state: NpcViewerState) =
+        viewers.applyViewerState(player, state)
+
     override fun clearViewerState(player: Player) = viewers.clearViewerState(player)
 
     override val headLookOrigin: NpcVector3?
@@ -147,9 +175,12 @@ internal class NpcRenderEngine(
         synchronized(lock) { NpcAnchorSnapshot(transform.root, headLookOrigin) }
 
     fun drainMovements(): java.util.concurrent.CompletionStage<Void> =
-        if (synchronized(lock) { closed }) closedCleanup.minimalCompletionStage() else movement.drain()
+        if (synchronized(lock) { closed }) closedCleanup.minimalCompletionStage()
+        else movement.drain()
 
-    override fun applyTransform(transform: NpcRenderTransform): java.util.concurrent.CompletionStage<Void> = movement.applyTransform(transform)
+    override fun applyTransform(
+        transform: NpcRenderTransform
+    ): java.util.concurrent.CompletionStage<Void> = movement.applyTransform(transform)
 
     override fun playClip(animation: String, elapsedMillis: Long) {
         update {
@@ -205,8 +236,7 @@ internal class NpcRenderEngine(
         }
         commitHeadLook()
         playback.sampleVisible()
-        val beforeSingleDeadline =
-            viewers.deferUpdate(time)
+        val beforeSingleDeadline = viewers.deferUpdate(time)
         render(playback.sampledClip, playback.sampledSeconds, !flush || beforeSingleDeadline)
         if (flush) viewers.flushViewerUpdates(time, force || seeking)
     }
@@ -218,7 +248,7 @@ internal class NpcRenderEngine(
             val dx = position.x() - anchor.x
             val dy = position.y() - anchor.y
             val dz = position.z() - anchor.z
-            dx*dx + dy*dy + dz*dz <= config.variationMinDistance*config.variationMinDistance
+            dx * dx + dy * dy + dz * dz <= config.variationMinDistance * config.variationMinDistance
         }
     }
 
@@ -268,13 +298,13 @@ internal class NpcRenderEngine(
 
     override fun close() {
         synchronized(lock) {
-                if (closed) return
-                closed = true
-                visibilityTask.cancel()
-                pendingSounds.clear()
-                viewers.clear()
-                Unit
-            }
+            if (closed) return
+            closed = true
+            visibilityTask.cancel()
+            pendingSounds.clear()
+            viewers.clear()
+            Unit
+        }
         // Queued owner work needs no further tick; accepted I/O/events must actually settle.
         movement.close().whenComplete { _, movementFailure ->
             var failure = movementFailure
@@ -296,4 +326,3 @@ internal class NpcRenderEngine(
         }
     }
 }
-

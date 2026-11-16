@@ -2,7 +2,9 @@ package gg.grounds.npc.core.model
 
 import gg.grounds.npc.core.math.NpcVector3
 
-/** An item-mesh part bound to an optional bone; centres and pivots use authored model coordinates. */
+/**
+ * An item-mesh part bound to an optional bone; centres and pivots use authored model coordinates.
+ */
 data class NpcPart(
     val bone: String?,
     val model: String,

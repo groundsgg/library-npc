@@ -1,7 +1,5 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.minestom.internal.rendering.NpcDisplayPoses
-
 import gg.grounds.npc.core.animation.NpcClip
 import gg.grounds.npc.core.animation.NpcLoopMode
 import gg.grounds.npc.core.animation.NpcPoseSampler
@@ -11,7 +9,7 @@ import gg.grounds.npc.core.model.NpcBone
 import gg.grounds.npc.core.model.NpcBounds
 import gg.grounds.npc.core.model.NpcModel
 import gg.grounds.npc.core.model.NpcPart
-
+import gg.grounds.npc.minestom.internal.rendering.NpcDisplayPoses
 import java.lang.management.ManagementFactory
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -25,7 +23,12 @@ class NpcDisplayPosesTest {
         allocation!!.isThreadAllocatedMemoryEnabled = true
         val bones =
             (0 until 12).map {
-                NpcBone("bone-$it", if (it == 0) null else "bone-${it-1}", NpcVector3.ZERO, NpcVector3.ZERO)
+                NpcBone(
+                    "bone-$it",
+                    if (it == 0) null else "bone-${it-1}",
+                    NpcVector3.ZERO,
+                    NpcVector3.ZERO,
+                )
             }
         val model =
             NpcModel(

@@ -6,7 +6,10 @@ import gg.grounds.npc.core.internal.NpcModelValidator
 import gg.grounds.npc.core.internal.immutableList
 import gg.grounds.npc.core.internal.immutableMap
 
-/** Validated immutable numeric asset definition. Collections are copied; invalid hierarchy, IDs, clips or sounds throw IllegalArgumentException. */
+/**
+ * Validated immutable numeric asset definition. Collections are copied; invalid hierarchy, IDs,
+ * clips or sounds throw IllegalArgumentException.
+ */
 class NpcModel(
     val id: String,
     val bounds: NpcBounds,
@@ -20,7 +23,9 @@ class NpcModel(
     val animations: Map<String, NpcClip> = immutableMap(animations)
     val sounds: Map<String, NpcClipSound> = immutableMap(sounds)
 
-    init { NpcModelValidator.validate(this) }
+    init {
+        NpcModelValidator.validate(this)
+    }
 
     /** The unique bone named head, ignoring case; null if absent or ambiguous. */
     val headBone: NpcBone? = this.bones.singleOrNull { it.name.equals("head", ignoreCase = true) }

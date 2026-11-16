@@ -1,12 +1,10 @@
 package gg.grounds.npc.minestom.transform
 
-import gg.grounds.npc.minestom.internal.rendering.DisplayTransform
-
 import gg.grounds.npc.core.math.NpcMatrix
 import gg.grounds.npc.core.math.NpcTransform
 import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.core.model.NpcBounds
-
+import gg.grounds.npc.minestom.internal.rendering.DisplayTransform
 import net.minestom.server.entity.metadata.display.AbstractDisplayMeta
 
 /** Shared affine-to-display decomposition. Returns whether client-visible fields changed. */

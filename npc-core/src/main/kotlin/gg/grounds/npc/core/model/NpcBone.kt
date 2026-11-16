@@ -2,7 +2,10 @@ package gg.grounds.npc.core.model
 
 import gg.grounds.npc.core.math.NpcVector3
 
-/** A bone in parent-before-child order. Origin is model-local; rotation is XYZ degrees. A null parent denotes a root. */
+/**
+ * A bone in parent-before-child order. Origin is model-local; rotation is XYZ degrees. A null
+ * parent denotes a root.
+ */
 data class NpcBone
 @JvmOverloads
 constructor(

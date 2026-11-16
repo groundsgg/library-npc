@@ -1,5 +1,8 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.core.io.NpcDecodeResult
+import gg.grounds.npc.core.io.NpcModelJson
+import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.minestom.config.NpcRenderConfig
 import gg.grounds.npc.minestom.internal.audience.NpcRenderPolicy
 import gg.grounds.npc.minestom.internal.lifecycle.NpcEngineHandle
@@ -7,11 +10,6 @@ import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.internal.rendering.NpcRenderEngine
 import gg.grounds.npc.minestom.spi.NpcSoundSink
 import gg.grounds.npc.minestom.viewer.NpcViewerState
-
-import gg.grounds.npc.core.io.NpcDecodeResult
-import gg.grounds.npc.core.io.NpcModelJson
-import gg.grounds.npc.core.math.NpcVector3
-
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.MetadataDef

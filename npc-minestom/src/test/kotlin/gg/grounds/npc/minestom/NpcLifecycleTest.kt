@@ -1,10 +1,5 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.minestom.spi.NpcMeshResolver
-import gg.grounds.npc.minestom.spi.NpcPublicationGuard
-import gg.grounds.npc.minestom.spi.NpcSoundSink
-import gg.grounds.npc.minestom.transform.NpcRenderTransform
-
 import gg.grounds.npc.core.animation.NpcClip
 import gg.grounds.npc.core.animation.NpcLoopMode
 import gg.grounds.npc.core.math.NpcTransform
@@ -14,7 +9,10 @@ import gg.grounds.npc.core.model.NpcBounds
 import gg.grounds.npc.core.model.NpcClipSound
 import gg.grounds.npc.core.model.NpcModel
 import gg.grounds.npc.core.model.NpcPart
-
+import gg.grounds.npc.minestom.spi.NpcMeshResolver
+import gg.grounds.npc.minestom.spi.NpcPublicationGuard
+import gg.grounds.npc.minestom.spi.NpcSoundSink
+import gg.grounds.npc.minestom.transform.NpcRenderTransform
 import java.time.Duration
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
@@ -33,7 +31,9 @@ class NpcLifecycleTest {
         val entered = java.util.concurrent.CountDownLatch(1)
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest.builder(instance, model(), transform()).publicationGuard(NpcPublicationGuard { operation ->
+                NpcSpawnRequest.builder(instance, model(), transform())
+                    .publicationGuard(
+                        NpcPublicationGuard { operation ->
                             entered.countDown()
                             hostLock.lock()
                             try {
@@ -42,7 +42,9 @@ class NpcLifecycleTest {
                             } finally {
                                 hostLock.unlock()
                             }
-                        }).build()
+                        }
+                    )
+                    .build()
             )
         val ready = start.ready().toCompletableFuture()
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
@@ -80,7 +82,8 @@ class NpcLifecycleTest {
         val teleportThreads = java.util.concurrent.ConcurrentLinkedQueue<Thread>()
         val instance = env.createFlatInstance() as net.minestom.server.instance.InstanceContainer
         env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
-        val start = NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
+        val start =
+            NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
         val ready = start.ready().toCompletableFuture()
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
         val handle = (ready.join() as NpcPrepareResult.Ready).handle
@@ -163,7 +166,8 @@ class NpcLifecycleTest {
     @Test
     fun `closing does not depend on another entity or instance scheduler tick`(env: Env) {
         val instance = env.createFlatInstance()
-        val start = NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
+        val start =
+            NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
         val ready = start.ready().toCompletableFuture()
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
         val handle = (ready.join() as NpcPrepareResult.Ready).handle
@@ -181,12 +185,16 @@ class NpcLifecycleTest {
         var count = 0
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest.builder(instance, model(), transform()).meshes(NpcMeshResolver {
+                NpcSpawnRequest.builder(instance, model(), transform())
+                    .meshes(
+                        NpcMeshResolver {
                             if (++count == 2) throw IllegalStateException("test mesh unavailable")
                             net.minestom.server.item.ItemStack.of(
                                 net.minestom.server.item.Material.PAPER
                             )
-                        }).build()
+                        }
+                    )
+                    .build()
             )
         assertInstanceOf(
             NpcPrepareResult.Rejected::class.java,
@@ -208,7 +216,8 @@ class NpcLifecycleTest {
             if (it.entity.entityType == EntityType.ITEM_DISPLAY && ++attachments == 2)
                 it.isCancelled = true
         }
-        val start = NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
+        val start =
+            NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
         val ready = start.ready().toCompletableFuture()
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
         assertInstanceOf(NpcPrepareResult.Rejected::class.java, ready.join())
@@ -234,13 +243,17 @@ class NpcLifecycleTest {
             )
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest.builder(instance, voiced, transform()).sounds(NpcSoundSink { _, _, _ ->
+                NpcSpawnRequest.builder(instance, voiced, transform())
+                    .sounds(
+                        NpcSoundSink { _, _, _ ->
                             entered.countDown()
                             hostLock.lock()
                             try {} finally {
                                 hostLock.unlock()
                             }
-                        }).build()
+                        }
+                    )
+                    .build()
             )
         val ready = start.ready().toCompletableFuture()
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
@@ -273,7 +286,8 @@ class NpcLifecycleTest {
     @Test
     fun `loaded movement continuation can be cancelled without another owner tick`(env: Env) {
         val instance = env.createFlatInstance() as net.minestom.server.instance.InstanceContainer
-        val start = NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
+        val start =
+            NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
         val ready = start.ready().toCompletableFuture()
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
         val handle = (ready.join() as NpcPrepareResult.Ready).handle
@@ -331,7 +345,8 @@ class NpcLifecycleTest {
     fun `prepared parts stay hidden until publication and close removes every part`(env: Env) {
         val instance = env.createFlatInstance()
         val player = env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
-        val start = NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
+        val start =
+            NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
         val ready = start.ready().toCompletableFuture()
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
         val handle = (ready.join() as NpcPrepareResult.Ready).handle
@@ -385,7 +400,12 @@ class NpcLifecycleTest {
         try {
             val start =
                 NpcRenderer.prepare(
-                    NpcSpawnRequest.builder(instance, model(), NpcRenderTransform(NpcTransform(NpcVector3(512.0, 42.0, 512.0)))).build()
+                    NpcSpawnRequest.builder(
+                            instance,
+                            model(),
+                            NpcRenderTransform(NpcTransform(NpcVector3(512.0, 42.0, 512.0))),
+                        )
+                        .build()
                 )
             assertTrue(entered.await(3, java.util.concurrent.TimeUnit.SECONDS))
             val closing = start.cancel().toCompletableFuture()
@@ -411,7 +431,9 @@ class NpcLifecycleTest {
         env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest.builder(instance, model(), transform()).publicationGuard(NpcPublicationGuard { false }).build()
+                NpcSpawnRequest.builder(instance, model(), transform())
+                    .publicationGuard(NpcPublicationGuard { false })
+                    .build()
             )
         val ready = start.ready().toCompletableFuture()
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
@@ -428,7 +450,8 @@ class NpcLifecycleTest {
     fun `animation and additive head look preserve the independent body pose`(env: Env) {
         val instance = env.createFlatInstance()
         env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
-        val start = NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
+        val start =
+            NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), transform()).build())
         val ready = start.ready().toCompletableFuture()
         assertTrue(env.tickWhile({ !ready.isDone }, wait))
         val handle = (ready.join() as NpcPrepareResult.Ready).handle
@@ -462,7 +485,13 @@ class NpcLifecycleTest {
                     NpcBone("head", "body", NpcVector3(0.0, 1.5, 0.0), NpcVector3.ZERO),
                 ),
                 listOf(
-                    NpcPart("body", "minecraft:stone", NpcVector3(0.0, 0.7, 0.0), NpcVector3.ZERO, NpcVector3.ZERO),
+                    NpcPart(
+                        "body",
+                        "minecraft:stone",
+                        NpcVector3(0.0, 0.7, 0.0),
+                        NpcVector3.ZERO,
+                        NpcVector3.ZERO,
+                    ),
                     NpcPart(
                         "head",
                         "minecraft:stone",

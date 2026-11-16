@@ -21,4 +21,4 @@ jobs:
       - run: python3 tools/verify_consumer_origin.py
       - run: ./gradlew -p fixtures/java-consumer run -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
       - run: ./gradlew -p fixtures/kotlin-consumer run -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
-      - run: ./gradlew -p examples/standalone-minestom test run --args=--smoke demoPack -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
+      - run: ./gradlew -p examples/standalone-minestom test smoke demoPack -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"

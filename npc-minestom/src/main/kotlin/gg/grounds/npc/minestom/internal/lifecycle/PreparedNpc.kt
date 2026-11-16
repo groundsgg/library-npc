@@ -1,11 +1,11 @@
 package gg.grounds.npc.minestom.internal.lifecycle
 
-import gg.grounds.npc.minestom.error.NpcOperationException
-
+import gg.grounds.npc.core.validation.NpcProblem
 import gg.grounds.npc.minestom.NpcHandle
 import gg.grounds.npc.minestom.NpcPrepareResult
 import gg.grounds.npc.minestom.NpcSpawnRequest
 import gg.grounds.npc.minestom.NpcStart
+import gg.grounds.npc.minestom.error.NpcOperationException
 import gg.grounds.npc.minestom.internal.presentation.NpcPresentationCopy
 import gg.grounds.npc.minestom.internal.presentation.NpcPresentationCopyControl
 import gg.grounds.npc.minestom.internal.presentation.NpcPresentationOwner
@@ -21,22 +21,11 @@ import gg.grounds.npc.minestom.spi.NpcSoundSink
 import gg.grounds.npc.minestom.transform.NpcAnchorSnapshot
 import gg.grounds.npc.minestom.transform.NpcRenderTransform
 import gg.grounds.npc.minestom.viewer.NpcViewerState
-
-import gg.grounds.npc.core.animation.NpcLoopMode
-import gg.grounds.npc.core.math.NpcMatrix
-import gg.grounds.npc.core.math.NpcVector3
-import gg.grounds.npc.core.model.NpcClipSound
-import gg.grounds.npc.core.model.NpcModel
-import gg.grounds.npc.core.validation.NpcProblem
-import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
-import kotlin.math.abs
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.metadata.display.ItemDisplayMeta
-import net.minestom.server.instance.Instance
-import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
 
 internal class PreparedNpc(
@@ -224,7 +213,9 @@ internal class PreparedNpc(
         val result = CompletableFuture<Void>()
         synchronized(lock) {
             if (stopping || engine == null)
-                return CompletableFuture.failedFuture(NpcOperationException("NPC_UNAVAILABLE", "NPC has closed or is not ready"))
+                return CompletableFuture.failedFuture(
+                    NpcOperationException("NPC_UNAVAILABLE", "NPC has closed or is not ready")
+                )
             commands += result
         }
         try {
@@ -288,10 +279,23 @@ internal class PreparedNpc(
                                 { operation -> request.publicationGuard.runIfCurrent(operation) },
                                 { options, guard, current ->
                                     val config =
-                                        request.config.toBuilder().nearIntervalMillis(options.sampleIntervalMillis).midIntervalMillis(options.sampleIntervalMillis).farIntervalMillis(options.sampleIntervalMillis).idleClip(null).variationClip(null).build()
+                                        request.config
+                                            .toBuilder()
+                                            .nearIntervalMillis(options.sampleIntervalMillis)
+                                            .midIntervalMillis(options.sampleIntervalMillis)
+                                            .farIntervalMillis(options.sampleIntervalMillis)
+                                            .idleClip(null)
+                                            .variationClip(null)
+                                            .build()
                                     val child =
                                         PreparedNpc(
-                                            request.toBuilder().transform(target.currentTransform()).publicationGuard(guard).sounds(NpcSoundSink { _, _, _ -> }).config(config).build(),
+                                            request
+                                                .toBuilder()
+                                                .transform(target.currentTransform())
+                                                .publicationGuard(guard)
+                                                .sounds(NpcSoundSink { _, _, _ -> })
+                                                .config(config)
+                                                .build(),
                                             limits,
                                             NpcRenderAudience.Personal(options.player, current),
                                             true,
@@ -353,7 +357,9 @@ internal class PreparedNpc(
 
     override fun stopClip(): CompletionStage<Void> = submit { it.stopClip() }
 
-    override fun stopClipIfPlaying(clipId: String): CompletionStage<Void> = submit { it.stopClipIfPlaying(clipId) }
+    override fun stopClipIfPlaying(clipId: String): CompletionStage<Void> = submit {
+        it.stopClipIfPlaying(clipId)
+    }
 
     override fun advanceClipTo(elapsedMillis: Long) = submit {
         require(elapsedMillis >= 0)
@@ -381,4 +387,3 @@ internal class PreparedNpc(
     override fun snapshot(): NpcAnchorSnapshot =
         synchronized(lock) { checkNotNull(engine).snapshot() }
 }
-

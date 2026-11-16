@@ -1,16 +1,14 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.core.animation.NpcClip
+import gg.grounds.npc.core.animation.NpcLoopMode
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcModel
 import gg.grounds.npc.minestom.config.NpcRenderConfig
 import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.internal.rendering.NpcRenderAudience
 import gg.grounds.npc.minestom.internal.rendering.NpcRenderEngine
 import gg.grounds.npc.minestom.spi.NpcSoundSink
-
-import gg.grounds.npc.core.animation.NpcClip
-import gg.grounds.npc.core.animation.NpcLoopMode
-import gg.grounds.npc.core.math.NpcVector3
-import gg.grounds.npc.core.model.NpcModel
-
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import net.minestom.server.coordinate.Pos

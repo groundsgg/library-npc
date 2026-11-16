@@ -1,14 +1,12 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.NpcPresentationPacketTest.Companion.drive
 import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import gg.grounds.npc.minestom.presentation.NpcPresentationHandle
 import gg.grounds.npc.minestom.presentation.NpcPresentationLimits
 import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationResult
 import gg.grounds.npc.minestom.spi.NpcMonotonicClock
-
-
-import gg.grounds.npc.minestom.NpcPresentationPacketTest.Companion.drive
 import java.lang.management.ManagementFactory
 import java.util.UUID
 import net.minestom.server.MinecraftServer
@@ -29,7 +27,12 @@ class NpcPresentationPerformanceTest {
             val players = (0..32).map { fixture.player(Pos(it / 32.0, 42.0, 0.0)) }
             val root =
                 NpcRenderer.prepare(
-                    NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform()).build()
+                    NpcSpawnRequest.builder(
+                            instance,
+                            personalTestModel(),
+                            NpcLifecycleTest.transform(),
+                        )
+                        .build()
                 )
             val parent = (drive(fixture, root.ready()) as NpcPrepareResult.Ready).handle
             drive(fixture, parent.publish())
@@ -53,7 +56,11 @@ class NpcPresentationPerformanceTest {
                 for (count in listOf(1, 8, 32)) {
                     while (handles.size < count) {
                         val start =
-                            parent.preparePresentation(NpcPresentationOptions.builder(players[handles.size]).clock(NpcMonotonicClock { 10_000_000_000 }).build())
+                            parent.preparePresentation(
+                                NpcPresentationOptions.builder(players[handles.size])
+                                    .clock(NpcMonotonicClock { 10_000_000_000 })
+                                    .build()
+                            )
                         val handle =
                             (drive(fixture, start.ready()) as NpcPresentationResult.Ready).handle
                         drive(fixture, handle.publish())
@@ -100,7 +107,12 @@ class NpcPresentationPerformanceTest {
                     )
                 val root =
                     NpcRenderer.prepare(
-                        NpcSpawnRequest.builder(fixture.instance, model, NpcLifecycleTest.transform()).build(),
+                        NpcSpawnRequest.builder(
+                                fixture.instance,
+                                model,
+                                NpcLifecycleTest.transform(),
+                            )
+                            .build(),
                         NpcPresentationLimits(32, limit),
                     )
                 val parent = (drive(fixture, root.ready()) as NpcPrepareResult.Ready).handle
@@ -109,13 +121,19 @@ class NpcPresentationPerformanceTest {
                 try {
                     for (player in players.take(count)) {
                         val start =
-                            parent.preparePresentation(NpcPresentationOptions.builder(player).clock(NpcMonotonicClock { 10_000_000_000 }).build())
+                            parent.preparePresentation(
+                                NpcPresentationOptions.builder(player)
+                                    .clock(NpcMonotonicClock { 10_000_000_000 })
+                                    .build()
+                            )
                         val handle =
                             (drive(fixture, start.ready()) as NpcPresentationResult.Ready).handle
                         drive(fixture, handle.publish())
                     }
                     val refused =
-                        parent.preparePresentation(NpcPresentationOptions.builder(players.last()).build())
+                        parent.preparePresentation(
+                            NpcPresentationOptions.builder(players.last()).build()
+                        )
                     assertInstanceOf(
                         NpcPresentationResult.Rejected::class.java,
                         refused

@@ -93,3 +93,38 @@ tasks.register<JavaExec>("formatKotlin") {
                     .map { it.absolutePath }
     }
 }
+
+val javaFormatter =
+    configurations.create("javaFormatter") {
+        attributes.attribute(
+            org.gradle.api.attributes.Usage.USAGE_ATTRIBUTE,
+            objects.named(org.gradle.api.attributes.Usage.JAVA_RUNTIME),
+        )
+        attributes.attribute(
+            org.gradle.api.attributes.java.TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
+            objects.named(org.gradle.api.attributes.java.TargetJvmEnvironment.STANDARD_JVM),
+        )
+    }
+
+dependencies { add(javaFormatter.name, "com.google.googlejavaformat:google-java-format:1.35.0") }
+
+tasks.register<JavaExec>("formatJava") {
+    classpath = javaFormatter
+    mainClass.set("com.google.googlejavaformat.java.Main")
+    jvmArgs(
+        listOf("api", "file", "parser", "tree", "util", "code").map {
+            "--add-exports=jdk.compiler/com.sun.tools.javac.$it=ALL-UNNAMED"
+        }
+    )
+    doFirst {
+        args =
+            listOf("--replace") +
+                fileTree(projectDir) {
+                        include("**/*.java")
+                        exclude(".evidence/**", ".superpowers/**", ".gradle/**", "**/build/**")
+                    }
+                    .files
+                    .sortedBy { it.path }
+                    .map { it.absolutePath }
+    }
+}

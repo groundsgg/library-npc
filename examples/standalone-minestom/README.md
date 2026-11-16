@@ -1,28 +1,28 @@
-# Personal NPC demo
+# NPC examples
 
-Build the library to a selected local Maven repository, then run this independent
-Java project with `-PnpcRepository=file:///absolute/path/to/library-npc/.evidence/maven`.
-An explicit `-PnpcVersion=...` selects a candidate; defaults match the public CI
-candidate. No composite build or product assets are used.
+Start with `NpcDemo.java`: one shared NPC, an explicitly host-driven clip clock and complete asynchronous cleanup. `PersonalNpcDemo.java` adds private clip/head/sound channels for each concrete player connection. Server setup, model construction, commands and resource-pack hosting are named helpers; synthetic players and assertions live only in `src/smoke`.
 
-`run` starts public Minestom. `runGroundsProfile` requires the complete existing
-26.3 classpath through `-PgroundsClasspathFile=/absolute/path/to/classpath.local`.
-The latter uses the neutral 26.3 resource pack. Defaults are game25574/pack25575;
-use `-PnpcPort=25576 -PnpcPackPort=25577` to preserve an existing demo.
-`run --args=--smoke` (or `runGroundsProfile --args=--smoke`) uses ephemeral ports
-and tests synthetic A/B personal channels while C retains the common NPC.
+Build and run from the library root with JDK 25:
 
-For actual client acceptance, connect A and B (optionally C), accept the pack:
+```sh
+./gradlew publishAllPublicationsToReviewRepository
+./gradlew -p examples/standalone-minestom run -PnpcRepository="file:$PWD/.evidence/maven"
+./gradlew -p examples/standalone-minestom runPersonalDemo -PnpcRepository="file:$PWD/.evidence/maven"
+```
 
-1. A and B use `/personal`; only that connection changes to a private visual group.
-2. A uses `/personalwave`; only A sees the gesture and hears the villager cue.
-   B uses `/personallook`; only B sees their private head pose. C sees the common NPC.
-3. `/npcwave` and `/npclook` change shared channels; a private channel stays private.
-   `/personalfollow` releases both channels to the latest shared state.
-4. `/personalidle`, `/personalstop`, `/npcscale` and `/npcmove` must not replay a cue.
-5. Move outside visibility and return: current pose, no repeated private cue.
-6. `/personalclose` restores the latest common model. Reconnect inherits no private
-   state. `/npcremove` drains all common/private displays and stops shared ticking.
+The independent build reads the version from `../../version.txt`; `-PnpcVersion=...` selects another candidate. It resolves Maven artifacts, never library sources. Defaults are game port 25574 and pack port 25575. Override with `-PnpcPort=... -PnpcPackPort=...` when another demo owns those ports. Accept the neutral demo resource pack in your client.
 
-The demo has no dialogue/UI, quest state or cross-proxy transport. Synthetic smoke
-does not replace simultaneous client visual/audio and real backend-transfer tests.
+The shared example offers `/npcwave`, `/npcidle`, `/npclook`, `/npcscale`, `/npcmove` and `/npcremove`. Its playback helper owns the repeating advance task; removal cancels the task and drains the NPC.
+
+In the personal example, A and B can each `/personal`. Only A sees/hears `/personalwave` from A; only B sees `/personallook` from B. Other players retain the shared NPC. `/personalfollow` releases both private channels, `/personalclose` restores the latest common pose. `/personalidle` and `/personalstop` retain private ownership without replaying sound.
+
+For automated checks:
+
+```sh
+./gradlew -p examples/standalone-minestom test smoke -PnpcRepository="file:$PWD/.evidence/maven"
+./gradlew -p examples/standalone-minestom smokeGroundsProfile -PnpcRepository="file:$PWD/.evidence/maven" -PgroundsClasspathFile=/absolute/path/to/classpath.local
+```
+
+Smoke tasks use ephemeral ports and a separate synthetic A/B/observer harness. The Grounds task requires the complete matching 26.3 runtime classpath and uses the matching resource pack. `runGroundsProfile` runs the interactive shared example on that runtime.
+
+Smoke success proves server-side startup, channels, movement and cleanup. Visual/audio acceptance with real clients, licensed content and actual backend/proxy transfers remain separate checks. No live handle, Entity ID or connection-owned presentation may be carried to another backend.

@@ -10,7 +10,6 @@ import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
 import gg.grounds.npc.minestom.presentation.NpcPresentationStart
 import gg.grounds.npc.minestom.spi.NpcPublicationGuard
 import gg.grounds.npc.minestom.viewer.NpcViewerState
-
 import java.util.IdentityHashMap
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage

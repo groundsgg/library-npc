@@ -1,16 +1,14 @@
 package consumer
 
-import gg.grounds.npc.minestom.NpcHandle
-import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
-import gg.grounds.npc.minestom.presentation.NpcPresentationResult
-
 import gg.grounds.npc.core.animation.NpcPoseSampler
 import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.core.model.NpcBounds
 import gg.grounds.npc.core.model.NpcModel
 import gg.grounds.npc.core.model.NpcPart
-
 import gg.grounds.npc.minestom.*
+import gg.grounds.npc.minestom.NpcHandle
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
 import java.util.concurrent.CompletionStage
 import net.minestom.server.entity.Player
 

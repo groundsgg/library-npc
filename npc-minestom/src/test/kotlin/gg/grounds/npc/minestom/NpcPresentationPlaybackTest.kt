@@ -1,13 +1,5 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
-import gg.grounds.npc.minestom.presentation.NpcPresentationChannel
-import gg.grounds.npc.minestom.presentation.NpcPresentationHandle
-import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
-import gg.grounds.npc.minestom.presentation.NpcPresentationResult
-import gg.grounds.npc.minestom.presentation.NpcPresentationStart
-import gg.grounds.npc.minestom.spi.NpcMonotonicClock
-
 import gg.grounds.npc.core.animation.NpcBoneTrack
 import gg.grounds.npc.core.animation.NpcClip
 import gg.grounds.npc.core.animation.NpcInterpolation
@@ -16,8 +8,14 @@ import gg.grounds.npc.core.animation.NpcLoopMode
 import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.core.model.NpcClipSound
 import gg.grounds.npc.core.model.NpcModel
-
 import gg.grounds.npc.minestom.NpcPresentationLifecycleTest.Companion.await
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.presentation.NpcPresentationChannel
+import gg.grounds.npc.minestom.presentation.NpcPresentationHandle
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
+import gg.grounds.npc.minestom.presentation.NpcPresentationStart
+import gg.grounds.npc.minestom.spi.NpcMonotonicClock
 import java.util.concurrent.atomic.AtomicLong
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.metadata.display.ItemDisplayMeta
@@ -177,7 +175,8 @@ class NpcPresentationPlaybackTest {
         env.createPlayer(instance, Pos(1.0, 42.0, 0.0))
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform()).build()
+                NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform())
+                    .build()
             )
         val parent = (await(env, start.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
@@ -198,7 +197,12 @@ class NpcPresentationPlaybackTest {
 
         fun open(): NpcPresentationHandle {
             start =
-                parent.preparePresentation(NpcPresentationOptions.builder(player).idleClip("idle").clock(NpcMonotonicClock(clock::get)).build())
+                parent.preparePresentation(
+                    NpcPresentationOptions.builder(player)
+                        .idleClip("idle")
+                        .clock(NpcMonotonicClock(clock::get))
+                        .build()
+                )
             val handle = (await(env, start!!.ready()) as NpcPresentationResult.Ready).handle
             await(env, handle.publish())
             return handle

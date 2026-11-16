@@ -1,10 +1,8 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.minestom.transform.NpcRenderTransform
-
 import gg.grounds.npc.core.math.NpcTransform
 import gg.grounds.npc.core.math.NpcVector3
-
+import gg.grounds.npc.minestom.transform.NpcRenderTransform
 import java.net.InetSocketAddress
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
