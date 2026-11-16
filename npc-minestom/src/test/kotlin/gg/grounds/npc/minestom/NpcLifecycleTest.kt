@@ -1,6 +1,15 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.animation.NpcClip
+import gg.grounds.npc.core.animation.NpcLoopMode
+import gg.grounds.npc.core.math.NpcTransform
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcBone
+import gg.grounds.npc.core.model.NpcBounds
+import gg.grounds.npc.core.model.NpcClipSound
+import gg.grounds.npc.core.model.NpcModel
+import gg.grounds.npc.core.model.NpcPart
+
 import java.time.Duration
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.EntityType
@@ -227,7 +236,7 @@ class NpcLifecycleTest {
                 base.bounds,
                 base.bones,
                 base.parts,
-                mapOf("wave" to NpcClip("once", 1.0, emptyMap())),
+                mapOf("wave" to NpcClip(NpcLoopMode.ONCE, 1.0, emptyMap())),
                 mapOf("wave" to NpcClipSound("demo:wave", 1.0, 1.0, 12.0)),
             )
         val start =
@@ -471,17 +480,17 @@ class NpcLifecycleTest {
                 "demo:headed",
                 NpcBounds(NpcVector3(0.0, 1.0, 0.0), NpcVector3(1.0, 2.0, 1.0)),
                 listOf(
-                    NpcBone("body", null, ZERO, ZERO),
-                    NpcBone("head", "body", NpcVector3(0.0, 1.5, 0.0), ZERO),
+                    NpcBone("body", null, NpcVector3.ZERO, NpcVector3.ZERO),
+                    NpcBone("head", "body", NpcVector3(0.0, 1.5, 0.0), NpcVector3.ZERO),
                 ),
                 listOf(
-                    NpcPart("body", "minecraft:stone", NpcVector3(0.0, 0.7, 0.0), ZERO, ZERO),
+                    NpcPart("body", "minecraft:stone", NpcVector3(0.0, 0.7, 0.0), NpcVector3.ZERO, NpcVector3.ZERO),
                     NpcPart(
                         "head",
                         "minecraft:stone",
                         NpcVector3(0.0, 1.8, -0.1),
                         NpcVector3(0.0, 1.5, 0.0),
-                        ZERO,
+                        NpcVector3.ZERO,
                     ),
                 ),
                 emptyMap(),

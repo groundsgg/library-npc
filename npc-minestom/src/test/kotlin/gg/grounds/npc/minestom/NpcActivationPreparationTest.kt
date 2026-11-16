@@ -1,6 +1,9 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.model.NpcBone
+import gg.grounds.npc.core.model.NpcModel
+import gg.grounds.npc.core.model.NpcPart
+
 import java.util.concurrent.CompletionException
 import net.minestom.server.MinecraftServer
 import net.minestom.server.component.DataComponents

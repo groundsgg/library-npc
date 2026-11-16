@@ -1,7 +1,12 @@
 // Extracted from Grounds minestom-lobby, commit 020a370ff414f85bb6ac495785605a8789ffbb19.
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.animation.NpcLoopMode
+import gg.grounds.npc.core.math.NpcMatrix
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcClipSound
+import gg.grounds.npc.core.model.NpcModel
+
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import kotlin.math.abs
@@ -550,12 +555,12 @@ internal class AnimatedNpcHandle(
             val clip = requested?.let(model.animations::get)
             if (
                 clip != null &&
-                    clip.loop == "once" &&
-                    sampledSeconds >= clip.length &&
+                    clip.loop == NpcLoopMode.ONCE &&
+                    sampledSeconds >= clip.lengthSeconds &&
                     config.idleClip in model.animations
             ) {
                 sampledClip = config.idleClip
-                sampledSeconds -= clip.length
+                sampledSeconds -= clip.lengthSeconds
             }
             val variation = variationStarted
             if (
@@ -564,7 +569,7 @@ internal class AnimatedNpcHandle(
                     config.variationClip in model.animations
             ) {
                 val age = (time - variation) / 1000.0
-                if (age in 0.0..<model.animations.getValue(config.variationClip!!).length) {
+                if (age in 0.0..<model.animations.getValue(config.variationClip!!).lengthSeconds) {
                     sampledClip = config.variationClip
                     sampledSeconds = age
                 }
@@ -590,13 +595,13 @@ internal class AnimatedNpcHandle(
         var seconds = time / 1000.0
         if (
             clip != null &&
-                clip.loop == "once" &&
-                seconds >= clip.length &&
+                clip.loop == NpcLoopMode.ONCE &&
+                seconds >= clip.lengthSeconds &&
                 config.idleClip != null &&
                 config.idleClip in model.animations
         ) {
             displayed = config.idleClip
-            seconds -= clip.length
+            seconds -= clip.lengthSeconds
         }
         if (
             config.idleClip != null &&
@@ -607,7 +612,7 @@ internal class AnimatedNpcHandle(
             val variation = variationStarted
             if (variation != null) {
                 val age = (time - variation) / 1000.0
-                if (age < model.animations.getValue(config.variationClip!!).length) {
+                if (age < model.animations.getValue(config.variationClip!!).lengthSeconds) {
                     displayed = config.variationClip
                     seconds = age
                 } else {

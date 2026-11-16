@@ -1,5 +1,6 @@
 package gg.grounds.npc.minestom
 
+
 import java.time.Duration
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.TimeUnit
@@ -203,7 +204,7 @@ class NpcPresentationLifecycleTest {
         val players = (0..20).map { env.createPlayer(instance, Pos(it / 20.0, 42.0, 0.0)) }
         val base = NpcLifecycleTest.model()
         val model =
-            gg.grounds.npc.core.NpcModel(
+            gg.grounds.npc.core.model.NpcModel(
                 base.id,
                 base.bounds,
                 base.bones,
@@ -279,7 +280,7 @@ class NpcPresentationLifecycleTest {
             env: Env,
             instance: Instance,
             limits: NpcPresentationLimits = NpcPresentationLimits(),
-            model: gg.grounds.npc.core.NpcModel = NpcLifecycleTest.model(),
+            model: gg.grounds.npc.core.model.NpcModel = NpcLifecycleTest.model(),
         ): NpcHandle {
             val start =
                 NpcRenderer.prepare(

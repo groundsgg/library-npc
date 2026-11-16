@@ -1,5 +1,6 @@
 package gg.grounds.npc.minestom
 
+
 import gg.grounds.npc.minestom.NpcPresentationPacketTest.Companion.drive
 import java.lang.management.ManagementFactory
 import java.util.UUID
@@ -88,7 +89,7 @@ class NpcPresentationPerformanceTest {
                 val players = (0..count).map { fixture.player(Pos(it / 32.0, 42.0, 0.0)) }
                 val base = personalTestModel()
                 val model =
-                    gg.grounds.npc.core.NpcModel(
+                    gg.grounds.npc.core.model.NpcModel(
                         base.id,
                         base.bounds,
                         base.bones,

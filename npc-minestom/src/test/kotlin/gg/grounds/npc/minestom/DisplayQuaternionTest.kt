@@ -1,6 +1,7 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.math.NpcMatrix
+
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertNotSame
 import org.junit.jupiter.api.Test

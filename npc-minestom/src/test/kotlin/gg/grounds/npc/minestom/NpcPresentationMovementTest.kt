@@ -1,6 +1,8 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.math.NpcTransform
+import gg.grounds.npc.core.math.NpcVector3
+
 import gg.grounds.npc.minestom.NpcPresentationLifecycleTest.Companion.await
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit

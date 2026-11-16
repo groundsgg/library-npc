@@ -1,6 +1,8 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.math.NpcTransform
+import gg.grounds.npc.core.math.NpcVector3
+
 import java.net.InetSocketAddress
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -16,7 +18,7 @@ import net.minestom.server.network.packet.server.play.SpawnEntityPacket
 import net.minestom.server.network.player.GameProfile
 import net.minestom.server.network.player.PlayerConnection
 
-internal fun sceneTransform(position: NpcVector3 = ZERO) =
+internal fun sceneTransform(position: NpcVector3 = NpcVector3.ZERO) =
     NpcRenderTransform(NpcTransform(position))
 
 internal class RendererFixture(

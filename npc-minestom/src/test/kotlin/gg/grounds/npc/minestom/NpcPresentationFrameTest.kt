@@ -1,6 +1,10 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.animation.NpcClip
+import gg.grounds.npc.core.animation.NpcLoopMode
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcModel
+
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import net.minestom.server.coordinate.Pos
@@ -106,7 +110,7 @@ class NpcPresentationFrameTest {
                 base.bounds,
                 base.bones,
                 base.parts,
-                mapOf("wave" to NpcClip("once", 1.0, emptyMap())),
+                mapOf("wave" to NpcClip(NpcLoopMode.ONCE, 1.0, emptyMap())),
                 emptyMap(),
             )
         val lock = Any()

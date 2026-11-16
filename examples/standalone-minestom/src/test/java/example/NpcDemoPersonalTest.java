@@ -22,7 +22,7 @@ class NpcDemoPersonalTest {
         instance.loadChunk(0,0).join();
         var player = player(instance);
         var observer = player(instance);
-        var start = NpcRenderer.prepare(new NpcSpawnRequest(instance,NpcDemo.model(),new NpcRenderTransform(new gg.grounds.npc.core.NpcTransform(gg.grounds.npc.core.NpcVector3.ZERO),null)));
+        var start = NpcRenderer.prepare(new NpcSpawnRequest(instance,NpcDemo.model(),new NpcRenderTransform(new gg.grounds.npc.core.math.NpcTransform(gg.grounds.npc.core.math.NpcVector3.ZERO),null)));
         var parent = ((NpcPrepareResult.Ready)await(instance,start.ready())).getHandle();
         await(instance,parent.publish());
         var clock = new AtomicLong(10_000_000_000L);

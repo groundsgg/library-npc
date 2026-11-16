@@ -1,6 +1,6 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.MetadataDef

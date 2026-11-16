@@ -1,5 +1,6 @@
 package gg.grounds.npc.minestom
 
+
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Vec

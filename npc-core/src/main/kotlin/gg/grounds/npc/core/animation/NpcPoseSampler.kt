@@ -1,8 +1,11 @@
-package gg.grounds.npc.core
+package gg.grounds.npc.core.animation
 
-class NpcPose(parts: Collection<NpcMatrix>) {
-    val parts: List<NpcMatrix> = immutableList(parts)
-}
+import gg.grounds.npc.core.internal.transformedParts
+
+import gg.grounds.npc.core.internal.pose
+import gg.grounds.npc.core.math.NpcMatrix
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcModel
 
 object NpcPoseSampler {
     /** Model-local authored pose; Minecraft's mesh-facing correction belongs to the adapter. */
@@ -26,16 +29,5 @@ object NpcPoseSampler {
     internal fun validate(model: NpcModel, clipId: String?, seconds: Double) {
         require(seconds.isFinite() && seconds >= 0) { "Sample time must be finite and nonnegative" }
         require(clipId == null || clipId in model.animations) { "Unknown clip: $clipId" }
-    }
-}
-
-/** Immutable prepared binding. Coordinate-system choices remain entirely with the caller. */
-class NpcPoseBinding internal constructor(private val model: NpcModel, parts: List<NpcMatrix>) {
-    private val parts = immutableList(parts)
-
-    @JvmOverloads
-    fun sample(clipId: String?, seconds: Double, headLook: NpcVector3? = null): NpcPose {
-        NpcPoseSampler.validate(model, clipId, seconds)
-        return NpcPose(model.samplePose(clipId, seconds, headLook, parts))
     }
 }

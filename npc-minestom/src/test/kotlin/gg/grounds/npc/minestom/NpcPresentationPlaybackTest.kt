@@ -1,6 +1,14 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.animation.NpcBoneTrack
+import gg.grounds.npc.core.animation.NpcClip
+import gg.grounds.npc.core.animation.NpcInterpolation
+import gg.grounds.npc.core.animation.NpcKeyframe
+import gg.grounds.npc.core.animation.NpcLoopMode
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcClipSound
+import gg.grounds.npc.core.model.NpcModel
+
 import gg.grounds.npc.minestom.NpcPresentationLifecycleTest.Companion.await
 import java.util.concurrent.atomic.AtomicLong
 import net.minestom.server.coordinate.Pos
@@ -14,11 +22,11 @@ internal fun personalTestModel(voiced: Boolean = false): NpcModel {
     val moving =
         mapOf(
             "body" to
-                mapOf(
-                    "position" to
+                NpcBoneTrack(
+                    position =
                         listOf(
-                            NpcKeyframe(0.0, NpcVector3.ZERO, "linear"),
-                            NpcKeyframe(1.0, NpcVector3(0.0, 1.0, 0.0), "linear"),
+                            NpcKeyframe(0.0, NpcVector3.ZERO, NpcInterpolation.LINEAR),
+                            NpcKeyframe(1.0, NpcVector3(0.0, 1.0, 0.0), NpcInterpolation.LINEAR),
                         )
                 )
         )
@@ -28,9 +36,9 @@ internal fun personalTestModel(voiced: Boolean = false): NpcModel {
         base.bones,
         base.parts,
         mapOf(
-            "wave" to NpcClip("once", 1.0, moving),
-            "idle" to NpcClip("loop", 2.0, emptyMap()),
-            "loop" to NpcClip("loop", 1.0, moving),
+            "wave" to NpcClip(NpcLoopMode.ONCE, 1.0, moving),
+            "idle" to NpcClip(NpcLoopMode.LOOP, 2.0, emptyMap()),
+            "loop" to NpcClip(NpcLoopMode.LOOP, 1.0, moving),
         ),
         if (voiced)
             mapOf(

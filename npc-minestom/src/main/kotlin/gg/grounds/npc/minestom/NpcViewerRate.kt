@@ -1,8 +1,6 @@
 // Extracted from Grounds minestom-lobby, commit 020a370ff414f85bb6ac495785605a8789ffbb19.
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
-
 /** Shared identities avoid boxing millisecond values in per-viewer membership maps. */
 internal enum class NpcViewerRate(val interval: Long) {
     NEAR(200L),

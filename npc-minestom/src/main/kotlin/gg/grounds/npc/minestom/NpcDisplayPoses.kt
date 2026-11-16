@@ -1,6 +1,10 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.animation.NpcPoseBinding
+import gg.grounds.npc.core.animation.NpcPoseSampler
+import gg.grounds.npc.core.math.NpcMatrix
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcModel
 
 /** Preserve the original once-per-model client-mesh correction in the part bind cache. */
 internal class NpcDisplayPoses(model: NpcModel) {

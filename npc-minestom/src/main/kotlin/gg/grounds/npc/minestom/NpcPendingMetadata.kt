@@ -1,7 +1,6 @@
 // Extracted from Grounds minestom-lobby, commit 020a370ff414f85bb6ac495785605a8789ffbb19.
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
 import net.minestom.server.entity.Metadata
 import net.minestom.server.entity.MetadataDef
 

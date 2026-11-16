@@ -1,6 +1,4 @@
-// Extracted from Grounds resourcepacks v1.3.0, commit c92fcaffe95e02bf4a6badba700a4c40b5724016.
-// See LICENSE and NOTICE for source provenance.
-package gg.grounds.npc.core
+package gg.grounds.npc.core.math
 
 import kotlin.math.cos
 import kotlin.math.sin

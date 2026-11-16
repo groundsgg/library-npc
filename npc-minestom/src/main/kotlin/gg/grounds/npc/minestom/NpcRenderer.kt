@@ -1,6 +1,7 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.NpcProblem
+import gg.grounds.npc.core.validation.NpcProblem
+
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import net.minestom.server.coordinate.Pos

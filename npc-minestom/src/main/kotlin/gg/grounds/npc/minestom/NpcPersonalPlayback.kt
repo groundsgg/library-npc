@@ -1,7 +1,8 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.NpcModel
-import gg.grounds.npc.core.NpcVector3
+import gg.grounds.npc.core.animation.NpcLoopMode
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcModel
 
 /** Independent clip/head channels. No entity access and no clock callback under a state lock. */
 internal class NpcPersonalPlayback(
@@ -73,12 +74,12 @@ internal class NpcPersonalPlayback(
                     seconds = elapsedNanos / 1_000_000_000.0
                     val clip = model.animations.getValue(selected)
                     if (
-                        clip.loop == "once" &&
+                        clip.loop == NpcLoopMode.ONCE &&
                             selected != options.idleClip &&
-                            seconds >= clip.length
+                            seconds >= clip.lengthSeconds
                     ) {
                         selected = options.idleClip
-                        seconds = if (selected == null) 0.0 else seconds - clip.length
+                        seconds = if (selected == null) 0.0 else seconds - clip.lengthSeconds
                     }
                 }
             }

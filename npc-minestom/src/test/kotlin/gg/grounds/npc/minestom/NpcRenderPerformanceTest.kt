@@ -1,6 +1,9 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.io.NpcDecodeResult
+import gg.grounds.npc.core.io.NpcModelJson
+import gg.grounds.npc.core.math.NpcVector3
+
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.MetadataDef

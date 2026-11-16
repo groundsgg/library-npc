@@ -1,6 +1,7 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.NpcVector3
+import gg.grounds.npc.core.math.NpcVector3
+
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 
