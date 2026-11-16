@@ -27,7 +27,14 @@ public class NpcMatrix(values: DoubleArray) {
     public operator fun times(other: NpcMatrix): NpcMatrix =
         NpcMatrix(
             DoubleArray(16) { index ->
-                (0..3).sumOf { matrix[(index / 4) * 4 + it] * other.matrix[it * 4 + index % 4] }
+                val row = (index / 4) * 4
+                val column = index % 4
+                var sum = 0.0
+                // A primitive loop avoids per-element IntRange/iterator allocations before C2.
+                for (component in 0..3) {
+                    sum += matrix[row + component] * other.matrix[component * 4 + column]
+                }
+                sum
             }
         )
 

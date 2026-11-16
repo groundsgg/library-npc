@@ -59,6 +59,7 @@ class NpcSamplingTest {
         repeat(100) { sampled += model.pose("idle", it / 1000.0, NpcVector3.ZERO).last().values[7] }
         val perPose = (allocation.getThreadAllocatedBytes(id) - before) / 100
         assertEquals(98.0, sampled, 1e-8)
+        println("NPC_POSE_ALLOCATION bytesPerPose=$perPose")
         assertTrue(perPose < 50_000, "Allocated $perPose bytes per fifty-part pose")
     }
 
