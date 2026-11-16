@@ -1,5 +1,7 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+
 import gg.grounds.npc.core.model.NpcBone
 import gg.grounds.npc.core.model.NpcModel
 import gg.grounds.npc.core.model.NpcPart

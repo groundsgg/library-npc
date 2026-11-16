@@ -1,5 +1,13 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.config.NpcRenderConfig
+import gg.grounds.npc.minestom.internal.audience.NpcRenderPolicy
+import gg.grounds.npc.minestom.internal.lifecycle.NpcEngineHandle
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.internal.rendering.NpcRenderEngine
+import gg.grounds.npc.minestom.spi.NpcSoundSink
+import gg.grounds.npc.minestom.viewer.NpcViewerState
+
 import gg.grounds.npc.core.io.NpcDecodeResult
 import gg.grounds.npc.core.io.NpcModelJson
 import gg.grounds.npc.core.math.NpcVector3
@@ -111,13 +119,13 @@ class NpcRenderPerformanceTest {
                     }
                 }
             }
-        return AnimatedNpcHandle(
+        return NpcRenderEngine(
                 lock,
                 model,
                 parts,
                 sceneTransform(),
                 NpcSoundSink { _, _, _ -> },
-                NpcRenderConfig(idleClip = "idle", variationClip = "idle2"),
+                NpcRenderConfig.builder().idleClip("idle").variationClip("idle2").build(),
             )
             .also { it.publishVisible() }
     }
@@ -488,7 +496,7 @@ class NpcRenderPerformanceTest {
         RendererFixture().use { first ->
             RendererFixture().use { other ->
                 val player = first.player()
-                val policy = NpcRenderPolicy(NpcRenderConfig())
+                val policy = NpcRenderPolicy(NpcRenderConfig.builder().build())
                 assertTrue(policy.canView(player, first.instance, NpcVector3(0.0, 0.0, 0.0)))
                 assertFalse(policy.canView(player, other.instance, NpcVector3(0.0, 0.0, 0.0)))
             }

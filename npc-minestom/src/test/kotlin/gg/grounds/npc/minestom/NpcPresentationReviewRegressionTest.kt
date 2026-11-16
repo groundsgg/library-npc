@@ -1,5 +1,17 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.config.NpcRenderConfig
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.presentation.NpcPresentationLimits
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationPhase
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
+import gg.grounds.npc.minestom.presentation.NpcPresentations
+import gg.grounds.npc.minestom.spi.NpcMonotonicClock
+import gg.grounds.npc.minestom.spi.NpcPublicationGuard
+import gg.grounds.npc.minestom.spi.NpcViewerSoundSink
+import gg.grounds.npc.minestom.transform.NpcRenderTransform
+
 import gg.grounds.npc.core.math.NpcTransform
 import gg.grounds.npc.core.math.NpcVector3
 
@@ -26,7 +38,7 @@ class NpcPresentationReviewRegressionTest {
             repeat(25) { f.fixture.instance.tick(0) }
             assertEquals(NpcPresentationPhase.CLOSED, hidden.snapshot().phase)
             assertEquals(2, f.parts().size)
-            val replacement = NpcPresentations.prepare(f.parent, NpcPresentationOptions(f.other))
+            val replacement = NpcPresentations.prepare(f.parent, NpcPresentationOptions.builder(f.other).build())
             assertInstanceOf(
                 NpcPresentationResult.Ready::class.java,
                 drive(f.fixture, replacement.ready()),
@@ -53,7 +65,7 @@ class NpcPresentationReviewRegressionTest {
     @Test
     fun `departure before construction releases its reservation without another tick`() {
         setup(limits = NpcPresentationLimits(1, 2)).use { f ->
-            val pending = NpcPresentations.prepare(f.parent, NpcPresentationOptions(f.player))
+            val pending = NpcPresentations.prepare(f.parent, NpcPresentationOptions.builder(f.player).build())
             f.player.remove()
             assertInstanceOf(
                 NpcPresentationResult.Rejected::class.java,
@@ -65,7 +77,7 @@ class NpcPresentationReviewRegressionTest {
                 NpcPresentationResult.Ready::class.java,
                 drive(
                     f.fixture,
-                    NpcPresentations.prepare(f.parent, NpcPresentationOptions(f.other)).ready(),
+                    NpcPresentations.prepare(f.parent, NpcPresentationOptions.builder(f.other).build()).ready(),
                 ),
             )
         }
@@ -78,18 +90,13 @@ class NpcPresentationReviewRegressionTest {
             var sounds = 0
             val personal =
                 f.personal(
-                    NpcPresentationOptions(
-                        f.player,
-                        publicationGuard =
-                            NpcPublicationGuard { op ->
+                    NpcPresentationOptions.builder(f.player).publicationGuard(NpcPublicationGuard { op ->
                                 if (!current.get()) false
                                 else {
                                     op.run()
                                     true
                                 }
-                            },
-                        sounds = NpcViewerSoundSink { _, _, _ -> sounds++ },
-                    )
+                            }).sounds(NpcViewerSoundSink { _, _, _ -> sounds++ }).build()
                 )
             drive(f.fixture, personal.publish())
             current.set(false)
@@ -150,14 +157,7 @@ class NpcPresentationReviewRegressionTest {
     fun `backward seek before a shared variation keeps a following presentation alive`() {
         setup(
                 config =
-                    NpcRenderConfig(
-                        idleClip = "idle",
-                        variationClip = "wave",
-                        variationDelayMillis = 100,
-                        nearIntervalMillis = 50,
-                        midIntervalMillis = 50,
-                        farIntervalMillis = 50,
-                    )
+                    NpcRenderConfig.builder().idleClip("idle").variationClip("wave").variationDelayMillis(100).nearIntervalMillis(50).midIntervalMillis(50).farIntervalMillis(50).build()
             )
             .use { f ->
                 f.player.teleport(Pos(10.0, 42.0, 0.0)).join()
@@ -183,10 +183,7 @@ class NpcPresentationReviewRegressionTest {
             val clock = AtomicLong(10_000_000_000)
             val personal =
                 f.personal(
-                    NpcPresentationOptions(
-                        f.player,
-                        clock = NpcMonotonicClock { clock.getAndAdd(10_000_000) },
-                    )
+                    NpcPresentationOptions.builder(f.player).clock(NpcMonotonicClock { clock.getAndAdd(10_000_000) }).build()
                 )
             drive(f.fixture, personal.publish())
             drive(f.fixture, personal.playClip("wave"))
@@ -350,7 +347,7 @@ class NpcPresentationReviewRegressionTest {
         val player: TestPlayer,
         val other: TestPlayer,
     ) : AutoCloseable {
-        fun personal(options: NpcPresentationOptions = NpcPresentationOptions(player)) =
+        fun personal(options: NpcPresentationOptions = NpcPresentationOptions.builder(player).build()) =
             (drive(fixture, NpcPresentations.prepare(parent, options).ready())
                     as NpcPresentationResult.Ready)
                 .handle
@@ -365,7 +362,7 @@ class NpcPresentationReviewRegressionTest {
 
     private fun setup(
         limits: NpcPresentationLimits = NpcPresentationLimits(),
-        config: NpcRenderConfig = NpcRenderConfig(),
+        config: NpcRenderConfig = NpcRenderConfig.builder().build(),
         gated: Boolean = false,
     ): Setup {
         MinecraftServer.init()
@@ -379,12 +376,7 @@ class NpcPresentationReviewRegressionTest {
         val other = fixture.player(Pos(1.0, 42.0, 0.0))
         val root =
             NpcRenderer.prepare(
-                NpcSpawnRequest(
-                    fixture.instance,
-                    personalTestModel(true),
-                    NpcLifecycleTest.transform(),
-                    config = config,
-                ),
+                NpcSpawnRequest.builder(fixture.instance, personalTestModel(true), NpcLifecycleTest.transform()).config(config).build(),
                 limits,
             )
         val parent = (drive(fixture, root.ready()) as NpcPrepareResult.Ready).handle

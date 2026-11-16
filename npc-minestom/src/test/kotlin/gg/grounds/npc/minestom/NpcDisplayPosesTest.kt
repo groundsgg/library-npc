@@ -1,5 +1,7 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.internal.rendering.NpcDisplayPoses
+
 import gg.grounds.npc.core.animation.NpcClip
 import gg.grounds.npc.core.animation.NpcLoopMode
 import gg.grounds.npc.core.animation.NpcPoseSampler

@@ -1,5 +1,14 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.presentation.NpcPresentationChannel
+import gg.grounds.npc.minestom.presentation.NpcPresentationHandle
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
+import gg.grounds.npc.minestom.presentation.NpcPresentationStart
+import gg.grounds.npc.minestom.presentation.NpcPresentations
+import gg.grounds.npc.minestom.spi.NpcMonotonicClock
+
 import gg.grounds.npc.core.animation.NpcBoneTrack
 import gg.grounds.npc.core.animation.NpcClip
 import gg.grounds.npc.core.animation.NpcInterpolation
@@ -169,7 +178,7 @@ class NpcPresentationPlaybackTest {
         env.createPlayer(instance, Pos(1.0, 42.0, 0.0))
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest(instance, personalTestModel(), NpcLifecycleTest.transform())
+                NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform()).build()
             )
         val parent = (await(env, start.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
@@ -192,11 +201,7 @@ class NpcPresentationPlaybackTest {
             start =
                 NpcPresentations.prepare(
                     parent,
-                    NpcPresentationOptions(
-                        player,
-                        idleClip = "idle",
-                        clock = NpcMonotonicClock(clock::get),
-                    ),
+                    NpcPresentationOptions.builder(player).idleClip("idle").clock(NpcMonotonicClock(clock::get)).build(),
                 )
             val handle = (await(env, start!!.ready()) as NpcPresentationResult.Ready).handle
             await(env, handle.publish())

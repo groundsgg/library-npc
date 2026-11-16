@@ -1,5 +1,13 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.presentation.NpcPresentationHandle
+import gg.grounds.npc.minestom.presentation.NpcPresentationLimits
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
+import gg.grounds.npc.minestom.presentation.NpcPresentations
+import gg.grounds.npc.minestom.spi.NpcMonotonicClock
+
 
 import gg.grounds.npc.minestom.NpcPresentationPacketTest.Companion.drive
 import java.lang.management.ManagementFactory
@@ -22,7 +30,7 @@ class NpcPresentationPerformanceTest {
             val players = (0..32).map { fixture.player(Pos(it / 32.0, 42.0, 0.0)) }
             val root =
                 NpcRenderer.prepare(
-                    NpcSpawnRequest(instance, personalTestModel(), NpcLifecycleTest.transform())
+                    NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform()).build()
                 )
             val parent = (drive(fixture, root.ready()) as NpcPrepareResult.Ready).handle
             drive(fixture, parent.publish())
@@ -48,10 +56,7 @@ class NpcPresentationPerformanceTest {
                         val start =
                             NpcPresentations.prepare(
                                 parent,
-                                NpcPresentationOptions(
-                                    players[handles.size],
-                                    clock = NpcMonotonicClock { 10_000_000_000 },
-                                ),
+                                NpcPresentationOptions.builder(players[handles.size]).clock(NpcMonotonicClock { 10_000_000_000 }).build(),
                             )
                         val handle =
                             (drive(fixture, start.ready()) as NpcPresentationResult.Ready).handle
@@ -99,7 +104,7 @@ class NpcPresentationPerformanceTest {
                     )
                 val root =
                     NpcRenderer.prepare(
-                        NpcSpawnRequest(fixture.instance, model, NpcLifecycleTest.transform()),
+                        NpcSpawnRequest.builder(fixture.instance, model, NpcLifecycleTest.transform()).build(),
                         NpcPresentationLimits(32, limit),
                     )
                 val parent = (drive(fixture, root.ready()) as NpcPrepareResult.Ready).handle
@@ -110,17 +115,14 @@ class NpcPresentationPerformanceTest {
                         val start =
                             NpcPresentations.prepare(
                                 parent,
-                                NpcPresentationOptions(
-                                    player,
-                                    clock = NpcMonotonicClock { 10_000_000_000 },
-                                ),
+                                NpcPresentationOptions.builder(player).clock(NpcMonotonicClock { 10_000_000_000 }).build(),
                             )
                         val handle =
                             (drive(fixture, start.ready()) as NpcPresentationResult.Ready).handle
                         drive(fixture, handle.publish())
                     }
                     val refused =
-                        NpcPresentations.prepare(parent, NpcPresentationOptions(players.last()))
+                        NpcPresentations.prepare(parent, NpcPresentationOptions.builder(players.last()).build())
                     assertInstanceOf(
                         NpcPresentationResult.Rejected::class.java,
                         refused

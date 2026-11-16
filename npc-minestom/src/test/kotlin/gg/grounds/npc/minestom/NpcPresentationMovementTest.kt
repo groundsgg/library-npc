@@ -1,5 +1,13 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.presentation.NpcPresentationChannel
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
+import gg.grounds.npc.minestom.presentation.NpcPresentations
+import gg.grounds.npc.minestom.spi.NpcMonotonicClock
+import gg.grounds.npc.minestom.transform.NpcRenderTransform
+
 import gg.grounds.npc.core.math.NpcTransform
 import gg.grounds.npc.core.math.NpcVector3
 
@@ -23,7 +31,7 @@ class NpcPresentationMovementTest {
         env.createPlayer(instance, Pos(1.0, 42.0, 0.0))
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest(instance, personalTestModel(), NpcLifecycleTest.transform())
+                NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform()).build()
             )
         val parent = (await(env, start.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
@@ -31,7 +39,7 @@ class NpcPresentationMovementTest {
         val personalStart =
             NpcPresentations.prepare(
                 parent,
-                NpcPresentationOptions(player, clock = NpcMonotonicClock(clock::get)),
+                NpcPresentationOptions.builder(player).clock(NpcMonotonicClock(clock::get)).build(),
             )
         try {
             val personal = (await(env, personalStart.ready()) as NpcPresentationResult.Ready).handle
@@ -70,11 +78,11 @@ class NpcPresentationMovementTest {
         val player = env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest(instance, personalTestModel(), NpcLifecycleTest.transform())
+                NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform()).build()
             )
         val parent = (await(env, start.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
-        val personalStart = NpcPresentations.prepare(parent, NpcPresentationOptions(player))
+        val personalStart = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(player).build())
         try {
             val target = NpcRenderTransform(NpcTransform(NpcVector3(12.0, 42.0, 3.0)))
             await(env, parent.applyTransform(target))
@@ -95,12 +103,12 @@ class NpcPresentationMovementTest {
         val player = env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest(instance, personalTestModel(), NpcLifecycleTest.transform())
+                NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform()).build()
             )
         val parent = (await(env, start.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
         val common = instance.entities.filterIsInstance<NpcItemDisplay>().toSet()
-        val personalStart = NpcPresentations.prepare(parent, NpcPresentationOptions(player))
+        val personalStart = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(player).build())
         val personal = (await(env, personalStart.ready()) as NpcPresentationResult.Ready).handle
         await(env, personal.publish())
         val entered = CountDownLatch(1)

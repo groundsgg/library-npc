@@ -1,5 +1,14 @@
 package example;
 
+import gg.grounds.npc.minestom.NpcPrepareResult;
+import gg.grounds.npc.minestom.NpcRenderer;
+import gg.grounds.npc.minestom.NpcSpawnRequest;
+import gg.grounds.npc.minestom.presentation.NpcPresentationChannel;
+import gg.grounds.npc.minestom.presentation.NpcPresentationHandle;
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions;
+import gg.grounds.npc.minestom.transform.NpcRenderTransform;
+import gg.grounds.npc.minestom.viewer.NpcViewerState;
+
 import gg.grounds.npc.core.animation.NpcBoneTrack;
 import gg.grounds.npc.core.animation.NpcClip;
 import gg.grounds.npc.core.animation.NpcInterpolation;
@@ -46,7 +55,7 @@ public final class NpcDemo {
             net.minestom.server.event.player.PlayerSpawnEvent.class,event -> {
                 if (event.isFirstSpawn()) event.getPlayer().sendResourcePacks(pack.request());
             });
-        var start = NpcRenderer.prepare(new NpcSpawnRequest(instance,model(),at(0)));
+        var start = NpcRenderer.prepare(NpcSpawnRequest.builder(instance, model(), at(0)).build());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try { start.cancel().toCompletableFuture().get(5,TimeUnit.SECONDS); }
             catch (Exception failure) { failure.printStackTrace(); }
@@ -59,11 +68,9 @@ public final class NpcDemo {
             if (!(prepared instanceof NpcPrepareResult.Ready ready)) throw new IllegalStateException(prepared.toString());
             var npc = ready.getHandle();
             npc.publish().toCompletableFuture().get(5,TimeUnit.SECONDS);
-            var personal = new NpcDemoPersonal(npc,player -> new NpcPresentationOptions(player,
-                operation -> {operation.run();return true;},
-                (recipient,origin,sound) -> recipient.playSound(net.kyori.adventure.sound.Sound.sound(
+            var personal = new NpcDemoPersonal(npc,player -> NpcPresentationOptions.builder(player).publicationGuard(operation -> {operation.run();return true;}).sounds((recipient,origin,sound) -> recipient.playSound(net.kyori.adventure.sound.Sound.sound(
                     net.kyori.adventure.key.Key.key(sound.getKey()),net.kyori.adventure.sound.Sound.Source.MASTER,
-                    (float)sound.getVolume(),(float)sound.getPitch()))));
+                    (float)sound.getVolume(),(float)sound.getPitch()))).build());
             playerCommand("personal",p -> personal.open(p).thenApply(h -> null));
             playerCommand("personalwave",p -> personal.with(p,h -> h.playClip("wave")));
             playerCommand("personalidle",p -> personal.with(p,h -> h.playClip("idle")));

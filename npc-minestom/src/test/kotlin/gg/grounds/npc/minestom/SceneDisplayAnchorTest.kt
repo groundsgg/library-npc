@@ -1,5 +1,7 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import org.junit.jupiter.api.Assertions.assertEquals

@@ -1,5 +1,8 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.internal.lifecycle.PreparedNpc
+import gg.grounds.npc.minestom.presentation.NpcPresentationLimits
+
 import gg.grounds.npc.core.validation.NpcProblem
 
 import java.util.concurrent.CompletableFuture

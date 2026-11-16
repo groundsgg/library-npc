@@ -1,5 +1,8 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.internal.rendering.DEFAULT_NPC_VISUAL
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+
 
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer

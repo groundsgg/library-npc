@@ -1,5 +1,11 @@
 package example;
 
+import gg.grounds.npc.minestom.NpcPrepareResult;
+import gg.grounds.npc.minestom.NpcRenderer;
+import gg.grounds.npc.minestom.NpcSpawnRequest;
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions;
+import gg.grounds.npc.minestom.transform.NpcRenderTransform;
+
 import gg.grounds.npc.minestom.*;
 import java.net.*;
 import java.util.UUID;
@@ -22,11 +28,11 @@ class NpcDemoPersonalTest {
         instance.loadChunk(0,0).join();
         var player = player(instance);
         var observer = player(instance);
-        var start = NpcRenderer.prepare(new NpcSpawnRequest(instance,NpcDemo.model(),new NpcRenderTransform(new gg.grounds.npc.core.math.NpcTransform(gg.grounds.npc.core.math.NpcVector3.ZERO),null)));
+        var start = NpcRenderer.prepare(NpcSpawnRequest.builder(instance, NpcDemo.model(), new NpcRenderTransform(new gg.grounds.npc.core.math.NpcTransform(gg.grounds.npc.core.math.NpcVector3.ZERO),null)).build());
         var parent = ((NpcPrepareResult.Ready)await(instance,start.ready())).getHandle();
         await(instance,parent.publish());
         var clock = new AtomicLong(10_000_000_000L);
-        var demo = new NpcDemoPersonal(parent,p -> new NpcPresentationOptions(p,op -> {op.run();return true;},(p2,origin,sound) -> {},null,50,clock::get));
+        var demo = new NpcDemoPersonal(parent,p -> NpcPresentationOptions.builder(p).publicationGuard(op -> {op.run();return true;}).sounds((p2,origin,sound) -> {}).idleClip(null).sampleIntervalMillis(50).clock(clock::get).build());
         try {
             var old = demo.open(player);
             demo.close(player).toCompletableFuture().get(1,TimeUnit.SECONDS);

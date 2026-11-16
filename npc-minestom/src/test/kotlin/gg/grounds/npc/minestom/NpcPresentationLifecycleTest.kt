@@ -1,5 +1,13 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.presentation.NpcPresentationLimits
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationPhase
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
+import gg.grounds.npc.minestom.presentation.NpcPresentations
+import gg.grounds.npc.minestom.spi.NpcPublicationGuard
+
 
 import java.time.Duration
 import java.util.concurrent.CompletionStage
@@ -52,8 +60,8 @@ class NpcPresentationLifecycleTest {
         val instance = env.createFlatInstance()
         val a = env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
         val parent = parent(env, instance)
-        val first = NpcPresentations.prepare(parent, NpcPresentationOptions(a))
-        val second = NpcPresentations.prepare(parent, NpcPresentationOptions(a))
+        val first = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(a).build())
+        val second = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(a).build())
         assertInstanceOf(
             NpcPresentationResult.Rejected::class.java,
             second.ready().toCompletableFuture().get(1, TimeUnit.SECONDS),
@@ -74,9 +82,9 @@ class NpcPresentationLifecycleTest {
         val a = env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
         val parent = parent(env, instance)
         val common = displays(instance)
-        val cancelled = NpcPresentations.prepare(parent, NpcPresentationOptions(a))
+        val cancelled = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(a).build())
         cancelled.cancel().toCompletableFuture().get(1, TimeUnit.SECONDS)
-        val replacement = NpcPresentations.prepare(parent, NpcPresentationOptions(a))
+        val replacement = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(a).build())
         try {
             val personal = (await(env, replacement.ready()) as NpcPresentationResult.Ready).handle
             await(env, personal.publish())
@@ -95,8 +103,8 @@ class NpcPresentationLifecycleTest {
         val a = env.createPlayer(instance, Pos(0.0, 42.0, 0.0))
         val b = env.createPlayer(instance, Pos(1.0, 42.0, 0.0))
         val parent = parent(env, instance, NpcPresentationLimits(1, 2))
-        val first = NpcPresentations.prepare(parent, NpcPresentationOptions(a))
-        val rejected = NpcPresentations.prepare(parent, NpcPresentationOptions(b))
+        val first = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(a).build())
+        val rejected = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(b).build())
         assertInstanceOf(
             NpcPresentationResult.Rejected::class.java,
             rejected.ready().toCompletableFuture().get(1, TimeUnit.SECONDS),
@@ -108,7 +116,7 @@ class NpcPresentationLifecycleTest {
         val partsLimited = parent(env, instance, NpcPresentationLimits(32, 1))
         try {
             val result =
-                NpcPresentations.prepare(partsLimited, NpcPresentationOptions(a))
+                NpcPresentations.prepare(partsLimited, NpcPresentationOptions.builder(a).build())
                     .ready()
                     .toCompletableFuture()
                     .get(1, TimeUnit.SECONDS)
@@ -130,7 +138,7 @@ class NpcPresentationLifecycleTest {
         for ((handle, player) in listOf(foreign to a, parent to other)) {
             assertInstanceOf(
                 NpcPresentationResult.Rejected::class.java,
-                NpcPresentations.prepare(handle, NpcPresentationOptions(player))
+                NpcPresentations.prepare(handle, NpcPresentationOptions.builder(player).build())
                     .ready()
                     .toCompletableFuture()
                     .get(1, TimeUnit.SECONDS),
@@ -139,7 +147,7 @@ class NpcPresentationLifecycleTest {
         parent.closeAsync().toCompletableFuture().get(1, TimeUnit.SECONDS)
         assertInstanceOf(
             NpcPresentationResult.Rejected::class.java,
-            NpcPresentations.prepare(parent, NpcPresentationOptions(a))
+            NpcPresentations.prepare(parent, NpcPresentationOptions.builder(a).build())
                 .ready()
                 .toCompletableFuture()
                 .get(1, TimeUnit.SECONDS),
@@ -157,7 +165,7 @@ class NpcPresentationLifecycleTest {
         val original =
             (common[1].entityMeta as net.minestom.server.entity.metadata.display.ItemDisplayMeta)
                 .translation
-        val start = NpcPresentations.prepare(parent, NpcPresentationOptions(a))
+        val start = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(a).build())
         try {
             val handle = (await(env, start.ready()) as NpcPresentationResult.Ready).handle
             await(env, handle.publish())
@@ -183,10 +191,10 @@ class NpcPresentationLifecycleTest {
         val players = (0..32).map { env.createPlayer(instance, Pos(it / 32.0, 42.0, 0.0)) }
         val parent = parent(env, instance)
         val starts =
-            players.take(32).map { NpcPresentations.prepare(parent, NpcPresentationOptions(it)) }
+            players.take(32).map { NpcPresentations.prepare(parent, NpcPresentationOptions.builder(it).build()) }
         try {
             assertTrue(starts.all { !it.ready().toCompletableFuture().isDone })
-            val refused = NpcPresentations.prepare(parent, NpcPresentationOptions(players.last()))
+            val refused = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(players.last()).build())
             assertInstanceOf(
                 NpcPresentationResult.Rejected::class.java,
                 refused.ready().toCompletableFuture().get(1, TimeUnit.SECONDS),
@@ -214,10 +222,10 @@ class NpcPresentationLifecycleTest {
             )
         val parent = parent(env, instance, model = model)
         val starts =
-            players.take(20).map { NpcPresentations.prepare(parent, NpcPresentationOptions(it)) }
+            players.take(20).map { NpcPresentations.prepare(parent, NpcPresentationOptions.builder(it).build()) }
         try {
             assertTrue(starts.all { !it.ready().toCompletableFuture().isDone })
-            val refused = NpcPresentations.prepare(parent, NpcPresentationOptions(players.last()))
+            val refused = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(players.last()).build())
             assertInstanceOf(
                 NpcPresentationResult.Rejected::class.java,
                 refused.ready().toCompletableFuture().get(1, TimeUnit.SECONDS),
@@ -236,23 +244,17 @@ class NpcPresentationLifecycleTest {
         var rejectGuard = false
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest(
-                    instance,
-                    NpcLifecycleTest.model(),
-                    NpcLifecycleTest.transform(),
-                    publicationGuard =
-                        NpcPublicationGuard { operation ->
+                NpcSpawnRequest.builder(instance, NpcLifecycleTest.model(), NpcLifecycleTest.transform()).publicationGuard(NpcPublicationGuard { operation ->
                             check(!rejectGuard) {
                                 "An unleased cancellation must not reenter the publication guard"
                             }
                             operation.run()
                             true
-                        },
-                )
+                        }).build()
             )
         val parent = (await(env, start.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
-        val personal = NpcPresentations.prepare(parent, NpcPresentationOptions(a))
+        val personal = NpcPresentations.prepare(parent, NpcPresentationOptions.builder(a).build())
         rejectGuard = true
         try {
             personal.cancel().toCompletableFuture().get(1, TimeUnit.SECONDS)
@@ -284,7 +286,7 @@ class NpcPresentationLifecycleTest {
         ): NpcHandle {
             val start =
                 NpcRenderer.prepare(
-                    NpcSpawnRequest(instance, model, NpcLifecycleTest.transform()),
+                    NpcSpawnRequest.builder(instance, model, NpcLifecycleTest.transform()).build(),
                     limits,
                 )
             val handle = (await(env, start.ready()) as NpcPrepareResult.Ready).handle

@@ -1,5 +1,11 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.config.NpcRenderConfig
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.internal.rendering.NpcRenderAudience
+import gg.grounds.npc.minestom.internal.rendering.NpcRenderEngine
+import gg.grounds.npc.minestom.spi.NpcSoundSink
+
 import gg.grounds.npc.core.animation.NpcClip
 import gg.grounds.npc.core.animation.NpcLoopMode
 import gg.grounds.npc.core.math.NpcVector3
@@ -102,7 +108,7 @@ class NpcPresentationFrameTest {
         env: Env,
         instance: Instance,
         audience: NpcRenderAudience = NpcRenderAudience.Shared,
-    ): AnimatedNpcHandle {
+    ): NpcRenderEngine {
         val base = NpcLifecycleTest.model()
         val model =
             NpcModel(
@@ -122,13 +128,13 @@ class NpcPresentationFrameTest {
             )
         assertTrue(env.tickWhile({ !attaching.isDone }, Duration.ofSeconds(3)))
         attaching.join()
-        return AnimatedNpcHandle(
+        return NpcRenderEngine(
             lock,
             model,
             parts,
             NpcLifecycleTest.transform(),
             NpcSoundSink { _, _, _ -> },
-            NpcRenderConfig(),
+            NpcRenderConfig.builder().build(),
             audience,
         )
     }

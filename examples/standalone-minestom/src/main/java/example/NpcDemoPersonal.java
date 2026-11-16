@@ -1,5 +1,12 @@
 package example;
 
+import gg.grounds.npc.minestom.NpcHandle;
+import gg.grounds.npc.minestom.presentation.NpcPresentationHandle;
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions;
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult;
+import gg.grounds.npc.minestom.presentation.NpcPresentationStart;
+import gg.grounds.npc.minestom.presentation.NpcPresentations;
+
 import gg.grounds.npc.minestom.*;
 import java.util.IdentityHashMap;
 import java.util.concurrent.*;

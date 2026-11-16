@@ -1,5 +1,10 @@
 package gg.grounds.npc.minestom
 
+import gg.grounds.npc.minestom.config.NpcRenderConfig
+import gg.grounds.npc.minestom.internal.lifecycle.NpcEngineHandle
+import gg.grounds.npc.minestom.transform.NpcRenderTransform
+import gg.grounds.npc.minestom.viewer.NpcViewerState
+
 import gg.grounds.npc.core.io.NpcDecodeResult
 import gg.grounds.npc.core.io.NpcModelJson
 import gg.grounds.npc.core.math.NpcTransform
@@ -54,12 +59,7 @@ internal class EngineTestRenderers(private val models: Map<String, NpcModel>) {
         fun create(context: SceneAssetRenderContext): CompletableFuture<NpcEngineHandle> {
             val start =
                 NpcRenderer.prepare(
-                    NpcSpawnRequest(
-                        context.instance,
-                        model,
-                        context.transform,
-                        config = NpcRenderConfig(idleClip = "idle", variationClip = "idle2"),
-                    )
+                    NpcSpawnRequest.builder(context.instance, model, context.transform).config(NpcRenderConfig.builder().idleClip("idle").variationClip("idle2").build()).build()
                 )
             val result = TickFuture<NpcEngineHandle>(context.instance)
             start.ready().whenComplete { ready, error ->

@@ -1,5 +1,13 @@
 package consumer;
 
+import gg.grounds.npc.minestom.NpcHandle;
+import gg.grounds.npc.minestom.presentation.NpcPresentationHandle;
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions;
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult;
+import gg.grounds.npc.minestom.presentation.NpcPresentationStart;
+import gg.grounds.npc.minestom.presentation.NpcPresentations;
+import gg.grounds.npc.minestom.transform.NpcRenderTransform;
+
 import gg.grounds.npc.core.animation.NpcPoseSampler;
 import gg.grounds.npc.core.math.NpcTransform;
 import gg.grounds.npc.core.math.NpcVector3;
@@ -11,7 +19,7 @@ import java.util.*;
 public final class JavaConsumer {
     // Compiled against Maven artifacts, with no composite or implementation imports.
     public static java.util.concurrent.CompletionStage<Void> gesture(NpcHandle parent, net.minestom.server.entity.Player player) {
-        NpcPresentationStart start = NpcPresentations.prepare(parent,new NpcPresentationOptions(player));
+        NpcPresentationStart start = NpcPresentations.prepare(parent,NpcPresentationOptions.builder(player).build());
         return start.ready().thenCompose(result -> {
             if(!(result instanceof NpcPresentationResult.Ready ready)) return start.cancel();
             NpcPresentationHandle handle=ready.getHandle();
