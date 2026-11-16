@@ -12,7 +12,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import net.minestom.server.entity.Player;
 
-/** Demo ownership only; rendering, expiry, clock and parent cleanup stay in the library. */
+/**
+ * Retains one presentation per concrete player connection and observes asynchronous cleanup.
+ *
+ * <p>The library owns rendering, private clocks and expiry; this helper owns only demo sessions.
+ * Identity keys are intentional: reconnecting with the same UUID creates a new Player and must not
+ * inherit an old connection's handle or viewer state. A close can race preparation, so each session
+ * also retains the start token before a ready handle exists.
+ */
 final class PersonalNpcSessions {
   private final NpcHandle parent;
   private final Function<Player, NpcPresentationOptions> options;
@@ -39,6 +46,7 @@ final class PersonalNpcSessions {
     }
     try {
       var start = parent.preparePresentation(options.apply(player));
+      // A pending preparation still needs cancellation, even when ready() never yields a handle.
       session.start.complete(start);
       start
           .ready()
@@ -51,7 +59,9 @@ final class PersonalNpcSessions {
                   return CompletableFuture.<NpcPresentationHandle>failedFuture(
                       new IllegalStateException(result.toString()));
                 var handle = ready.getHandle();
+                // Observe expiry/parent shutdown without initiating another close.
                 handle.closed().whenComplete((unused, error) -> forget(player, session));
+                // Publication replaces the common visual only for this concrete connection.
                 return handle.publish().thenApply(unused -> handle);
               })
           .whenComplete(
@@ -94,6 +104,7 @@ final class PersonalNpcSessions {
     }
     if (session == null) return CompletableFuture.completedFuture(null);
     session.closing.set(true);
+    // Await removal before the library restores the parent's current shared pose for this player.
     return session.start.thenCompose(NpcPresentationStart::cancel);
   }
 

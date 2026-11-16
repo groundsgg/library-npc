@@ -33,6 +33,7 @@ final class DemoServer implements AutoCloseable {
       var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
       instance.setChunkSupplier(LightingChunk::new);
       instance.setTime(6000);
+      // Freeze lighting for the demo. World age is independent of the NPC's clip-local clock.
       instance.defaultClock().pause();
       instance.setGenerator(unit -> unit.modifier().fillHeight(0, 40, Block.GRASS_BLOCK));
       MinecraftServer.getGlobalEventHandler()

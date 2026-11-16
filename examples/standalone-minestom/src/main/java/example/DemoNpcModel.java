@@ -24,6 +24,7 @@ final class DemoNpcModel {
   static NpcModel create() {
     var zero = NpcVector3.ZERO;
     var head = new NpcVector3(0, 1.4, 0);
+    // Numeric keyframes and clip duration use seconds. Here the head rotates 20 degrees around Z.
     var wave =
         new NpcClip(
             NpcLoopMode.ONCE,
@@ -40,6 +41,7 @@ final class DemoNpcModel {
     return new NpcModel(
         "npc_demo:bot",
         new NpcBounds(new NpcVector3(0, 1, 0), new NpcVector3(1, 2, 1)),
+        // Parents precede children. The head's origin is also its local rotation pivot.
         List.of(new NpcBone("body", null, zero, zero), new NpcBone("head", "body", head, zero)),
         List.of(
             new NpcPart(
@@ -56,7 +58,9 @@ final class DemoNpcModel {
                 head,
                 zero,
                 new NpcVector3(0.5, 0.5, 0.5))),
+        // An empty idle track keeps the rest pose; model IDs above resolve through the demo pack.
         Map.of("idle", new NpcClip(NpcLoopMode.LOOP, 1, Map.of()), "wave", wave),
+        // This declares a cue. Delivery still requires an injected sound sink; defaults are silent.
         Map.of("wave", new NpcClipSound("minecraft:entity.villager.yes", 0.8, 1.0, 12)));
   }
 

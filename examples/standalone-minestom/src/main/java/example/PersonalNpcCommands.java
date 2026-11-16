@@ -11,6 +11,7 @@ import net.minestom.server.command.builder.Command;
 /** The optional presentation scenario: independent channels belong to a concrete connection. */
 final class PersonalNpcCommands {
   static NpcPresentationOptions options(net.minestom.server.entity.Player player) {
+    // Private cues target the supplied recipient only; do not broadcast them around the parent NPC.
     return NpcPresentationOptions.builder(player)
         .sounds(
             (recipient, origin, sound) ->
@@ -29,6 +30,7 @@ final class PersonalNpcCommands {
         "personalwave", player -> personal.with(player, handle -> handle.playClip("wave")));
     playerCommand(
         "personalidle", player -> personal.with(player, handle -> handle.playClip("idle")));
+    // Stopping retains the private channel. Following releases it back to the common NPC.
     playerCommand("personalstop", player -> personal.with(player, NpcPresentationHandle::stopClip));
     playerCommand(
         "personallook", player -> personal.with(player, handle -> handle.applyHeadLook(35, -15)));

@@ -16,6 +16,7 @@ final class SharedNpcCommands {
     command("npclook", () -> npc.applyHeadLook(20, -10));
     command("npcmove", () -> npc.applyTransform(DemoNpcModel.at(2)));
     command("npcremove", playback::remove);
+    // Scale/glow is an override for the command sender's connection, not a global model edit.
     PersonalNpcCommands.playerCommand(
         "npcscale", player -> npc.applyViewerState(player, new NpcViewerState(1.3, true)));
   }

@@ -10,7 +10,14 @@ import java.util.*;
 import java.util.concurrent.*;
 import net.minestom.server.timer.TaskSchedule;
 
-/** Owns the start token and clip task until all shared/private NPC cleanup has drained. */
+/**
+ * The example's lifecycle owner: prepare hidden parts, publish them, then drain them before the
+ * server stops. Keep this owner even if preparation fails before it returns a handle.
+ *
+ * <p>The blocking {@link #await} helper is confined to bootstrap and shutdown threads. NPC commands
+ * run on the instance scheduler, so an instance-tick callback must compose their stages instead of
+ * waiting synchronously for work on that same scheduler.
+ */
 final class DemoApplication implements AutoCloseable {
   final DemoServer server;
   final NpcHandle npc;
@@ -26,6 +33,7 @@ final class DemoApplication implements AutoCloseable {
     this.npc = npc;
     this.playback = new SharedNpcPlayback(npc);
     this.personal = new PersonalNpcSessions(npc, PersonalNpcCommands::options);
+    // Shared animation uses a host-owned clip clock. The library does not install this task.
     var ticking =
         server
             .instance
@@ -42,11 +50,13 @@ final class DemoApplication implements AutoCloseable {
       var request =
           NpcSpawnRequest.builder(server.instance, DemoNpcModel.create(), DemoNpcModel.at(0))
               .build();
+      // Retain the cancellation token immediately, before asynchronous attachment can finish.
       start = NpcRenderer.prepare(request);
       var prepared = await(start.ready());
       if (!(prepared instanceof NpcPrepareResult.Ready ready))
         throw new IllegalStateException(prepared.toString());
       var npc = ready.getHandle();
+      // Ready means allocated and hidden. Publication is the separate visibility boundary.
       await(npc.publish());
       var demo = new DemoApplication(server, start, npc);
       SharedNpcCommands.register(npc, demo.playback);
@@ -54,6 +64,7 @@ final class DemoApplication implements AutoCloseable {
       return demo;
     } catch (Exception failure) {
       try {
+        // This also handles rejection or failure before any usable handle was returned.
         if (start != null) await(start.cancel());
       } catch (Exception cleanup) {
         failure.addSuppressed(cleanup);
@@ -64,6 +75,7 @@ final class DemoApplication implements AutoCloseable {
     }
   }
 
+  /** Bootstrap/shutdown convenience; never call this from an instance-tick callback. */
   static <T> T await(CompletionStage<T> stage) throws Exception {
     return stage.toCompletableFuture().get(5, TimeUnit.SECONDS);
   }
@@ -72,11 +84,13 @@ final class DemoApplication implements AutoCloseable {
   public void close() {
     if (!closed.compareAndSet(false, true)) return;
     try {
+      // Stop the host's repeating task before closing the NPC it would otherwise keep advancing.
       await(playback.remove());
     } catch (Exception failure) {
       failure.printStackTrace();
     } finally {
       try {
+        // Parent cleanup includes pending/active private presentations and accepted sound/I/O work.
         await(start.cancel());
       } catch (Exception failure) {
         failure.printStackTrace();

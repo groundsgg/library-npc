@@ -4,7 +4,15 @@ import gg.grounds.npc.minestom.NpcHandle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-/** Clip-local time and ownership of the sample's repeating advance task. */
+/**
+ * Owns the shared clip clock and its repeating scheduler task.
+ *
+ * <p>{@code advanceClipTo} takes absolute clip-local milliseconds. At a nominal 20 ticks per second
+ * this demo advances by 50 ms per tick, producing 50, 100, 150... rather than passing a repeated
+ * delta of 50. It deliberately uses tick time, so animation slows with a lagging server. Numeric
+ * model keyframes use seconds; personal presentations use their own monotonic clock inside the
+ * library.
+ */
 final class SharedNpcPlayback {
   private final NpcHandle npc;
   private final CompletableFuture<Void> removed = new CompletableFuture<>();
@@ -24,6 +32,7 @@ final class SharedNpcPlayback {
   synchronized CompletionStage<Void> start(String clip) {
     if (closed)
       return CompletableFuture.failedFuture(new IllegalStateException("Demo NPC removed"));
+    // A new clip starts at zero regardless of how long the server has already been running.
     elapsed = 0;
     return npc.playClip(clip, 0);
   }
@@ -46,6 +55,8 @@ final class SharedNpcPlayback {
       cancelTicks = () -> {};
     }
     try {
+      // Cancel the host driver first; observe the asynchronous renderer drain before reporting
+      // done.
       stop.run();
       npc.closeAsync()
           .whenComplete(
