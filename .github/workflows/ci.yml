@@ -16,9 +16,11 @@ jobs:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v6
-      - run: ./gradlew check publishAllPublicationsToReviewRepository
+      - run: ./gradlew check apiCheck dokkaGenerate publishAllPublicationsToReviewRepository
+      - run: python3 -m unittest discover -s tools -p '*_test.py'
       - run: python3 tools/verify_public_artifacts.py
       - run: python3 tools/verify_consumer_origin.py
-      - run: ./gradlew -p fixtures/java-consumer run -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
-      - run: ./gradlew -p fixtures/kotlin-consumer run -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
+      - run: ./gradlew -p fixtures/java-consumer run -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven" | tee .evidence/java-consumer.log
+      - run: ./gradlew -p fixtures/kotlin-consumer run -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven" | tee .evidence/kotlin-consumer.log
+      - run: python3 tools/verify_consumer_origin.py --log .evidence/java-consumer.log --log .evidence/kotlin-consumer.log
       - run: ./gradlew -p examples/standalone-minestom test smoke demoPack -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"

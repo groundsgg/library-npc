@@ -7,27 +7,44 @@ import gg.grounds.npc.core.internal.immutableList
 import gg.grounds.npc.core.internal.immutableMap
 
 /**
- * Validated immutable numeric asset definition. Collections are copied; invalid hierarchy, IDs,
- * clips or sounds throw IllegalArgumentException.
+ * Validated immutable numeric NPC definition. Inputs are defensively copied; invalid IDs,
+ * hierarchy, clips or sounds throw IllegalArgumentException. No scripts, catalogues or platform
+ * resources are evaluated or discovered.
+ *
+ * @property id Namespaced asset identity, at most 256 characters.
+ * @property bounds Authored model-local bounds.
+ * @property bones Immutable bones in parent-before-child order, at most 256.
+ * @property parts Immutable model parts or sampled matrices in authored order, at most 1024 model
+ *   parts.
+ * @property animations Immutable clip-ID mapping, at most 128 clips.
+ * @property sounds Immutable cues keyed by existing clip IDs.
+ * @property headBone The unique case-insensitive head bone, or null when absent/ambiguous.
  */
-class NpcModel(
-    val id: String,
-    val bounds: NpcBounds,
+public class NpcModel(
+    /** Namespaced asset identity, at most 256 characters. */
+    public val id: String,
+    /** Authored model-local bounds. */
+    public val bounds: NpcBounds,
     bones: List<NpcBone>,
     parts: List<NpcPart>,
     animations: Map<String, NpcClip>,
     sounds: Map<String, NpcClipSound>,
 ) {
-    val bones: List<NpcBone> = immutableList(bones)
-    val parts: List<NpcPart> = immutableList(parts)
-    val animations: Map<String, NpcClip> = immutableMap(animations)
-    val sounds: Map<String, NpcClipSound> = immutableMap(sounds)
+    /** Immutable bones in parent-before-child order, at most 256. */
+    public val bones: List<NpcBone> = immutableList(bones)
+    /** Immutable model parts or sampled matrices in authored order, at most 1024 model parts. */
+    public val parts: List<NpcPart> = immutableList(parts)
+    /** Immutable clip-ID mapping, at most 128 clips. */
+    public val animations: Map<String, NpcClip> = immutableMap(animations)
+    /** Immutable cues keyed by existing clip IDs. */
+    public val sounds: Map<String, NpcClipSound> = immutableMap(sounds)
 
     init {
         NpcModelValidator.validate(this)
     }
 
     /** The unique bone named head, ignoring case; null if absent or ambiguous. */
-    val headBone: NpcBone? = this.bones.singleOrNull { it.name.equals("head", ignoreCase = true) }
+    public val headBone: NpcBone? =
+        this.bones.singleOrNull { it.name.equals("head", ignoreCase = true) }
     internal val evaluation = NpcModelEvaluator(this)
 }

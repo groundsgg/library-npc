@@ -42,7 +42,7 @@ java {
 
 dependencies {
     implementation(
-        "gg.grounds:npc-minestom:${providers.gradleProperty("npcVersion").getOrElse("0.1.0-SNAPSHOT")}"
+        "gg.grounds:npc-minestom:${providers.gradleProperty("npcVersion").getOrElse(file("../../version.txt").readText().trim())}"
     )
     implementation("net.minestom:minestom:2026.10.07-26.2")
 }

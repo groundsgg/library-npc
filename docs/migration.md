@@ -1,33 +1,37 @@
-# Migration boundaries
+# Migrate from NPC 0.2.0 to the redesigned API
 
-The old product runtime combines model definitions, numeric evaluation and an
-implicit catalogue loader. The new NPC library keeps definitions/evaluation and
-rendering. Grounds retains schema-1 content loading and its exact catalogue,
-bounds, clips, sounds and pack-digest validation in a host adapter.
+The 0.3.0 API-review candidate intentionally breaks source and JVM signatures. Rebuild Java and Kotlin consumers together with the matching Scene adapter. Kotlin typealiases do not provide a Java binary migration.
 
-Product model JSON/index/digests move into `resourcepacks-npc-content`. Public
-neutral artifacts have an empty index; purchased payload stays in private
-server/client distributions. The engine does not include it. Existing resource
-paths and map definitions remain compatible; there is no world-file migration.
+| Previous API | Current source API |
+| --- | --- |
+| `gg.grounds.npc.core` model types | `gg.grounds.npc.core.model` |
+| Core vector/matrix/transform | `gg.grounds.npc.core.math` |
+| Core clips/keyframes/pose sampler | `gg.grounds.npc.core.animation` |
+| Core JSON/result/limits | `gg.grounds.npc.core.io` |
+| `NpcProblem` | `gg.grounds.npc.core.validation.NpcProblem` |
+| Minestom configuration, transforms, viewer state and callbacks at root | `config`, `transform`, `viewer` and `spi` packages |
+| Personal APIs at root | `gg.grounds.npc.minestom.presentation` |
+| Optional positional options constructors and `copy` | `builder(...).property(value).build()` and `toBuilder()` |
+| `startAnimation(id, millis)` | `playClip(id, millis)` or `playClip(id)` at zero |
+| `advanceAnimation(millis)` | `advanceClipTo(millis)`, still absolute milliseconds |
+| `stopAnimation(null)` | `stopClip()` |
+| `stopAnimation(id)` | `stopClipIfPlaying(id)` |
+| `NpcPresentations.prepare(parent, options)` | `parent.preparePresentation(options)` |
+| Clip loop/interpolation strings | `NpcLoopMode` and `NpcInterpolation` |
+| Nested track string maps | Bone-ID map of `NpcBoneTrack(position, rotation, scale)` |
+| Clip/keyframe `.length` / `.time` | `.lengthSeconds` / `.timeSeconds` |
+| Package constants/operators and public `sampleNpcTrack` | `NpcVector3.ZERO/ONE`, member operators and internal track sampling |
 
-Scene integration lives in the optional `scene-npc-minestom` module. Scene
-owns element generations, activation, colliders and its resource drain. NPC owns
-render entities. Hosts must invalidate the generation and await asynchronous NPC
-cleanup before reporting unload/close success. Legacy Scene factories remain
-supported. `SceneRendererLifetime.trackCleanup` owns a pending renderer start even
-when it never delivers a handle; asynchronous cleanup errors also survive until
-shutdown when reported earlier. Failed installation waits for its rollback drain. Placeholder displays share the extracted TRSR utility through a thin
-transform/bounds adapter rather than retaining a second decomposition engine.
+Regular immutable option classes replace extensible `data class` configuration. Fixed mathematical value types retain their value semantics. Public `NpcHandle.closed()` observes final cleanup without closing. Argument errors stay in command stages; operation errors preserve their cause. Delegating handles can forward personal preparation directly.
 
-Lobby migration is accepted only after its original behaviour/performance suites,
-Scene drain checks and a real Grounds 26.3 client check. Keep the previous complete
-distribution for rollback, including matching content/catalogue/client-pack pins.
-Never transfer live entity IDs or viewer overrides to another connection/backend.
+Schema-1 JSON, resource IDs, authored units, interpolation curves, sounds and host asset catalogue checks remain unchanged. Existing models/resource packs do not need a schema conversion. Runtime interval limitations recorded in compatibility still apply.
 
-N7 adds independent private clip/head/sound presentations through additive APIs.
-The optional Scene adapter exposes `PersonalNpcRenderedAssetHandle`, obtained from
-the concrete generation-bound factory handle. Existing Scene SPI methods remain
-unchanged. The common NPC owns private cleanup, so the existing Scene drain also
-waits for private preparation and cleanup failures. The new Scene branch requires
-the published NPC0.2.0 artifacts. The adapter is still an open Scene integration
-PR, independently of that completed NPC release. Dialogue actor lookup remains future work.
+## Coordinated Grounds migration
+
+Build/publish the NPC review candidate locally, rebuild the Scene NPC adapter against it, then build Lobby and Dialogue against that same candidate set. Scene exports NPC in its API, so updating an NPC JAR without rebuilding Scene/consumers is insufficient. Check dependency reports and loaded JAR hashes. Independent consumers use Maven publications, not source substitution.
+
+Scene still owns generations, activation, colliders and the host resource drain. NPC owns render entities. Keep the original host generation guard and await cancellation even when preparation never returns a handle. Invalidated/failed installation must drain rollback before reporting completion. Lobby retains exact catalogue/bounds/clip/sound and pack-digest validation; private licensed resources remain outside public artifacts.
+
+Dialogue’s base Minestom module has no NPC dependency. Its optional NPC consumer migrates its pin, Java model, personal actor adapter and tests. Retain separate prepare/publish/cancel, private sound isolation, cancellation while preparing and shared-NPC restoration. Do not replace the independently accepted Dialogue rendering/navigation changes.
+
+Real visual/audio, licensed-content and cross-backend/proxy acceptance remain separate from compilation and synthetic smoke. A new connection/backend must establish new ownership; no live handle, Player reference, entity ID or viewer override is transferable. Keep the previous complete candidate set for rollback rather than mixing old and new JARs.

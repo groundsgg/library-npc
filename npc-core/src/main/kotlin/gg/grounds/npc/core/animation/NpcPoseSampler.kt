@@ -6,11 +6,15 @@ import gg.grounds.npc.core.math.NpcMatrix
 import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.core.model.NpcModel
 
-object NpcPoseSampler {
+/**
+ * Pure model-local pose evaluation. Time is seconds; a null clip samples the rest pose. Platform
+ * mesh-facing corrections belong to the adapter.
+ */
+public object NpcPoseSampler {
     /** Model-local authored pose; Minecraft's mesh-facing correction belongs to the adapter. */
     @JvmStatic
     @JvmOverloads
-    fun sample(
+    public fun sample(
         model: NpcModel,
         clipId: String?,
         seconds: Double,
@@ -22,7 +26,7 @@ object NpcPoseSampler {
 
     /** Precompute a neutral right-multiplied part binding, e.g. a host mesh basis correction. */
     @JvmStatic
-    fun prepare(model: NpcModel, partPostTransform: NpcMatrix): NpcPoseBinding =
+    public fun prepare(model: NpcModel, partPostTransform: NpcMatrix): NpcPoseBinding =
         NpcPoseBinding(model, model.transformedParts(partPostTransform))
 
     internal fun validate(model: NpcModel, clipId: String?, seconds: Double) {

@@ -47,6 +47,8 @@ public final class JavaConsumer {
   }
 
   public static void main(String[] args) {
+    origin("npc-core", NpcModel.class);
+    origin("npc-minestom", gg.grounds.npc.minestom.NpcRenderer.class);
     var model =
         new NpcModel(
             "example:java",
@@ -66,5 +68,15 @@ public final class JavaConsumer {
     var root = new NpcRenderTransform(new NpcTransform(NpcVector3.ZERO), null);
     if (!root.getRoot().getPosition().equals(NpcVector3.ZERO)) throw new AssertionError();
     System.out.println("Java consumer OK: " + model.getId());
+  }
+
+  private static void origin(String module, Class<?> type) {
+    try {
+      var path =
+          java.nio.file.Path.of(type.getProtectionDomain().getCodeSource().getLocation().toURI());
+      System.out.println("NPC_ORIGIN " + module + " " + path);
+    } catch (java.net.URISyntaxException error) {
+      throw new IllegalStateException(error);
+    }
   }
 }

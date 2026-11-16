@@ -7,10 +7,22 @@ import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 
-object NpcModelJson {
+/**
+ * Bounded UTF-8 schema-1 decoder. Expected authored errors become structured diagnostics with field
+ * paths; a failure never returns a partially usable model.
+ */
+public object NpcModelJson {
+    /**
+     * Decode bounded UTF-8 schema-1 bytes into a complete validated model. Authored syntax/semantic
+     * errors return Failure with a field path; invalid UTF-8 and byte overflow have distinct codes.
+     * Limits may be stricter than the hard model maxima.
+     */
     @JvmStatic
     @JvmOverloads
-    fun decode(bytes: ByteArray, limits: NpcDecodeLimits = NpcDecodeLimits()): NpcDecodeResult {
+    public fun decode(
+        bytes: ByteArray,
+        limits: NpcDecodeLimits = NpcDecodeLimits(),
+    ): NpcDecodeResult {
         if (bytes.size > limits.maxBytes)
             return NpcDecodeResult.Failure(
                 listOf(NpcProblem("NPC_MODEL_TOO_LARGE", "$", "Model exceeds the byte limit"))

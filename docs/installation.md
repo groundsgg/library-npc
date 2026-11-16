@@ -1,7 +1,16 @@
 # Installation
 
-Releases use GitHub Packages, matching the other Grounds libraries. Version 0.2.0
-was generated through Release Please and published by the shared Gradle workflow.
+The current source is the breaking 0.3.0 API-review candidate. Build it locally with JDK 25:
+
+```sh
+./gradlew check apiCheck dokkaGenerate publishAllPublicationsToReviewRepository
+```
+
+Use the resulting `.evidence/maven` repository and version from `version.txt` for independent consumer builds. See the repository README and examples. This does not publish to GitHub or create a release. The previously published 0.2.0 package has the older API; use its release-tag documentation until a coordinated new release is available.
+
+For published packages, the repository configuration remains:
+
+Releases use GitHub Packages, matching the other Grounds libraries. The last published API is 0.2.0.
 
 GitHub Packages requires authentication even when the repository and package are
 public. A personal access token (classic) with `read:packages` is required for

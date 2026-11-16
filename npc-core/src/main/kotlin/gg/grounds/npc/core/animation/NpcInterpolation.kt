@@ -1,7 +1,7 @@
 package gg.grounds.npc.core.animation
 
 /** Interpolation between numeric keyframes; no authored expression is evaluated. */
-enum class NpcInterpolation {
+public enum class NpcInterpolation {
     /** Interpolate linearly between adjacent keys. */
     LINEAR,
     /** Keep the preceding key until the next key is reached. */

@@ -34,6 +34,15 @@ fun gesture(parent: NpcHandle, player: Player): CompletionStage<Void> {
 }
 
 fun main() {
+    listOf(
+            "npc-core" to NpcModel::class.java,
+            "npc-minestom" to gg.grounds.npc.minestom.NpcRenderer::class.java,
+        )
+        .forEach { (module, type) ->
+            val path = java.nio.file.Path.of(type.protectionDomain.codeSource.location.toURI())
+            println("NPC_ORIGIN $module $path")
+        }
+
     val model =
         NpcModel(
             "example:kotlin",

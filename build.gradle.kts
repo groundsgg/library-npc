@@ -1,10 +1,22 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-plugins { kotlin("jvm") version "2.2.20" apply false }
+plugins {
+    kotlin("jvm") version "2.2.20" apply false
+    id("org.jetbrains.dokka") version "2.2.0"
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.18.2"
+}
 
 group = "gg.grounds"
 
-version = providers.gradleProperty("versionOverride").orElse("0.1.0-SNAPSHOT").get()
+version =
+    providers
+        .gradleProperty("versionOverride")
+        .orElse(
+            providers.fileContents(layout.projectDirectory.file("version.txt")).asText.map {
+                it.trim()
+            }
+        )
+        .get()
 
 repositories { mavenCentral() }
 
@@ -12,11 +24,13 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "java-library")
     apply(plugin = "maven-publish")
+    apply(plugin = "org.jetbrains.dokka")
     group = rootProject.group
     version = rootProject.version
     repositories { mavenCentral() }
     extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
         jvmToolchain(25)
+        explicitApi()
     }
     extensions.configure<JavaPluginExtension> {
         sourceCompatibility = JavaVersion.VERSION_24
@@ -127,4 +141,33 @@ tasks.register<JavaExec>("formatJava") {
                     .sortedBy { it.path }
                     .map { it.absolutePath }
     }
+}
+
+subprojects {
+    extensions.configure<org.jetbrains.dokka.gradle.DokkaExtension> {
+        dokkaPublications.named("html") { failOnWarning.set(true) }
+        dokkaSourceSets.configureEach {
+            reportUndocumented.set(true)
+            perPackageOption {
+                matchingRegex.set(".*\\.internal(?:\\..*)?")
+                suppress.set(true)
+            }
+        }
+    }
+}
+
+dependencies {
+    dokka(project(":npc-core"))
+    dokka(project(":npc-minestom"))
+}
+
+// BCV still requests ASM 9.6, which cannot read our established JVM-24 bytecode.
+subprojects {
+    configurations
+        .matching { it.name.startsWith("bcv-rt-jvm-cp") }
+        .configureEach {
+            resolutionStrategy.eachDependency {
+                if (requested.group == "org.ow2.asm") useVersion("9.9.1")
+            }
+        }
 }

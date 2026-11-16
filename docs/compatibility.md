@@ -1,5 +1,9 @@
 # Compatibility
 
+The redesigned source API retains Kotlin 2.2.20, JDK 25 builds and JVM-24 NPC bytecode. Public Minestom remains `2026.10.07-26.2`; the explicitly supplied fork profile remains `2026.11.08-26.3-grounds`. Schema-1 content remains compatible. API compatibility with 0.2.0 is intentionally broken; see migration.
+
+Current-candidate tests and real-client acceptance are separate: a green library/consumer build does not imply actual backend/proxy-transfer acceptance. The observations below belong to the earlier implementation unless explicitly requalified against the new candidate.
+
 | Target | Local evidence |
 | --- | --- |
 | Core | JDK 25; Kotlin 2.2.20; Java/Kotlin JVM 24 bytecode; 14 tests |

@@ -1,17 +1,30 @@
 package gg.grounds.npc.core.io
 
 /**
- * Optional stricter schema-1 decode budgets. Defaults equal the supported hard limits; budgets
- * cannot exceed them.
+ * Optional stricter schema-1 decode budgets. Defaults equal hard model limits; positive custom
+ * limits may only reduce those maxima. Invalid configuration throws IllegalArgumentException.
+ *
+ * @property maxBytes Positive UTF-8 input-byte budget; default 2 MiB.
+ * @property maxBones Maximum bones, in 1..256.
+ * @property maxParts Maximum parts, in 1..1024.
+ * @property maxClips Maximum clips, in 1..128.
+ * @property maxKeysPerTrack Maximum keys per channel track, in 1..4096.
+ * @property maxClipSeconds Finite positive clip duration budget, at most 300 seconds.
  */
-data class NpcDecodeLimits
+public data class NpcDecodeLimits
 @JvmOverloads
 constructor(
+    /** Positive UTF-8 input-byte budget; default 2 MiB. */
     val maxBytes: Int = 2 * 1024 * 1024,
+    /** Maximum bones, in 1..256. */
     val maxBones: Int = 256,
+    /** Maximum parts, in 1..1024. */
     val maxParts: Int = 1024,
+    /** Maximum clips, in 1..128. */
     val maxClips: Int = 128,
+    /** Maximum keys per channel track, in 1..4096. */
     val maxKeysPerTrack: Int = 4096,
+    /** Finite positive clip duration budget, at most 300 seconds. */
     val maxClipSeconds: Double = 300.0,
 ) {
     init {

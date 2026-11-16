@@ -8,28 +8,41 @@ import gg.grounds.npc.minestom.internal.rendering.DisplayTransform
 import net.minestom.server.entity.metadata.display.AbstractDisplayMeta
 
 /** Shared affine-to-display decomposition. Returns whether client-visible fields changed. */
-object NpcDisplayTransforms {
+public object NpcDisplayTransforms {
+    /**
+     * Project a world affine matrix into display TRSR relative to anchor. Call on the owning
+     * scheduler; true means float-visible fields changed. Does not restart interpolation by itself.
+     */
     @JvmStatic
     @JvmOverloads
-    fun apply(
+    public fun apply(
         meta: AbstractDisplayMeta,
         worldMatrix: NpcMatrix,
         anchor: NpcVector3 = NpcVector3.ZERO,
     ): Boolean =
         applyModel(meta, NpcRenderTransform(NpcTransform(NpcVector3.ZERO)), worldMatrix, anchor)
 
+    /**
+     * Project authored bounds through root/local transforms into display TRSR relative to anchor.
+     * Call on the owning scheduler; true means client-visible fields changed.
+     */
     @JvmStatic
     @JvmOverloads
-    fun applyBounds(
+    public fun applyBounds(
         meta: AbstractDisplayMeta,
         transform: NpcRenderTransform,
         bounds: NpcBounds,
         anchor: NpcVector3 = NpcVector3.ZERO,
     ): Boolean = DisplayTransform.from(transform, bounds).apply(meta, anchor)
 
+    /**
+     * Project an authored model matrix through root/local transforms into display TRSR relative to
+     * anchor. Does not apply the renderer’s item-facing correction; true means serialized fields
+     * changed.
+     */
     @JvmStatic
     @JvmOverloads
-    fun applyModel(
+    public fun applyModel(
         meta: AbstractDisplayMeta,
         transform: NpcRenderTransform,
         model: NpcMatrix,
