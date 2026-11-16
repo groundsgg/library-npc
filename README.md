@@ -17,6 +17,8 @@ python3 tools/verify_public_artifacts.py
 
 The independent builds read `version.txt` by default. `-PnpcVersion=...` selects a different library and `-PversionOverride=...` changes the root publication version. No Grounds token is needed for source builds or the local candidate repository.
 
+`examples/` contains runnable host applications for learning the API. `fixtures/` contains independent Java and Kotlin consumer projects that verify the published Maven artifacts can be reused. `tools/` contains maintenance checks for artifact contents, licensing and the actual origin of resolved dependencies.
+
 Start with the [shared Java example](examples/standalone-minestom/src/main/java/example/NpcDemo.java), then the [personal example](examples/standalone-minestom/src/main/java/example/PersonalNpcDemo.java). [Example instructions](examples/standalone-minestom/README.md) describe ports, commands, both runtime profiles and separate smoke tasks.
 
 ## Numeric API

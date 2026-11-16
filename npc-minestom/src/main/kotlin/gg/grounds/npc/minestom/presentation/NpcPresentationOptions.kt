@@ -83,13 +83,13 @@ public class NpcPresentationOptions private constructor(builder: Builder) {
         internal var clock: NpcMonotonicClock = NpcMonotonicClock(System::nanoTime)
 
         /**
-         * Configure Concrete online Player connection in the parent instance; a reconnect inherits
+         * Configure concrete online Player connection in the parent instance; a reconnect inherits
          * nothing. Validation occurs at build; returns this builder for chaining.
          */
         public fun player(value: Player): Builder = apply { player = value }
 
         /**
-         * Configure Synchronous atomic host generation check; the default runs the operation
+         * Configure synchronous atomic host generation check; the default runs the operation
          * immediately. Validation occurs at build; returns this builder for chaining.
          */
         public fun publicationGuard(value: NpcPublicationGuard): Builder = apply {
@@ -103,13 +103,13 @@ public class NpcPresentationOptions private constructor(builder: Builder) {
         public fun sounds(value: NpcViewerSoundSink): Builder = apply { sounds = value }
 
         /**
-         * Configure Existing clip ID for idle playback, or null for rest. Existence is checked when
+         * Configure existing clip ID for idle playback, or null for rest. Existence is checked when
          * a model is available. Validation occurs at build; returns this builder for chaining.
          */
         public fun idleClip(value: String?): Builder = apply { idleClip = value }
 
         /**
-         * Configure Personal sample interval, 50..10000 ms in steps of 50; default 50. Validation
+         * Configure personal sample interval, 50..10000 ms in steps of 50; default 50. Validation
          * occurs at build; returns this builder for chaining.
          */
         public fun sampleIntervalMillis(value: Long): Builder = apply {
@@ -117,7 +117,7 @@ public class NpcPresentationOptions private constructor(builder: Builder) {
         }
 
         /**
-         * Configure Monotonic nanosecond source; defaults to System.nanoTime and is never a world
+         * Configure monotonic nanosecond source; defaults to System.nanoTime and is never a world
          * clock. Validation occurs at build; returns this builder for chaining.
          */
         public fun clock(value: NpcMonotonicClock): Builder = apply { clock = value }

@@ -15,8 +15,7 @@ import gg.grounds.npc.core.io.NpcDecodeLimits
  * @property id Namespaced asset identity, at most 256 characters.
  * @property bounds Authored model-local bounds.
  * @property bones Immutable bones in parent-before-child order, at most 256.
- * @property parts Immutable model parts or sampled matrices in authored order, at most 1024 model
- *   parts.
+ * @property parts Immutable model parts in authored order, at most 1024.
  * @property animations Immutable clip-ID mapping, at most 128 clips.
  * @property sounds Immutable cues keyed by existing clip IDs.
  * @property headBone The unique case-insensitive head bone, or null when absent/ambiguous.
@@ -45,7 +44,7 @@ internal constructor(
 
     /** Immutable bones in parent-before-child order, at most 256. */
     public val bones: List<NpcBone> = immutableList(bones)
-    /** Immutable model parts or sampled matrices in authored order, at most 1024 model parts. */
+    /** Immutable model parts in authored order, at most 1024. */
     public val parts: List<NpcPart> = immutableList(parts)
     /** Immutable clip-ID mapping, at most 128 clips. */
     public val animations: Map<String, NpcClip> = immutableMap(animations)

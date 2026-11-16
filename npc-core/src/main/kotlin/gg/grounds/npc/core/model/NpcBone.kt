@@ -9,7 +9,7 @@ import gg.grounds.npc.core.math.NpcVector3
  * @property id Unique local bone ID, 1..128 characters.
  * @property parent Local ID of an earlier bone, or null for a root.
  * @property origin Pivot in authored model coordinates.
- * @property rotation XYZ rotation in degrees, or ordered additive rotation keys for a bone track.
+ * @property rotation XYZ rotation in finite degrees.
  * @property name Authored bone label; a unique case-insensitive head label determines the look
  *   subtree.
  */
@@ -22,7 +22,7 @@ constructor(
     val parent: String?,
     /** Pivot in authored model coordinates. */
     val origin: NpcVector3,
-    /** XYZ rotation in degrees, or ordered additive rotation keys for a bone track. */
+    /** XYZ rotation in finite degrees. */
     val rotation: NpcVector3,
     /** Authored bone label; a unique case-insensitive head label determines the look subtree. */
     val name: String = id,

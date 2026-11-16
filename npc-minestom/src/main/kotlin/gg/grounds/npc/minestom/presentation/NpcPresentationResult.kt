@@ -6,9 +6,6 @@ import java.util.Collections
 /**
  * Hidden private preparation outcome. Rejected groups never hide the common NPC; a Ready handle
  * must still be published.
- *
- * @property handle Prepared handle that remains hidden until guarded publish succeeds.
- * @property problems Nonempty immutable failure diagnostics.
  */
 public sealed interface NpcPresentationResult {
     /**

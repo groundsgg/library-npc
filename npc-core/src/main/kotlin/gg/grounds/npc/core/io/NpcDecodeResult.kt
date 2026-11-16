@@ -7,9 +7,6 @@ import gg.grounds.npc.core.validation.NpcProblem
 /**
  * A fully validated model or nonempty immutable diagnostics. Callers must handle both variants
  * before creating a renderer.
- *
- * @property model Validated model definition, or namespaced item-model ID for a mesh part.
- * @property problems Nonempty immutable failure diagnostics.
  */
 public sealed interface NpcDecodeResult {
     /**

@@ -153,79 +153,79 @@ public class NpcRenderConfig private constructor(builder: Builder) {
         internal var variationMinDistance: Double = 5.0
 
         /**
-         * Configure Admission radius in world blocks; default 64. Validation occurs at build;
+         * Configure admission radius in world blocks; default 64. Validation occurs at build;
          * returns this builder for chaining.
          */
         public fun viewDistance(value: Double): Builder = apply { viewDistance = value }
 
         /**
-         * Configure Retention radius in blocks, at least viewDistance; default 72. Validation
+         * Configure retention radius in blocks, at least viewDistance; default 72. Validation
          * occurs at build; returns this builder for chaining.
          */
         public fun retentionDistance(value: Double): Builder = apply { retentionDistance = value }
 
         /**
-         * Configure Positive vertical visibility bound in world blocks; default 32. Validation
+         * Configure positive vertical visibility bound in world blocks; default 32. Validation
          * occurs at build; returns this builder for chaining.
          */
         public fun verticalDistance(value: Double): Builder = apply { verticalDistance = value }
 
         /**
-         * Configure Near-cohort admission radius in blocks; default 16. Validation occurs at build;
+         * Configure near-cohort admission radius in blocks; default 16. Validation occurs at build;
          * returns this builder for chaining.
          */
         public fun nearDistance(value: Double): Builder = apply { nearDistance = value }
 
         /**
-         * Configure Near-cohort hysteresis radius in blocks, between nearDistance and midDistance;
+         * Configure near-cohort hysteresis radius in blocks, between nearDistance and midDistance;
          * default 18. Validation occurs at build; returns this builder for chaining.
          */
         public fun nearRetention(value: Double): Builder = apply { nearRetention = value }
 
         /**
-         * Configure Mid-cohort admission radius in blocks; default 32. Validation occurs at build;
+         * Configure mid-cohort admission radius in blocks; default 32. Validation occurs at build;
          * returns this builder for chaining.
          */
         public fun midDistance(value: Double): Builder = apply { midDistance = value }
 
         /**
-         * Configure Mid-cohort hysteresis radius in blocks, between midDistance and viewDistance;
+         * Configure mid-cohort hysteresis radius in blocks, between midDistance and viewDistance;
          * default 36. Validation occurs at build; returns this builder for chaining.
          */
         public fun midRetention(value: Double): Builder = apply { midRetention = value }
 
         /**
-         * Configure Near-cohort update interval, 50..10000 ms in 50 ms steps; default 200.
+         * Configure near-cohort update interval, 50..10000 ms in 50 ms steps; default 200.
          * Validation occurs at build; returns this builder for chaining.
          */
         public fun nearIntervalMillis(value: Long): Builder = apply { nearIntervalMillis = value }
 
         /**
-         * Configure Mid-cohort interval, at least nearIntervalMillis; default 250 ms. Validation
+         * Configure mid-cohort interval, at least nearIntervalMillis; default 250 ms. Validation
          * occurs at build; returns this builder for chaining.
          */
         public fun midIntervalMillis(value: Long): Builder = apply { midIntervalMillis = value }
 
         /**
-         * Configure Far-cohort interval, at least midIntervalMillis; default 500 ms. Validation
+         * Configure far-cohort interval, at least midIntervalMillis; default 500 ms. Validation
          * occurs at build; returns this builder for chaining.
          */
         public fun farIntervalMillis(value: Long): Builder = apply { farIntervalMillis = value }
 
         /**
-         * Configure Existing clip ID for idle playback, or null for rest. Existence is checked when
+         * Configure existing clip ID for idle playback, or null for rest. Existence is checked when
          * a model is available. Validation occurs at build; returns this builder for chaining.
          */
         public fun idleClip(value: String?): Builder = apply { idleClip = value }
 
         /**
-         * Configure Optional shared idle-variation clip ID; null disables variation. Validation
+         * Configure optional shared idle-variation clip ID; null disables variation. Validation
          * occurs at build; returns this builder for chaining.
          */
         public fun variationClip(value: String?): Builder = apply { variationClip = value }
 
         /**
-         * Configure Shared variation delay in 50..3600000 milliseconds; default 20000. Validation
+         * Configure shared variation delay in 50..3600000 milliseconds; default 20000. Validation
          * occurs at build; returns this builder for chaining.
          */
         public fun variationDelayMillis(value: Long): Builder = apply {
@@ -233,7 +233,7 @@ public class NpcRenderConfig private constructor(builder: Builder) {
         }
 
         /**
-         * Configure Positive world-block distance within which shared idle variation is suppressed;
+         * Configure positive world-block distance within which shared idle variation is suppressed;
          * default 5. Validation occurs at build; returns this builder for chaining.
          */
         public fun variationMinDistance(value: Double): Builder = apply {

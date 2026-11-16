@@ -9,10 +9,6 @@ import gg.grounds.npc.core.model.NpcModel
 /**
  * Immutable cached part binding for repeated sampling. The caller chooses the post-transform
  * coordinate correction; sampling never mutates the model.
- *
- * @property model Validated model definition, or namespaced item-model ID for a mesh part.
- * @property parts Immutable model parts or sampled matrices in authored order, at most 1024 model
- *   parts.
  */
 public class NpcPoseBinding
 internal constructor(private val model: NpcModel, parts: List<NpcMatrix>) {

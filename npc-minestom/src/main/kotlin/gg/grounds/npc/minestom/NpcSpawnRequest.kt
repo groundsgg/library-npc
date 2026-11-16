@@ -89,25 +89,25 @@ public class NpcSpawnRequest private constructor(builder: Builder) {
         internal var config: NpcRenderConfig = NpcRenderConfig.builder().build()
 
         /**
-         * Configure Owning Minestom instance; live state belongs to this backend only. Validation
+         * Configure owning Minestom instance; live state belongs to this backend only. Validation
          * occurs at build; returns this builder for chaining.
          */
         public fun instance(value: Instance): Builder = apply { instance = value }
 
         /**
-         * Configure Validated model definition, or namespaced item-model ID for a mesh part.
-         * Validation occurs at build; returns this builder for chaining.
+         * Configure complete validated immutable numeric model. Validation occurs at build; returns
+         * this builder for chaining.
          */
         public fun model(value: NpcModel): Builder = apply { model = value }
 
         /**
-         * Configure Shared world/root and optional local model transform. Validation occurs at
+         * Configure shared world/root and optional local model transform. Validation occurs at
          * build; returns this builder for chaining.
          */
         public fun transform(value: NpcRenderTransform): Builder = apply { transform = value }
 
         /**
-         * Configure Synchronous atomic host generation check; the default runs the operation
+         * Configure synchronous atomic host generation check; the default runs the operation
          * immediately. Validation occurs at build; returns this builder for chaining.
          */
         public fun publicationGuard(value: NpcPublicationGuard): Builder = apply {
@@ -115,7 +115,7 @@ public class NpcSpawnRequest private constructor(builder: Builder) {
         }
 
         /**
-         * Configure Namespaced mesh resolver; defaults to PAPER plus the item-model component.
+         * Configure namespaced mesh resolver; defaults to PAPER plus the item-model component.
          * Validation occurs at build; returns this builder for chaining.
          */
         public fun meshes(value: NpcMeshResolver): Builder = apply { meshes = value }
@@ -128,7 +128,7 @@ public class NpcSpawnRequest private constructor(builder: Builder) {
         public fun sounds(value: NpcSoundSink): Builder = apply { sounds = value }
 
         /**
-         * Configure Visibility/update policy; defaults preserve the established shared render
+         * Configure visibility/update policy; defaults preserve the established shared render
          * profile. Validation occurs at build; returns this builder for chaining.
          */
         public fun config(value: NpcRenderConfig): Builder = apply { config = value }
