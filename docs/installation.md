@@ -1,21 +1,14 @@
 # Installation
 
-The current source is the breaking 0.3.0 API-review candidate. Build it locally with JDK 25:
+NPC 1.0.0 is published to GitHub Packages. It introduces the redesigned typed API;
+0.2.0 consumers should follow the [migration guide](migration.md).
 
-```sh
-./gradlew check apiCheck dokkaGenerate publishAllPublicationsToReviewRepository
-```
+## Consume the published packages
 
-Use the resulting `.evidence/maven` repository and version from `version.txt` for independent consumer builds. See the repository README and examples. This does not publish to GitHub or create a release. The previously published 0.2.0 package has the older API; use its release-tag documentation until a coordinated new release is available.
-
-For published packages, the repository configuration remains:
-
-Releases use GitHub Packages, matching the other Grounds libraries. The last published API is 0.2.0.
-
-GitHub Packages requires authentication even when the repository and package are
-public. A personal access token (classic) with `read:packages` is required for
-external consumers. Do not commit it; use a local Gradle property or secret.
-Source builds themselves resolve only Maven Central and need no Grounds token.
+GitHub Packages requires authentication even for public Maven artifacts. Store
+`github.user` and a classic token with `read:packages` in your local
+`~/.gradle/gradle.properties` or CI secrets. Source builds themselves resolve only
+Maven Central and need no Grounds token.
 
 ```kotlin
 repositories {
@@ -37,21 +30,39 @@ repositories {
 }
 
 dependencies {
-    implementation("gg.grounds:npc-core:0.2.0")
-    implementation("gg.grounds:npc-minestom:0.2.0")
-    // Supply the Minestom version supported by your server separately.
+    implementation("gg.grounds:npc-minestom:1.0.0")
+    implementation("net.minestom:minestom:2026.10.07-26.2")
 }
 ```
 
-`npc-core` is platform independent. `npc-minestom` deliberately uses compile-only
-Minestom, so it does not replace the host's server dependency. Java 25 is required
-for the supported Minestom baseline; see [compatibility](compatibility.md).
-The current Java/Kotlin consumers and standalone example use the redesigned API.
-Run them with `-PnpcVersion=0.3.0-api-review-SNAPSHOT -PnpcRepository=file:///ABSOLUTE/PATH/.evidence/maven`
-after building the local candidate. An explicit version also allows copying these independent
-projects outside this checkout. Without an override they read the producer's `version.txt`.
-For the published 0.2.0 API, use the fixtures and documentation from its release tag.
-Local candidate overrides are development tools and are not release coordinates.
+`npc-minestom` exposes core transitively and uses compile-only Minestom, so your
+host supplies its supported server version. Use Java 25 for the supported host.
+For platform-independent numeric definitions and sampling alone, use
+`gg.grounds:npc-core:1.0.0` instead. See [compatibility](compatibility.md).
 
-An anonymous Maven endpoint and Maven Central publication are not configured.
-This is an explicit initial choice to follow the other Grounds libraries.
+## Build a local Maven publication
+
+With JDK 25 in the matching source checkout:
+
+```sh
+./gradlew check apiCheck dokkaGenerate publishAllPublicationsToReviewRepository
+```
+
+The independent consumers and example resolve the resulting `.evidence/maven`
+repository and the version from `version.txt`:
+
+```sh
+./gradlew -p fixtures/java-consumer run -PnpcRepository="file:$PWD/.evidence/maven"
+./gradlew -p fixtures/kotlin-consumer run -PnpcRepository="file:$PWD/.evidence/maven"
+./gradlew -p examples/standalone-minestom run -PnpcRepository="file:$PWD/.evidence/maven"
+```
+
+An explicit `-PnpcVersion=1.0.0` also allows copying these independent projects
+outside the checkout, where no producer `version.txt` exists. To run against the
+published registry, select
+`-PnpcRepository=https://maven.pkg.github.com/groundsgg/library-npc` and configure
+the credentials above. Local publication does not publish a package or create a tag.
+
+The current Java/Kotlin examples use the 1.0.0 API. Use the older release-tag
+fixtures when consuming 0.2.0. Anonymous Maven retrieval and Maven Central
+publication are not configured.
