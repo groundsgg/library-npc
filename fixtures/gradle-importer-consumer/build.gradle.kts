@@ -35,6 +35,8 @@ val npcCompiler = configurations.create("npcCompiler")
 
 dependencies {
     implementation("gg.grounds:npc-core:${npcVersion.get()}")
+    implementation("gg.grounds:npc-importer:${npcVersion.get()}")
+    implementation("gg.grounds:npc-cli:${npcVersion.get()}")
     add(npcCompiler.name, "gg.grounds:npc-cli:${npcVersion.get()}")
 }
 
@@ -73,5 +75,8 @@ application { mainClass.set("consumer.GradleImportConsumer") }
 
 tasks.named<JavaExec>("run") {
     dependsOn(compileNpcModels)
-    args(compiledContent.get().asFile.absolutePath)
+    args(
+        compiledContent.get().asFile.absolutePath,
+        layout.projectDirectory.dir("models").asFile.absolutePath,
+    )
 }

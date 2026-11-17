@@ -39,6 +39,8 @@ jobs:
           ./gradlew -p fixtures/kotlin-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
           ./gradlew -p examples/standalone-minestom test smoke -PnpcVersion="$version" -PnpcRepository="$repository"
           ./gradlew -p fixtures/gradle-importer-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
+          ./gradlew -p fixtures/kotlin-importer-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
+          ./gradlew -p examples/standalone-minestom smokeImported smokePrecompiled -PnpcVersion="$version" -PnpcRepository="$repository"
 
   cli-distributions:
     needs: [publish, verify-published-consumers]

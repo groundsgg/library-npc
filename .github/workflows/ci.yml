@@ -31,5 +31,13 @@ jobs:
         run: |
           ./gradlew :npc-cli:installDist :npc-cli:assembleDist
           npc-cli/build/install/npc-cli/bin/npc-cli --help
-      - name: Compile content from an independent Gradle project
-        run: ./gradlew -p fixtures/gradle-importer-consumer run -PnpcVersion="$(cat version.txt)" -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
+      - name: Verify Java import API and CLI origins
+        run: |
+          ./gradlew -p fixtures/gradle-importer-consumer run -PnpcVersion="$(cat version.txt)" -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven" | tee .evidence/gradle-importer.log
+          python3 tools/verify_consumer_origin.py --modules npc-core,npc-importer,npc-cli --log .evidence/gradle-importer.log
+      - name: Verify independent Kotlin import API
+        run: |
+          ./gradlew -p fixtures/kotlin-importer-consumer run -PnpcVersion="$(cat version.txt)" -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven" | tee .evidence/kotlin-importer.log
+          python3 tools/verify_consumer_origin.py --modules npc-core,npc-importer --log .evidence/kotlin-importer.log
+      - name: Exercise startup and precompiled original model examples
+        run: ./gradlew -p examples/standalone-minestom smokeImported smokePrecompiled -PnpcVersion="$(cat version.txt)" -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"

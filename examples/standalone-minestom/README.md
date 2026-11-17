@@ -4,16 +4,48 @@ These small Minestom applications demonstrate how to own an NPC from preparation
 Start with the shared scenario, then use two clients to explore private clip, head-look and sound
 channels. Both scenarios use the same neutral two-part model and resource pack.
 
-The examples target the released `1.0.0` API. The older `0.2.0` release uses
+The shared/personal lifecycle uses the `1.0.0` API. The current source also includes importer examples and requires all modules from a matching importer-capable build; released `1.0.0` has no importer. The older `0.2.0` release uses
 different packages and methods; use its release-tag examples when consuming that version.
+
+## Import an original Blockbench model
+
+`models/bot.bbmodel` is original freely distributable source: a blue body, orange head, idle clip and one-second head wave. `models/import.json` declares its external Vanilla sound cue. `base-pack/` is a small independent pack used to demonstrate merging. Purchased models and a Grounds checkout are unnecessary.
+
+Build a matching local candidate once, using JDK 25:
+
+```sh
+NPC_VERSION="$(cat version.txt)-local-SNAPSHOT"
+./gradlew -PversionOverride="$NPC_VERSION" publishAllPublicationsToReviewRepository :npc-cli:executableJar
+```
+
+Choose either loading path:
+
+```sh
+# Import the .bbmodel through the library API before accepting players.
+./gradlew -p examples/standalone-minestom runImportedDemo \
+  -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven"
+
+# Compile through the published CLI in Gradle, then load only its prepared files.
+./gradlew -p examples/standalone-minestom runPrecompiledDemo \
+  -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven"
+```
+
+Run one application at a time. Connect to `localhost:25574`, accept its pack and try `/npcwave`, `/npclook` and `/npcprivate`. Both modes use the same lifecycle/commands. `runPrecompiledDemo` first runs `compileDemoNpc`, whose generated output is `build/imported/26.2/`. The API startup mode owns a temporary compilation directory and removes it after its pack host and NPCs close. Editing the source requires restarting.
+
+Read `ImportedNpcDemo.java` for bootstrap ownership, then `DemoImportedContent.java` for source versus prepared loading, then `DemoApplication.java` for the existing rendering lifecycle. Pack generation is done by the importer, and hosting/sending remains example code.
+
+For the actual Grounds runtime profile, use `runImportedGroundsDemo` or `runPrecompiledGroundsDemo` with `-PgroundsClasspathFile=/absolute/path/to/classpath.local`. The target becomes 26.3 and its metadata uses 97.1. Synthetic verification uses `smokeImported`, `smokePrecompiled`, `smokeImportedGrounds` and `smokePrecompiledGrounds` on temporary ports.
+
+The complete [import guide](../../docs/importing.md) explains standalone CLI/JAR usage, base-pack conflicts, Java/Kotlin APIs, target selection and format limits. To retain only prepared runtime dependencies, copy the loader calls into your application and keep `npc-importer`/`npc-cli` in its build pipeline.
 
 ## Run the shared example
 
 Use JDK 25 and run these commands from the `library-npc` root:
 
 ```sh
-./gradlew publishAllPublicationsToReviewRepository
-./gradlew -p examples/standalone-minestom run -PnpcRepository="file:$PWD/.evidence/maven"
+NPC_VERSION="$(cat version.txt)-local-SNAPSHOT"
+./gradlew -PversionOverride="$NPC_VERSION" publishAllPublicationsToReviewRepository
+./gradlew -p examples/standalone-minestom run -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven"
 ```
 
 Connect to `localhost:25574` and accept the neutral demo resource pack served on port `25575`.
@@ -25,7 +57,7 @@ To copy this example outside the repository, supply both an absolute repository 
 
 ```sh
 ./gradlew -p /absolute/path/to/copied-example run \
-  -PnpcVersion=1.0.0 \
+  -PnpcVersion="$NPC_VERSION" \
   -PnpcRepository=file:///absolute/path/to/library-npc/.evidence/maven
 ```
 
@@ -34,16 +66,16 @@ Use the matching client/runtime profile described below.
 
 ## Read the code in this order
 
-| File | What to learn |
-| --- | --- |
-| [`NpcDemo.java`](src/main/java/example/NpcDemo.java) | Start the application and register its shutdown owner. |
-| [`DemoApplication.java`](src/main/java/example/DemoApplication.java) | Retain `NpcStart`, handle readiness, publish hidden parts, and drain cleanup on failure or shutdown. |
-| [`DemoNpcModel.java`](src/main/java/example/DemoNpcModel.java) | Define parent-before-child bones, item-model IDs, bounds, typed clips, keyframes and sound cues. |
-| [`SharedNpcPlayback.java`](src/main/java/example/SharedNpcPlayback.java) | Drive absolute clip-local milliseconds and stop the repeating task on removal. |
-| [`SharedNpcCommands.java`](src/main/java/example/SharedNpcCommands.java) | Observe command stages, move the root, and apply a connection-specific scale/glow override. |
-| [`PersonalNpcCommands.java`](src/main/java/example/PersonalNpcCommands.java) | Request private channels and route sounds exclusively to their recipient. |
-| [`PersonalNpcSessions.java`](src/main/java/example/PersonalNpcSessions.java) | Retain cancellation tokens across asynchronous preparation and reconnects. |
-| [`DemoServer.java`](src/main/java/example/DemoServer.java), [`DemoPackHost.java`](src/main/java/example/DemoPackHost.java) | Local server, world and pack hosting infrastructure; read these after the NPC lifecycle. |
+| File                                                                                                                       | What to learn                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| [`NpcDemo.java`](src/main/java/example/NpcDemo.java)                                                                       | Start the application and register its shutdown owner.                                               |
+| [`DemoApplication.java`](src/main/java/example/DemoApplication.java)                                                       | Retain `NpcStart`, handle readiness, publish hidden parts, and drain cleanup on failure or shutdown. |
+| [`DemoNpcModel.java`](src/main/java/example/DemoNpcModel.java)                                                             | Define parent-before-child bones, item-model IDs, bounds, typed clips, keyframes and sound cues.     |
+| [`SharedNpcPlayback.java`](src/main/java/example/SharedNpcPlayback.java)                                                   | Drive absolute clip-local milliseconds and stop the repeating task on removal.                       |
+| [`SharedNpcCommands.java`](src/main/java/example/SharedNpcCommands.java)                                                   | Observe command stages, move the root, and apply a connection-specific scale/glow override.          |
+| [`PersonalNpcCommands.java`](src/main/java/example/PersonalNpcCommands.java)                                               | Request private channels and route sounds exclusively to their recipient.                            |
+| [`PersonalNpcSessions.java`](src/main/java/example/PersonalNpcSessions.java)                                               | Retain cancellation tokens across asynchronous preparation and reconnects.                           |
+| [`DemoServer.java`](src/main/java/example/DemoServer.java), [`DemoPackHost.java`](src/main/java/example/DemoPackHost.java) | Local server, world and pack hosting infrastructure; read these after the NPC lifecycle.             |
 
 Synthetic players and assertions live separately in `src/smoke`; they are not part of the interactive application.
 
@@ -71,26 +103,26 @@ failures, and include cancellation in your host's resource drain.
 
 ### Time and pose units
 
-| Value | Unit and meaning |
-| --- | --- |
-| `NpcKeyframe.timeSeconds`, `NpcClip.lengthSeconds`, numeric pose sampling | Seconds. The wave lasts `1.0` second and reaches its peak at `0.5`. |
-| Shared `playClip(id, elapsedMillis)` and `advanceClipTo(elapsedMillis)` | Absolute clip-local milliseconds: `50`, `100`, `150`...; passing `50` repeatedly keeps seeking to the same sample. |
-| Head yaw/pitch and authored bone rotations | Degrees. The demo's wave rotates the head around its local Z axis. |
-| Root placement | World coordinates. `DemoNpcModel.at(2)` moves the root to `(2, 40, 0)`. |
+| Value                                                                     | Unit and meaning                                                                                                   |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `NpcKeyframe.timeSeconds`, `NpcClip.lengthSeconds`, numeric pose sampling | Seconds. The wave lasts `1.0` second and reaches its peak at `0.5`.                                                |
+| Shared `playClip(id, elapsedMillis)` and `advanceClipTo(elapsedMillis)`   | Absolute clip-local milliseconds: `50`, `100`, `150`...; passing `50` repeatedly keeps seeking to the same sample. |
+| Head yaw/pitch and authored bone rotations                                | Degrees. The demo's wave rotates the head around its local Z axis.                                                 |
+| Root placement                                                            | World coordinates. `DemoNpcModel.at(2)` moves the root to `(2, 40, 0)`.                                            |
 
 The shared clock uses tick time, so animation slows with a lagging server. Personal presentations
 instead use the library's monotonic clock and need no host `advanceClipTo` task.
 
 ## Try the shared commands
 
-| Command | Expected result |
-| --- | --- |
-| `/npcwave` | Every admitted viewer sees the one-second head gesture, starting at clip time zero. |
-| `/npcidle` | The shared NPC returns to its idle clip; its empty tracks preserve the rest pose. |
-| `/npclook` | The shared head receives additive yaw/pitch without rotating the whole body. |
-| `/npcscale` | Only the calling player's connection sees scale `1.3` and glow. Another viewer keeps the normal appearance. |
-| `/npcmove` | The shared root moves to `(2, 40, 0)`; owned private copies follow the parent. |
-| `/npcremove` | The advance task stops and the NPC drains cleanup. Restart the application to create it again. |
+| Command      | Expected result                                                                                             |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
+| `/npcwave`   | Every admitted viewer sees the one-second head gesture, starting at clip time zero.                         |
+| `/npcidle`   | The shared NPC returns to its idle clip; its empty tracks preserve the rest pose.                           |
+| `/npclook`   | The shared head receives additive yaw/pitch without rotating the whole body.                                |
+| `/npcscale`  | Only the calling player's connection sees scale `1.3` and glow. Another viewer keeps the normal appearance. |
+| `/npcmove`   | The shared root moves to `(2, 40, 0)`; owned private copies follow the parent.                              |
+| `/npcremove` | The advance task stops and the NPC drains cleanup. Restart the application to create it again.              |
 
 The model declares a `wave` sound cue, but the shared request uses the default silent sound sink.
 The personal example below injects an exclusive recipient sink so you can hear its private cue.
@@ -100,7 +132,7 @@ The personal example below injects an exclusive recipient sink so you can hear i
 Stop the shared application before using the same ports, then run:
 
 ```sh
-./gradlew -p examples/standalone-minestom runPersonalDemo -PnpcRepository="file:$PWD/.evidence/maven"
+./gradlew -p examples/standalone-minestom runPersonalDemo -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven"
 ```
 
 1. Connect A and B and accept the pack on both clients. Both initially see the common NPC.
@@ -127,7 +159,7 @@ The default interactive tasks use public Minestom `2026.10.07-26.2`. For the Gro
 
 ```sh
 ./gradlew -p examples/standalone-minestom runGroundsProfile \
-  -PnpcRepository="file:$PWD/.evidence/maven" \
+  -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven" \
   -PgroundsClasspathFile=/absolute/path/to/classpath.local
 ```
 
@@ -138,9 +170,9 @@ not a replacement for the Maven-resolved NPC library.
 To run the independent example tests and both synthetic smoke profiles:
 
 ```sh
-./gradlew -p examples/standalone-minestom test smoke -PnpcRepository="file:$PWD/.evidence/maven"
+./gradlew -p examples/standalone-minestom test smoke -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven"
 ./gradlew -p examples/standalone-minestom smokeGroundsProfile \
-  -PnpcRepository="file:$PWD/.evidence/maven" \
+  -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven" \
   -PgroundsClasspathFile=/absolute/path/to/classpath.local
 ```
 
@@ -151,12 +183,12 @@ remain separate checks.
 
 ## Troubleshooting
 
-| Symptom | Check |
-| --- | --- |
-| No model geometry or missing-texture items | Accept the pack; verify the pack port is available and the runtime uses its matching pack. |
-| Shared clip starts but does not progress in your own host | Install an advance driver and pass increasing absolute milliseconds. |
-| No sound in the shared example | The default sink is silent. Supply `NpcSoundSink` in your host, or use the personal example's recipient sink. |
-| Blocking timeout during startup integration | Do not invoke the demo's blocking `await` from an instance tick. Compose stages instead. |
-| Old packages or methods while compiling | Match the candidate version and selected Maven repository. After rebuilding a mutable local candidate, use Gradle `--refresh-dependencies`. |
+| Symptom                                                   | Check                                                                                                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| No model geometry or missing-texture items                | Accept the pack; verify the pack port is available and the runtime uses its matching pack.                                                  |
+| Shared clip starts but does not progress in your own host | Install an advance driver and pass increasing absolute milliseconds.                                                                        |
+| No sound in the shared example                            | The default sink is silent. Supply `NpcSoundSink` in your host, or use the personal example's recipient sink.                               |
+| Blocking timeout during startup integration               | Do not invoke the demo's blocking `await` from an instance tick. Compose stages instead.                                                    |
+| Old packages or methods while compiling                   | Match the candidate version and selected Maven repository. After rebuilding a mutable local candidate, use Gradle `--refresh-dependencies`. |
 
 Continue with the library's [API contracts](../../docs/api.md) and [migration guide](../../docs/migration.md).

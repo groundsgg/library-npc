@@ -45,11 +45,15 @@ final class DemoApplication implements AutoCloseable {
   }
 
   static DemoApplication start(DemoServer server, boolean personalCommands) throws Exception {
+    return start(server, personalCommands, DemoNpcModel.create());
+  }
+
+  static DemoApplication start(
+      DemoServer server, boolean personalCommands, gg.grounds.npc.core.model.NpcModel model)
+      throws Exception {
     NpcStart start = null;
     try {
-      var request =
-          NpcSpawnRequest.builder(server.instance, DemoNpcModel.create(), DemoNpcModel.at(0))
-              .build();
+      var request = NpcSpawnRequest.builder(server.instance, model, DemoNpcModel.at(0)).build();
       // Retain the cancellation token immediately, before asynchronous attachment can finish.
       start = NpcRenderer.prepare(request);
       var prepared = await(start.ready());

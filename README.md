@@ -9,10 +9,11 @@ The released **1.0.0** API is available from GitHub Packages. It breaks source a
 Use JDK 25 and the wrapper. Kotlin 2.2.20 and Java produce JVM-24 library bytecode; the supported Minestom runtime requires Java 25.
 
 ```sh
-./gradlew check apiCheck dokkaGenerate publishAllPublicationsToReviewRepository
-python3 tools/verify_public_artifacts.py
-./gradlew -p fixtures/java-consumer run -PnpcRepository="file:$PWD/.evidence/maven"
-./gradlew -p fixtures/kotlin-consumer run -PnpcRepository="file:$PWD/.evidence/maven"
+NPC_VERSION="$(cat version.txt)-local-SNAPSHOT"
+./gradlew -PversionOverride="$NPC_VERSION" check apiCheck dokkaGenerate publishAllPublicationsToReviewRepository
+python3 tools/verify_public_artifacts.py --version "$NPC_VERSION"
+./gradlew -p fixtures/java-consumer run -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven"
+./gradlew -p fixtures/kotlin-consumer run -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven"
 ```
 
 The independent builds read `version.txt` by default. `-PnpcVersion=...` selects a different library and `-PversionOverride=...` changes the root publication version. No Grounds token is needed for source builds or the local candidate repository.
@@ -20,6 +21,12 @@ The independent builds read `version.txt` by default. `-PnpcVersion=...` selects
 `examples/` contains runnable host applications for learning the API. `fixtures/` contains independent Java and Kotlin consumer projects that verify the published Maven artifacts can be reused. `tools/` contains maintenance checks for artifact contents, licensing and the actual origin of resolved dependencies.
 
 Start with the [shared Java example](examples/standalone-minestom/src/main/java/example/NpcDemo.java), then the [personal example](examples/standalone-minestom/src/main/java/example/PersonalNpcDemo.java). [Example instructions](examples/standalone-minestom/README.md) describe ports, commands, both runtime profiles and separate smoke tasks.
+
+## Import your own models
+
+The current source adds `npc-importer` and `npc-cli` for generic Blockbench 5.0/4.10 models. One compiler serves startup API calls, an executable JAR and Gradle. It generates prepared server content and a complete resourcepack, and can merge an existing pack. Prepared runtime loading needs only `npc-core`.
+
+These importer modules are not part of the older published 1.0.0 release. Use matching modules from an importer-capable build. Start with [model import and CLI usage](docs/importing.md), the [original animated example](examples/standalone-minestom/README.md#import-an-original-blockbench-model) and the [independent Gradle consumer](fixtures/gradle-importer-consumer).
 
 ## Numeric API
 
