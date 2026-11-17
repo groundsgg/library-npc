@@ -4,7 +4,7 @@ These small Minestom applications demonstrate how to own an NPC from preparation
 Start with the shared scenario, then use two clients to explore private clip, head-look and sound
 channels. Both scenarios use the same neutral two-part model and resource pack.
 
-The examples target the redesigned `0.3.0-api-review-SNAPSHOT` source API. Published `0.2.0` uses
+The examples target the released `1.0.0` API. The older `0.2.0` release uses
 different packages and methods; use its release-tag examples when consuming that version.
 
 ## Run the shared example
@@ -25,7 +25,7 @@ To copy this example outside the repository, supply both an absolute repository 
 
 ```sh
 ./gradlew -p /absolute/path/to/copied-example run \
-  -PnpcVersion=0.3.0-api-review-SNAPSHOT \
+  -PnpcVersion=1.0.0 \
   -PnpcRepository=file:///absolute/path/to/library-npc/.evidence/maven
 ```
 

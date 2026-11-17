@@ -1,6 +1,6 @@
-# Migrate from NPC 0.2.0 to the redesigned API
+# Migrate from NPC 0.2.0 to 1.0.0
 
-The 0.3.0 API-review candidate intentionally breaks source and JVM signatures. Rebuild Java and Kotlin consumers together with the matching Scene adapter. Kotlin typealiases do not provide a Java binary migration.
+NPC 1.0.0 intentionally breaks source and JVM signatures. Rebuild Java and Kotlin consumers together with the matching Scene adapter. Kotlin typealiases do not provide a Java binary migration.
 
 | Previous API | Current source API |
 | --- | --- |
@@ -30,7 +30,7 @@ Schema-1 JSON, resource IDs, authored units, interpolation curves, sounds and ho
 
 ## Coordinated Grounds migration
 
-Build/publish the NPC review candidate locally, rebuild the Scene NPC adapter against it, then build Lobby and Dialogue against that same candidate set. Scene exports NPC in its API, so updating an NPC JAR without rebuilding Scene/consumers is insufficient. Check dependency reports and loaded JAR hashes. Independent consumers use Maven publications, not source substitution.
+Use the published NPC 1.0.0 packages, rebuild the matching Scene NPC adapter against them, then build Lobby and Dialogue against that same released dependency set. Scene exports NPC in its API, so updating an NPC JAR without rebuilding Scene/consumers is insufficient. Check dependency reports and loaded JAR hashes. Independent consumers use Maven publications, not source substitution.
 
 Scene still owns generations, activation, colliders and the host resource drain. NPC owns render entities. Keep the original host generation guard and await cancellation even when preparation never returns a handle. Invalidated/failed installation must drain rollback before reporting completion. Lobby retains exact catalogue/bounds/clip/sound and pack-digest validation; private licensed resources remain outside public artifacts.
 

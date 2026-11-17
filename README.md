@@ -2,7 +2,7 @@
 
 Reusable numeric NPC models and Minestom rendering for Java and Kotlin. `npc-core` validates and samples immutable authored definitions; `npc-minestom` renders shared NPCs and optional connection-specific presentations. Core has no Minestom, Scene, Lobby or Grounds-service dependency.
 
-This source branch is the breaking **0.3.0-api-review-SNAPSHOT** candidate. It is locally buildable; it does not claim a new GitHub Packages release. Published 0.2.0 callers need the [migration guide](docs/migration.md).
+The released **1.0.0** API is available from GitHub Packages. It breaks source and JVM compatibility with 0.2.0; existing callers need the [migration guide](docs/migration.md). See [installation](docs/installation.md) for authenticated Maven consumption or build the source locally below.
 
 ## Build and use
 
