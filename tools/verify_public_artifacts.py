@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """Audit built public NPC binaries, sources and dependency metadata."""
+import argparse
+import hashlib
+import json
 from pathlib import Path
 import zipfile
 from xml.etree import ElementTree as ET
@@ -33,3 +36,29 @@ for module in ('npc-core', 'npc-minestom'):
     assert licences[0].findtext('m:url', namespaces=namespace) == 'https://opensource.org/license/mit', module
     assert (ROOT / 'LICENSE').read_text().startswith('MIT License\n'), 'Library licence must be MIT'
     print(f'{module}: MIT binary/source provenance, payload isolation and dependency metadata verified')
+
+# Match the built binaries to the selected local Maven publication, never a stale filename.
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--version", default=(ROOT / "version.txt").read_text().strip())
+parser.add_argument("--repository", type=Path, default=ROOT / ".evidence/maven")
+args = parser.parse_args()
+modules = {}
+for module in ("npc-core", "npc-minestom"):
+    binary = ROOT / module / "build/libs" / (module + "-" + args.version + ".jar")
+    digest = hashlib.sha256(binary.read_bytes()).hexdigest()
+    directory = args.repository.resolve() / "gg/grounds" / module / args.version
+    metadata = directory / "maven-metadata.xml"
+    if metadata.exists():
+        versions = ET.parse(metadata).findall("./versioning/snapshotVersions/snapshotVersion")
+        value = next(entry.findtext("value") for entry in versions
+                     if entry.findtext("extension") == "jar" and not entry.findtext("classifier"))
+        published = directory / (module + "-" + value + ".jar")
+    else:
+        published = directory / binary.name
+    if hashlib.sha256(published.read_bytes()).hexdigest() != digest:
+        raise ValueError("Selected Maven publication differs from fresh build: " + module)
+    modules[module] = {"sha256": digest, "publication": str(published)}
+manifest = ROOT / ".evidence/public-artifacts.json"
+manifest.parent.mkdir(exist_ok=True)
+manifest.write_text(json.dumps({"version": args.version, "modules": modules}, indent=2) + "\n")
+print("PUBLIC_ARTIFACTS_OK " + str(manifest))

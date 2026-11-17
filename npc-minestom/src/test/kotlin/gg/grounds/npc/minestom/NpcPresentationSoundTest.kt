@@ -1,6 +1,12 @@
 package gg.grounds.npc.minestom
 
 import gg.grounds.npc.minestom.NpcPresentationLifecycleTest.Companion.await
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
+import gg.grounds.npc.minestom.spi.NpcMonotonicClock
+import gg.grounds.npc.minestom.spi.NpcSoundSink
+import gg.grounds.npc.minestom.spi.NpcViewerSoundSink
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
@@ -27,36 +33,33 @@ class NpcPresentationSoundTest {
         val personalSounds = CopyOnWriteArrayList<Pair<Player, String>>()
         val parentStart =
             NpcRenderer.prepare(
-                NpcSpawnRequest(
-                    instance,
-                    personalTestModel(true),
-                    NpcLifecycleTest.transform(),
-                    sounds = NpcSoundSink { _, _, sound -> sharedSounds += sound.key },
-                )
+                NpcSpawnRequest.builder(
+                        instance,
+                        personalTestModel(true),
+                        NpcLifecycleTest.transform(),
+                    )
+                    .sounds(NpcSoundSink { _, _, sound -> sharedSounds += sound.key })
+                    .build()
             )
         val parent = (await(env, parentStart.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
         val clock = AtomicLong(10_000_000_000)
         val sink = NpcViewerSoundSink { player, _, sound -> personalSounds += player to sound.key }
         val sa =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions(
-                    a,
-                    sounds = sink,
-                    idleClip = "idle",
-                    clock = NpcMonotonicClock(clock::get),
-                ),
+            parent.preparePresentation(
+                NpcPresentationOptions.builder(a)
+                    .sounds(sink)
+                    .idleClip("idle")
+                    .clock(NpcMonotonicClock(clock::get))
+                    .build()
             )
         val sb =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions(
-                    b,
-                    sounds = sink,
-                    idleClip = "idle",
-                    clock = NpcMonotonicClock(clock::get),
-                ),
+            parent.preparePresentation(
+                NpcPresentationOptions.builder(b)
+                    .sounds(sink)
+                    .idleClip("idle")
+                    .clock(NpcMonotonicClock(clock::get))
+                    .build()
             )
         try {
             val ha = (await(env, sa.ready()) as NpcPresentationResult.Ready).handle
@@ -74,7 +77,7 @@ class NpcPresentationSoundTest {
             await(env, ha.applyHeadLook(20.0, 10.0))
             await(env, ha.followSharedHeadLook())
             assertEquals(2, personalSounds.size)
-            await(env, parent.startAnimation("wave", 0))
+            await(env, parent.playClip("wave", 0))
             assertEquals(listOf("demo:wave"), sharedSounds.toList())
             assertEquals(2, personalSounds.size)
             await(env, ha.playClip("wave"))
@@ -96,14 +99,20 @@ class NpcPresentationSoundTest {
         var sounds = 0
         val parentStart =
             NpcRenderer.prepare(
-                NpcSpawnRequest(instance, personalTestModel(true), NpcLifecycleTest.transform())
+                NpcSpawnRequest.builder(
+                        instance,
+                        personalTestModel(true),
+                        NpcLifecycleTest.transform(),
+                    )
+                    .build()
             )
         val parent = (await(env, parentStart.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
         val start =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions(a, sounds = NpcViewerSoundSink { _, _, _ -> sounds++ }),
+            parent.preparePresentation(
+                NpcPresentationOptions.builder(a)
+                    .sounds(NpcViewerSoundSink { _, _, _ -> sounds++ })
+                    .build()
             )
         try {
             val personal = (await(env, start.ready()) as NpcPresentationResult.Ready).handle
@@ -127,16 +136,19 @@ class NpcPresentationSoundTest {
         val entered = CountDownLatch(1)
         val parentStart =
             NpcRenderer.prepare(
-                NpcSpawnRequest(instance, personalTestModel(true), NpcLifecycleTest.transform())
+                NpcSpawnRequest.builder(
+                        instance,
+                        personalTestModel(true),
+                        NpcLifecycleTest.transform(),
+                    )
+                    .build()
             )
         val parent = (await(env, parentStart.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
         val start =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions(
-                    a,
-                    sounds =
+            parent.preparePresentation(
+                NpcPresentationOptions.builder(a)
+                    .sounds(
                         NpcViewerSoundSink { _, _, _ ->
                             entered.countDown()
                             hostLock.lock()
@@ -145,8 +157,9 @@ class NpcPresentationSoundTest {
                             } finally {
                                 hostLock.unlock()
                             }
-                        },
-                ),
+                        }
+                    )
+                    .build()
             )
         val personal = (await(env, start.ready()) as NpcPresentationResult.Ready).handle
         await(env, personal.publish())
@@ -178,23 +191,23 @@ class NpcPresentationSoundTest {
         val b = env.createPlayer(instance, Pos(1.0, 42.0, 0.0))
         val parentStart =
             NpcRenderer.prepare(
-                NpcSpawnRequest(instance, personalTestModel(), NpcLifecycleTest.transform())
+                NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform())
+                    .build()
             )
         val parent = (await(env, parentStart.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
         val common = instance.entities.filterIsInstance<NpcItemDisplay>().toSet()
         var failing = false
         val start =
-            NpcPresentations.prepare(
-                parent,
-                NpcPresentationOptions(
-                    a,
-                    clock =
+            parent.preparePresentation(
+                NpcPresentationOptions.builder(a)
+                    .clock(
                         NpcMonotonicClock {
                             check(!failing) { "original synthetic clock failure" }
                             10_000_000_000
-                        },
-                ),
+                        }
+                    )
+                    .build()
             )
         val personal = (await(env, start.ready()) as NpcPresentationResult.Ready).handle
         await(env, personal.publish())

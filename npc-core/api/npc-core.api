@@ -1,0 +1,280 @@
+public final class gg/grounds/npc/core/animation/NpcBoneTrack {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getPosition ()Ljava/util/List;
+	public final fun getRotation ()Ljava/util/List;
+	public final fun getScale ()Ljava/util/List;
+}
+
+public final class gg/grounds/npc/core/animation/NpcClip {
+	public fun <init> (Lgg/grounds/npc/core/animation/NpcLoopMode;DLjava/util/Map;)V
+	public final fun getLengthSeconds ()D
+	public final fun getLoop ()Lgg/grounds/npc/core/animation/NpcLoopMode;
+	public final fun getTracks ()Ljava/util/Map;
+}
+
+public final class gg/grounds/npc/core/animation/NpcInterpolation : java/lang/Enum {
+	public static final field CATMULL_ROM Lgg/grounds/npc/core/animation/NpcInterpolation;
+	public static final field LINEAR Lgg/grounds/npc/core/animation/NpcInterpolation;
+	public static final field STEP Lgg/grounds/npc/core/animation/NpcInterpolation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lgg/grounds/npc/core/animation/NpcInterpolation;
+	public static fun values ()[Lgg/grounds/npc/core/animation/NpcInterpolation;
+}
+
+public final class gg/grounds/npc/core/animation/NpcKeyframe {
+	public fun <init> (DLgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/animation/NpcInterpolation;)V
+	public final fun component1 ()D
+	public final fun component2 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun component3 ()Lgg/grounds/npc/core/animation/NpcInterpolation;
+	public final fun copy (DLgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/animation/NpcInterpolation;)Lgg/grounds/npc/core/animation/NpcKeyframe;
+	public static synthetic fun copy$default (Lgg/grounds/npc/core/animation/NpcKeyframe;DLgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/animation/NpcInterpolation;ILjava/lang/Object;)Lgg/grounds/npc/core/animation/NpcKeyframe;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInterpolation ()Lgg/grounds/npc/core/animation/NpcInterpolation;
+	public final fun getTimeSeconds ()D
+	public final fun getValue ()Lgg/grounds/npc/core/math/NpcVector3;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/core/animation/NpcLoopMode : java/lang/Enum {
+	public static final field HOLD Lgg/grounds/npc/core/animation/NpcLoopMode;
+	public static final field LOOP Lgg/grounds/npc/core/animation/NpcLoopMode;
+	public static final field ONCE Lgg/grounds/npc/core/animation/NpcLoopMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lgg/grounds/npc/core/animation/NpcLoopMode;
+	public static fun values ()[Lgg/grounds/npc/core/animation/NpcLoopMode;
+}
+
+public final class gg/grounds/npc/core/animation/NpcPose {
+	public fun <init> (Ljava/util/Collection;)V
+	public final fun getParts ()Ljava/util/List;
+}
+
+public final class gg/grounds/npc/core/animation/NpcPoseBinding {
+	public final fun sample (Ljava/lang/String;D)Lgg/grounds/npc/core/animation/NpcPose;
+	public final fun sample (Ljava/lang/String;DLgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/animation/NpcPose;
+	public static synthetic fun sample$default (Lgg/grounds/npc/core/animation/NpcPoseBinding;Ljava/lang/String;DLgg/grounds/npc/core/math/NpcVector3;ILjava/lang/Object;)Lgg/grounds/npc/core/animation/NpcPose;
+}
+
+public final class gg/grounds/npc/core/animation/NpcPoseSampler {
+	public static final field INSTANCE Lgg/grounds/npc/core/animation/NpcPoseSampler;
+	public static final fun prepare (Lgg/grounds/npc/core/model/NpcModel;Lgg/grounds/npc/core/math/NpcMatrix;)Lgg/grounds/npc/core/animation/NpcPoseBinding;
+	public static final fun sample (Lgg/grounds/npc/core/model/NpcModel;Ljava/lang/String;D)Lgg/grounds/npc/core/animation/NpcPose;
+	public static final fun sample (Lgg/grounds/npc/core/model/NpcModel;Ljava/lang/String;DLgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/animation/NpcPose;
+	public static synthetic fun sample$default (Lgg/grounds/npc/core/model/NpcModel;Ljava/lang/String;DLgg/grounds/npc/core/math/NpcVector3;ILjava/lang/Object;)Lgg/grounds/npc/core/animation/NpcPose;
+}
+
+public final class gg/grounds/npc/core/io/NpcDecodeLimits {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public fun <init> (II)V
+	public fun <init> (III)V
+	public fun <init> (IIII)V
+	public fun <init> (IIIII)V
+	public fun <init> (IIIIID)V
+	public synthetic fun <init> (IIIIIDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun component5 ()I
+	public final fun component6 ()D
+	public final fun copy (IIIIID)Lgg/grounds/npc/core/io/NpcDecodeLimits;
+	public static synthetic fun copy$default (Lgg/grounds/npc/core/io/NpcDecodeLimits;IIIIIDILjava/lang/Object;)Lgg/grounds/npc/core/io/NpcDecodeLimits;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxBones ()I
+	public final fun getMaxBytes ()I
+	public final fun getMaxClipSeconds ()D
+	public final fun getMaxClips ()I
+	public final fun getMaxKeysPerTrack ()I
+	public final fun getMaxParts ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class gg/grounds/npc/core/io/NpcDecodeResult {
+}
+
+public final class gg/grounds/npc/core/io/NpcDecodeResult$Failure : gg/grounds/npc/core/io/NpcDecodeResult {
+	public fun <init> (Ljava/util/Collection;)V
+	public final fun getProblems ()Ljava/util/List;
+}
+
+public final class gg/grounds/npc/core/io/NpcDecodeResult$Success : gg/grounds/npc/core/io/NpcDecodeResult {
+	public fun <init> (Lgg/grounds/npc/core/model/NpcModel;)V
+	public final fun component1 ()Lgg/grounds/npc/core/model/NpcModel;
+	public final fun copy (Lgg/grounds/npc/core/model/NpcModel;)Lgg/grounds/npc/core/io/NpcDecodeResult$Success;
+	public static synthetic fun copy$default (Lgg/grounds/npc/core/io/NpcDecodeResult$Success;Lgg/grounds/npc/core/model/NpcModel;ILjava/lang/Object;)Lgg/grounds/npc/core/io/NpcDecodeResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getModel ()Lgg/grounds/npc/core/model/NpcModel;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/core/io/NpcModelJson {
+	public static final field INSTANCE Lgg/grounds/npc/core/io/NpcModelJson;
+	public static final fun decode ([B)Lgg/grounds/npc/core/io/NpcDecodeResult;
+	public static final fun decode ([BLgg/grounds/npc/core/io/NpcDecodeLimits;)Lgg/grounds/npc/core/io/NpcDecodeResult;
+	public static synthetic fun decode$default ([BLgg/grounds/npc/core/io/NpcDecodeLimits;ILjava/lang/Object;)Lgg/grounds/npc/core/io/NpcDecodeResult;
+}
+
+public final class gg/grounds/npc/core/math/NpcMatrix {
+	public static final field Companion Lgg/grounds/npc/core/math/NpcMatrix$Companion;
+	public fun <init> ([D)V
+	public final fun contentEquals (Lgg/grounds/npc/core/math/NpcMatrix;)Z
+	public final fun get (I)D
+	public final fun getValues ()[D
+	public final fun point (Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun times (Lgg/grounds/npc/core/math/NpcMatrix;)Lgg/grounds/npc/core/math/NpcMatrix;
+}
+
+public final class gg/grounds/npc/core/math/NpcMatrix$Companion {
+	public final fun getIDENTITY ()Lgg/grounds/npc/core/math/NpcMatrix;
+	public final fun rotation (Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/math/NpcMatrix;
+	public final fun scale (Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/math/NpcMatrix;
+	public final fun translation (Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/math/NpcMatrix;
+}
+
+public final class gg/grounds/npc/core/math/NpcTransform {
+	public fun <init> (Lgg/grounds/npc/core/math/NpcVector3;)V
+	public fun <init> (Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;)V
+	public fun <init> (Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;)V
+	public synthetic fun <init> (Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun component2 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun component3 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun copy (Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/math/NpcTransform;
+	public static synthetic fun copy$default (Lgg/grounds/npc/core/math/NpcTransform;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;ILjava/lang/Object;)Lgg/grounds/npc/core/math/NpcTransform;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPosition ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun getRotationDegrees ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun getScale ()Lgg/grounds/npc/core/math/NpcVector3;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/core/math/NpcVector3 {
+	public static final field Companion Lgg/grounds/npc/core/math/NpcVector3$Companion;
+	public static final field ONE Lgg/grounds/npc/core/math/NpcVector3;
+	public static final field ZERO Lgg/grounds/npc/core/math/NpcVector3;
+	public fun <init> (DDD)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getX ()D
+	public final fun getY ()D
+	public final fun getZ ()D
+	public fun hashCode ()I
+	public final fun minus (Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun plus (Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun times (D)Lgg/grounds/npc/core/math/NpcVector3;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/core/math/NpcVector3$Companion {
+}
+
+public final class gg/grounds/npc/core/model/NpcBone {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun component4 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Ljava/lang/String;)Lgg/grounds/npc/core/model/NpcBone;
+	public static synthetic fun copy$default (Lgg/grounds/npc/core/model/NpcBone;Ljava/lang/String;Ljava/lang/String;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Ljava/lang/String;ILjava/lang/Object;)Lgg/grounds/npc/core/model/NpcBone;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getOrigin ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun getParent ()Ljava/lang/String;
+	public final fun getRotation ()Lgg/grounds/npc/core/math/NpcVector3;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/core/model/NpcBounds {
+	public fun <init> (Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;)V
+	public final fun component1 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun component2 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun copy (Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/model/NpcBounds;
+	public static synthetic fun copy$default (Lgg/grounds/npc/core/model/NpcBounds;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;ILjava/lang/Object;)Lgg/grounds/npc/core/model/NpcBounds;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCenter ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun getSize ()Lgg/grounds/npc/core/math/NpcVector3;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/core/model/NpcClipSound {
+	public fun <init> (Ljava/lang/String;DDD)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun copy (Ljava/lang/String;DDD)Lgg/grounds/npc/core/model/NpcClipSound;
+	public static synthetic fun copy$default (Lgg/grounds/npc/core/model/NpcClipSound;Ljava/lang/String;DDDILjava/lang/Object;)Lgg/grounds/npc/core/model/NpcClipSound;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKey ()Ljava/lang/String;
+	public final fun getPitch ()D
+	public final fun getRadius ()D
+	public final fun getVolume ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/core/model/NpcModel {
+	public fun <init> (Ljava/lang/String;Lgg/grounds/npc/core/model/NpcBounds;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;)V
+	public final fun getAnimations ()Ljava/util/Map;
+	public final fun getBones ()Ljava/util/List;
+	public final fun getBounds ()Lgg/grounds/npc/core/model/NpcBounds;
+	public final fun getHeadBone ()Lgg/grounds/npc/core/model/NpcBone;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getParts ()Ljava/util/List;
+	public final fun getSounds ()Ljava/util/Map;
+}
+
+public final class gg/grounds/npc/core/model/NpcPart {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun component4 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun component5 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun component6 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/core/model/NpcPart;
+	public static synthetic fun copy$default (Lgg/grounds/npc/core/model/NpcPart;Ljava/lang/String;Ljava/lang/String;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/math/NpcVector3;ILjava/lang/Object;)Lgg/grounds/npc/core/model/NpcPart;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBone ()Ljava/lang/String;
+	public final fun getCenter ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getPivot ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun getRotation ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun getScale ()Lgg/grounds/npc/core/math/NpcVector3;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/core/validation/NpcProblem {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lgg/grounds/npc/core/validation/NpcProblem;
+	public static synthetic fun copy$default (Lgg/grounds/npc/core/validation/NpcProblem;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lgg/grounds/npc/core/validation/NpcProblem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getPath ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

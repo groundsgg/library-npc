@@ -36,7 +36,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
 
 dependencies {
     implementation(
-        "gg.grounds:npc-minestom:${providers.gradleProperty("npcVersion").getOrElse("0.1.0-SNAPSHOT")}"
+        "gg.grounds:npc-minestom:${providers.gradleProperty("npcVersion").orElse(providers.fileContents(layout.projectDirectory.file("../../version.txt")).asText.map { it.trim() }).get()}"
     )
     implementation("net.minestom:minestom:2026.10.07-26.2")
     runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
@@ -97,3 +97,46 @@ tasks.register<JavaExec>("runGroundsProfile") {
 }
 
 tasks.test { useJUnitPlatform() }
+
+// Interactive entrypoints are separate from synthetic smoke fixtures.
+tasks.register<JavaExec>("runPersonalDemo") {
+    dependsOn(tasks.classes, demoPack)
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("example.PersonalNpcDemo")
+    doFirst { systemProperty("npc.demoPack", demoPack.get().archiveFile.get().asFile.absolutePath) }
+}
+
+val smokeSources =
+    sourceSets.create("smoke") {
+        compileClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()
+        runtimeClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()
+    }
+
+tasks.register<JavaExec>("smoke") {
+    dependsOn(smokeSources.classesTaskName, demoPack)
+    classpath = smokeSources.runtimeClasspath
+    mainClass.set("example.NpcDemoSmoke")
+    doFirst { systemProperty("npc.demoPack", demoPack.get().archiveFile.get().asFile.absolutePath) }
+}
+
+tasks.register<JavaExec>("smokeGroundsProfile") {
+    dependsOn(smokeSources.classesTaskName, tasks.named("groundsDemoPack"))
+    mainClass.set("example.NpcDemoSmoke")
+    doFirst {
+        require(groundsClasspathFile.isPresent) {
+            "Supply the complete local Grounds 26.3 classpath file"
+        }
+        val local = file(groundsClasspathFile.get()).readText().trim().split(File.pathSeparator)
+        classpath =
+            sourceSets.main.get().output +
+                smokeSources.output +
+                files(local) +
+                configurations.runtimeClasspath.get().filter {
+                    it.name.startsWith("npc-") || it.name.startsWith("kotlin-stdlib")
+                }
+        systemProperty(
+            "npc.demoPack",
+            tasks.named<Zip>("groundsDemoPack").get().archiveFile.get().asFile.absolutePath,
+        )
+    }
+}

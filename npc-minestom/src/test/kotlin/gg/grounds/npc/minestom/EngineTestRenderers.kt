@@ -1,6 +1,15 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.io.NpcDecodeResult
+import gg.grounds.npc.core.io.NpcModelJson
+import gg.grounds.npc.core.math.NpcTransform
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcBounds
+import gg.grounds.npc.core.model.NpcModel
+import gg.grounds.npc.minestom.config.NpcRenderConfig
+import gg.grounds.npc.minestom.internal.lifecycle.NpcEngineHandle
+import gg.grounds.npc.minestom.transform.NpcRenderTransform
+import gg.grounds.npc.minestom.viewer.NpcViewerState
 import java.util.concurrent.*
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
@@ -48,12 +57,14 @@ internal class EngineTestRenderers(private val models: Map<String, NpcModel>) {
         fun create(context: SceneAssetRenderContext): CompletableFuture<NpcEngineHandle> {
             val start =
                 NpcRenderer.prepare(
-                    NpcSpawnRequest(
-                        context.instance,
-                        model,
-                        context.transform,
-                        config = NpcRenderConfig(idleClip = "idle", variationClip = "idle2"),
-                    )
+                    NpcSpawnRequest.builder(context.instance, model, context.transform)
+                        .config(
+                            NpcRenderConfig.builder()
+                                .idleClip("idle")
+                                .variationClip("idle2")
+                                .build()
+                        )
+                        .build()
                 )
             val result = TickFuture<NpcEngineHandle>(context.instance)
             start.ready().whenComplete { ready, error ->
@@ -119,13 +130,13 @@ private class SynchronousHandle(private val handle: NpcHandle, private val insta
     override fun applyHeadLook(yawDegrees: Double, pitchDegrees: Double) =
         wait(handle.applyHeadLook(yawDegrees, pitchDegrees))
 
-    override fun startAnimation(animation: String, elapsedMillis: Long) =
-        wait(handle.startAnimation(animation, elapsedMillis))
+    override fun playClip(animation: String, elapsedMillis: Long) =
+        wait(handle.playClip(animation, elapsedMillis))
 
-    override fun stopAnimation(animation: String?) = wait(handle.stopAnimation(animation))
+    override fun stopClipIfPlaying(animation: String?) =
+        wait(if (animation == null) handle.stopClip() else handle.stopClipIfPlaying(animation))
 
-    override fun advanceAnimation(elapsedMillis: Long) =
-        wait(handle.advanceAnimation(elapsedMillis))
+    override fun advanceClipTo(elapsedMillis: Long) = wait(handle.advanceClipTo(elapsedMillis))
 
     override fun applyViewerState(player: Player, state: NpcViewerState) =
         wait(handle.applyViewerState(player, state))

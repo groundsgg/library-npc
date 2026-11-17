@@ -1,6 +1,6 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
 import java.util.UUID
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
@@ -54,7 +54,7 @@ class NpcViewerUpdatesTest {
                     fixture.player(Pos(50.0, 0.0, 0.0)),
                 )
             val handle = create(fixture)
-            handle.startAnimation(LocalId("wave"), 0)
+            handle.playClip(LocalId("wave"), 0)
             for ((viewer, duration) in viewers.zip(listOf(4, 5, 10))) {
                 val initializedDuration =
                     viewer
@@ -69,7 +69,7 @@ class NpcViewerUpdatesTest {
                 assertEquals(duration, initializedDuration)
             }
             viewers.forEach { it.connection.packets.clear() }
-            for (tick in 1..20) handle.advanceAnimation(tick * 50L)
+            for (tick in 1..20) handle.advanceClipTo(tick * 50L)
             assertEquals(listOf(10, 8, 4), viewers.map { it.updates().size })
             assertTrue(
                 viewers
@@ -90,16 +90,16 @@ class NpcViewerUpdatesTest {
             fixture.player()
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
-            handle.startAnimation(LocalId("wave"), 0)
+            handle.playClip(LocalId("wave"), 0)
             far.connection.packets.clear()
             handle.applyHeadLook(35.0, 0.0)
-            handle.advanceAnimation(200)
+            handle.advanceClipTo(200)
             val head =
                 fixture.instance.entities.filterIsInstance<NpcItemDisplay>().maxBy { it.entityId }
             val expected = (head.entityMeta as ItemDisplayMeta).leftRotation.copyOf()
             assertTrue(far.updates().isEmpty(), "Far viewer was sent the near frame")
-            handle.advanceAnimation(400)
-            handle.advanceAnimation(500)
+            handle.advanceClipTo(400)
+            handle.advanceClipTo(500)
             val update = far.updates().single { it.entityId() == head.entityId }
             assertArrayEquals(
                 expected,
@@ -117,17 +117,17 @@ class NpcViewerUpdatesTest {
             val handle = create(fixture)
             val body =
                 fixture.instance.entities.filterIsInstance<NpcItemDisplay>().minBy { it.entityId }
-            handle.startAnimation(LocalId("wave"), 0)
-            handle.advanceAnimation(200)
+            handle.playClip(LocalId("wave"), 0)
+            handle.advanceClipTo(200)
             far.connection.packets.clear()
-            handle.stopAnimation(LocalId("wave"))
+            handle.stopClipIfPlaying(LocalId("wave"))
             assertEquals(
                 0.7,
                 far.updates().last { it.entityId() == body.entityId }.translation()!!.y(),
                 1e-6,
             )
             far.connection.packets.clear()
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             assertTrue(far.updates().isEmpty())
             handle.close()
         }
@@ -141,20 +141,20 @@ class NpcViewerUpdatesTest {
             val handle = create(fixture)
             val body =
                 fixture.instance.entities.filterIsInstance<NpcItemDisplay>().minBy { it.entityId }
-            handle.startAnimation(LocalId("wave"), 0)
-            handle.advanceAnimation(200)
-            handle.advanceAnimation(400)
+            handle.playClip(LocalId("wave"), 0)
+            handle.advanceClipTo(200)
+            handle.advanceClipTo(400)
             far.connection.packets.clear()
-            handle.advanceAnimation(100)
+            handle.advanceClipTo(100)
             assertEquals(
                 0.8,
                 far.updates().last { it.entityId() == body.entityId }.translation()!!.y(),
                 1e-6,
             )
             far.connection.packets.clear()
-            handle.advanceAnimation(300)
-            handle.advanceAnimation(500)
-            handle.advanceAnimation(600)
+            handle.advanceClipTo(300)
+            handle.advanceClipTo(500)
+            handle.advanceClipTo(600)
             assertEquals(2, far.updates().size)
             handle.close()
         }
@@ -166,18 +166,18 @@ class NpcViewerUpdatesTest {
             fixture.player()
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
-            handle.startAnimation(LocalId("wave"), 0)
-            handle.advanceAnimation(200)
+            handle.playClip(LocalId("wave"), 0)
+            handle.advanceClipTo(200)
             far.connection.packets.clear()
             fixture.player(Pos(48.0, 0.0, 0.0))
-            handle.advanceAnimation(400)
+            handle.advanceClipTo(400)
             val npcIds =
                 fixture.instance.entities
                     .filterIsInstance<NpcItemDisplay>()
                     .map { it.entityId }
                     .toSet()
             assertTrue(far.updates().none { it.entityId() in npcIds })
-            handle.advanceAnimation(500)
+            handle.advanceClipTo(500)
             assertEquals(2, far.updates().count { it.entityId() in npcIds })
             handle.close()
         }
@@ -191,9 +191,9 @@ class NpcViewerUpdatesTest {
             val handle = create(fixture)
             val body =
                 fixture.instance.entities.filterIsInstance<NpcItemDisplay>().minBy { it.entityId }
-            handle.startAnimation(LocalId("wave"), 0)
+            handle.playClip(LocalId("wave"), 0)
             near.connection.packets.clear()
-            handle.advanceAnimation(200)
+            handle.advanceClipTo(200)
             val first = near.updates().single { it.entityId() == body.entityId }
             val original = first.entries().toMap()
             handle.applyTransform(
@@ -201,8 +201,8 @@ class NpcViewerUpdatesTest {
                     it.copy(root = it.root.copy(rotationDegrees = EulerRotation(35.0, 0.0, 0.0)))
                 }
             )
-            handle.advanceAnimation(400)
-            handle.advanceAnimation(500)
+            handle.advanceClipTo(400)
+            handle.advanceClipTo(500)
             assertEquals(original, first.entries())
             assertEquals(0.9, first.translation()!!.y(), 1e-6)
             handle.close()
@@ -215,17 +215,17 @@ class NpcViewerUpdatesTest {
             fixture.player()
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
-            handle.startAnimation(LocalId("wave"), 0)
+            handle.playClip(LocalId("wave"), 0)
             far.connection.packets.clear()
-            handle.advanceAnimation(200)
-            handle.advanceAnimation(400)
-            handle.advanceAnimation(500)
+            handle.advanceClipTo(200)
+            handle.advanceClipTo(400)
+            handle.advanceClipTo(500)
             val packet = far.updates().first()
             val position = packet.translation()
             assertNotNull(position)
-            handle.advanceAnimation(600)
-            handle.advanceAnimation(800)
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(600)
+            handle.advanceClipTo(800)
+            handle.advanceClipTo(1000)
             assertEquals(position, packet.translation())
             assertFalse(packet.entries().isEmpty())
             handle.close()
@@ -239,10 +239,10 @@ class NpcViewerUpdatesTest {
             RendererFixture().use { fixture ->
                 val player = fixture.player(Pos(start, 0.0, 0.0))
                 val handle = create(fixture)
-                handle.startAnimation(LocalId("wave"), 0)
+                handle.playClip(LocalId("wave"), 0)
                 player.teleport(Pos(retained, 0.0, 0.0)).join()
                 player.connection.packets.clear()
-                handle.advanceAnimation(interval)
+                handle.advanceClipTo(interval)
                 assertEquals(2, player.updates().size)
                 val displays = fixture.instance.entities.filterIsInstance<NpcItemDisplay>()
                 assertTrue(
@@ -262,9 +262,9 @@ class NpcViewerUpdatesTest {
             fixture.player()
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
-            handle.startAnimation(LocalId("wave"), 0)
+            handle.playClip(LocalId("wave"), 0)
             handle.applyHeadLook(35.0, 0.0)
-            handle.advanceAnimation(200)
+            handle.advanceClipTo(200)
             far.connection.packets.clear()
             handle.applyViewerState(far, SceneViewerVisualState(2.0, true))
             val poseFields =
@@ -304,18 +304,18 @@ class NpcViewerUpdatesTest {
             fixture.player()
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
-            handle.startAnimation(LocalId("wave"), 0)
-            handle.advanceAnimation(200)
+            handle.playClip(LocalId("wave"), 0)
+            handle.advanceClipTo(200)
             far.teleport(Pos(100.0, 0.0, 0.0)).join()
-            handle.advanceAnimation(400)
+            handle.advanceClipTo(400)
             far.teleport(Pos(50.0, 0.0, 0.0)).join()
-            handle.advanceAnimation(450)
+            handle.advanceClipTo(450)
             assertTrue(far.updates().isNotEmpty())
             far.connection.packets.clear()
-            handle.advanceAnimation(500)
+            handle.advanceClipTo(500)
             assertTrue(far.updates().isEmpty())
-            handle.advanceAnimation(700)
-            handle.advanceAnimation(950)
+            handle.advanceClipTo(700)
+            handle.advanceClipTo(950)
             assertEquals(2, far.updates().size)
             handle.close()
         }
@@ -327,11 +327,11 @@ class NpcViewerUpdatesTest {
             fixture.player()
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
-            handle.startAnimation(LocalId("wave"), 0)
-            handle.advanceAnimation(200)
+            handle.playClip(LocalId("wave"), 0)
+            handle.advanceClipTo(200)
             far.connection.packets.clear()
             handle.close()
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             assertTrue(far.updates().isEmpty())
         }
     }
@@ -342,8 +342,8 @@ class NpcViewerUpdatesTest {
             fixture.player()
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
-            handle.startAnimation(LocalId("wave"), 0)
-            handle.advanceAnimation(200)
+            handle.playClip(LocalId("wave"), 0)
+            handle.advanceClipTo(200)
             far.connection.packets.clear()
             handle.applyViewerState(far, SceneViewerVisualState(1.0, true))
             assertEquals(2, far.updates().size)
@@ -363,13 +363,13 @@ class NpcViewerUpdatesTest {
                 listOf(fixture.player(Pos(50.0, 0.0, 0.0)), fixture.player(Pos(51.0, 0.0, 0.0)))
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
+                handle.playClip(LocalId("wave"), 0)
                 (near + far).forEach {
                     it.connection.captureEnvelopes = true
                     it.connection.envelopes.clear()
                     it.connection.packets.clear()
                 }
-                handle.advanceAnimation(200)
+                handle.advanceClipTo(200)
                 assertEquals(2, near[0].connection.envelopes.size)
                 assertTrue(far.all { it.connection.envelopes.isEmpty() })
                 near[0].connection.envelopes.zip(near[1].connection.envelopes).forEach { (a, b) ->
@@ -377,8 +377,8 @@ class NpcViewerUpdatesTest {
                     assertSame(a, b)
                 }
                 val retained = near[0].updates().first().entries().toMap()
-                handle.advanceAnimation(400)
-                handle.advanceAnimation(500)
+                handle.advanceClipTo(400)
+                handle.advanceClipTo(500)
                 assertEquals(2, far[0].connection.envelopes.size)
                 far[0].connection.envelopes.zip(far[1].connection.envelopes).forEach { (a, b) ->
                     assertTrue(a is CachedPacket)
@@ -399,12 +399,12 @@ class NpcViewerUpdatesTest {
             val entering = fixture.player(Pos(100.0, 0.0, 0.0))
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
+                handle.playClip(LocalId("wave"), 0)
                 leaving.teleport(Pos(100.0, 0.0, 0.0)).join()
                 entering.teleport(Pos.ZERO).join()
                 entering.connection.packets.clear()
                 stable.connection.packets.clear()
-                handle.advanceAnimation(200)
+                handle.advanceClipTo(200)
                 val duration = MetadataDef.Display.TRANSFORMATION_INTERPOLATION_DURATION.index()
                 for (display in fixture.instance.entities.filterIsInstance<NpcItemDisplay>()) {
                     assertFalse(leaving in display.viewers)
@@ -462,18 +462,18 @@ class NpcViewerUpdatesTest {
             val original = fixture.player()
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
+                handle.playClip(LocalId("wave"), 0)
                 original.teleport(Pos(24.0, 0.0, 0.0)).join()
                 lateinit var replacement: TestPlayer
                 instance.replacement = {
                     original.remove()
                     fixture.player(Pos(50.0, 0.0, 0.0), original.uuid).also { replacement = it }
                 }
-                handle.advanceAnimation(200)
+                handle.advanceClipTo(200)
                 replacement.connection.packets.clear()
-                handle.advanceAnimation(400)
-                handle.advanceAnimation(600)
-                handle.advanceAnimation(700)
+                handle.advanceClipTo(400)
+                handle.advanceClipTo(600)
+                handle.advanceClipTo(700)
                 val body =
                     fixture.instance.entities.filterIsInstance<NpcItemDisplay>().minBy {
                         it.entityId
@@ -494,7 +494,7 @@ class NpcViewerUpdatesTest {
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
+                handle.playClip(LocalId("wave"), 0)
                 val body =
                     fixture.instance.entities.filterIsInstance<NpcItemDisplay>().minBy {
                         it.entityId
@@ -502,8 +502,8 @@ class NpcViewerUpdatesTest {
                 body.updateViewableRule { it !== far }
                 assertFalse(far in body.viewers)
                 far.connection.packets.clear()
-                handle.advanceAnimation(200)
-                handle.advanceAnimation(500)
+                handle.advanceClipTo(200)
+                handle.advanceClipTo(500)
                 assertEquals(1, far.updates().size)
                 assertTrue(far.updates().none { it.entityId() == body.entityId })
             } finally {
@@ -518,18 +518,18 @@ class NpcViewerUpdatesTest {
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
-                handle.advanceAnimation(200)
+                handle.playClip(LocalId("wave"), 0)
+                handle.advanceClipTo(200)
                 fixture.player(Pos(48.0, 0.0, 0.0))
                 far.connection.packets.clear()
-                handle.advanceAnimation(400)
+                handle.advanceClipTo(400)
                 assertTrue(far.updates().isEmpty())
-                handle.advanceAnimation(500)
+                handle.advanceClipTo(500)
                 assertEquals(2, far.updates().size)
                 far.connection.packets.clear()
-                handle.advanceAnimation(900)
+                handle.advanceClipTo(900)
                 assertTrue(far.updates().isEmpty())
-                handle.advanceAnimation(1000)
+                handle.advanceClipTo(1000)
                 assertEquals(2, far.updates().size)
             } finally {
                 handle.close()
@@ -543,7 +543,7 @@ class NpcViewerUpdatesTest {
             val viewers = listOf(fixture.player(), fixture.player(Pos(2.0, 0.0, 0.0)))
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
+                handle.playClip(LocalId("wave"), 0)
                 viewers.forEach {
                     it.connection.captureEnvelopes = true
                     it.connection.envelopes.clear()
@@ -578,15 +578,15 @@ class NpcViewerUpdatesTest {
             val other = fixture.player(Pos(51.0, 0.0, 0.0))
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
-                handle.advanceAnimation(200)
+                handle.playClip(LocalId("wave"), 0)
+                handle.advanceClipTo(200)
                 val uuid = original.uuid
                 original.remove()
                 val replacement = fixture.player(Pos(50.0, 0.0, 0.0), uuid)
                 assertNotSame(original, replacement)
                 listOf(replacement, other).forEach { it.connection.packets.clear() }
-                handle.advanceAnimation(400)
-                handle.advanceAnimation(500)
+                handle.advanceClipTo(400)
+                handle.advanceClipTo(500)
                 for (viewer in listOf(replacement, other)) {
                     val heights = viewer.updates().mapNotNull { it.translation()?.y() }.sorted()
                     assertEquals(2, heights.size)
@@ -606,10 +606,10 @@ class NpcViewerUpdatesTest {
             val far = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
-                handle.advanceAnimation(150)
+                handle.playClip(LocalId("wave"), 0)
+                handle.advanceClipTo(150)
                 listOf(near, far).forEach { it.connection.packets.clear() }
-                handle.advanceAnimation(100)
+                handle.advanceClipTo(100)
                 for (viewer in listOf(near, far)) {
                     val heights = viewer.updates().mapNotNull { it.translation()?.y() }.sorted()
                     assertEquals(2, heights.size)
@@ -639,14 +639,14 @@ class NpcViewerUpdatesTest {
             val viewers = List(12) { fixture.player() }
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
+                handle.playClip(LocalId("wave"), 0)
                 val displays = instance.entities.filterIsInstance<NpcItemDisplay>()
                 viewers.forEach { it.teleport(Pos(24.0, 0.0, 0.0)).join() }
                 viewers.forEach { it.connection.packets.clear() }
                 instance.resolutions = 0
                 instance.counting = true
                 try {
-                    handle.advanceAnimation(250)
+                    handle.advanceClipTo(250)
                 } finally {
                     instance.counting = false
                 }
@@ -679,7 +679,7 @@ class NpcViewerUpdatesTest {
             val viewer = fixture.player(Pos(50.0, 0.0, 0.0))
             val handle = create(fixture)
             try {
-                handle.startAnimation(LocalId("wave"), 0)
+                handle.playClip(LocalId("wave"), 0)
                 val displays = fixture.instance.entities.filterIsInstance<NpcItemDisplay>()
                 assertEquals(2, displays.size)
                 val missing = displays.minBy { it.entityId }
@@ -687,7 +687,7 @@ class NpcViewerUpdatesTest {
                 assertFalse(viewer in missing.viewers)
                 viewer.teleport(Pos.ZERO).join()
                 viewer.connection.packets.clear()
-                handle.advanceAnimation(200)
+                handle.advanceClipTo(200)
                 val duration = MetadataDef.Display.TRANSFORMATION_INTERPOLATION_DURATION.index()
                 val poseFields =
                     setOf(

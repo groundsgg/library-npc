@@ -1,11 +1,15 @@
 # Compatibility
 
+The redesigned source API retains Kotlin 2.2.20, JDK 25 builds and JVM-24 NPC bytecode. Public Minestom remains `2026.10.07-26.2`; the explicitly supplied fork profile remains `2026.11.08-26.3-grounds`. Schema-1 content remains compatible. API compatibility with 0.2.0 is intentionally broken; see migration.
+
+Current-candidate tests and real-client acceptance are separate: a green library/consumer build does not imply actual backend/proxy-transfer acceptance. The observations below belong to the earlier implementation unless explicitly requalified against the new candidate.
+
 | Target | Local evidence |
 | --- | --- |
 | Core | JDK 25; Kotlin 2.2.20; Java/Kotlin JVM 24 bytecode; 14 tests |
 | Public adapter | Minestom 2026.10.07-26.2; Java 25 runtime; 117 renderer tests and standalone smoke |
 | Grounds adapter | Compiles/tests pass against 2026.11.08-26.3-grounds; standalone startup/move/close smoke passes |
-| Java/Kotlin consumers | Separate Gradle projects resolving local candidates and published0.2.0 artifacts; both run |
+| Java/Kotlin consumers | Separate Gradle projects resolving the redesigned local candidate; Java and Kotlin both run |
 | Numeric content | Existing schema 1; original synthetic fixtures only |
 | Scene/Lobby integration | Updated local suites pass; integration PRs open; licensed-content and real backend/proxy-transfer gates remain |
 | Real 26.3 client | Neutral two-client private visuals/sound/restoration confirmed by user; licensed content and real transfers remain pending |

@@ -1,0 +1,326 @@
+public abstract interface class gg/grounds/npc/minestom/NpcHandle {
+	public abstract fun advanceClipTo (J)Ljava/util/concurrent/CompletionStage;
+	public abstract fun applyHeadLook (DD)Ljava/util/concurrent/CompletionStage;
+	public abstract fun applyTransform (Lgg/grounds/npc/minestom/transform/NpcRenderTransform;)Ljava/util/concurrent/CompletionStage;
+	public abstract fun applyViewerState (Lnet/minestom/server/entity/Player;Lgg/grounds/npc/minestom/viewer/NpcViewerState;)Ljava/util/concurrent/CompletionStage;
+	public abstract fun clearViewerState (Lnet/minestom/server/entity/Player;)Ljava/util/concurrent/CompletionStage;
+	public abstract fun closeAsync ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun closed ()Ljava/util/concurrent/CompletionStage;
+	public fun playClip (Ljava/lang/String;)Ljava/util/concurrent/CompletionStage;
+	public abstract fun playClip (Ljava/lang/String;J)Ljava/util/concurrent/CompletionStage;
+	public abstract fun preparePresentation (Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions;)Lgg/grounds/npc/minestom/presentation/NpcPresentationStart;
+	public abstract fun publish ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun snapshot ()Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;
+	public abstract fun stopClip ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun stopClipIfPlaying (Ljava/lang/String;)Ljava/util/concurrent/CompletionStage;
+}
+
+public final class gg/grounds/npc/minestom/NpcHandle$DefaultImpls {
+	public static fun playClip (Lgg/grounds/npc/minestom/NpcHandle;Ljava/lang/String;)Ljava/util/concurrent/CompletionStage;
+}
+
+public abstract interface class gg/grounds/npc/minestom/NpcPrepareResult {
+}
+
+public final class gg/grounds/npc/minestom/NpcPrepareResult$Ready : gg/grounds/npc/minestom/NpcPrepareResult {
+	public fun <init> (Lgg/grounds/npc/minestom/NpcHandle;)V
+	public final fun component1 ()Lgg/grounds/npc/minestom/NpcHandle;
+	public final fun copy (Lgg/grounds/npc/minestom/NpcHandle;)Lgg/grounds/npc/minestom/NpcPrepareResult$Ready;
+	public static synthetic fun copy$default (Lgg/grounds/npc/minestom/NpcPrepareResult$Ready;Lgg/grounds/npc/minestom/NpcHandle;ILjava/lang/Object;)Lgg/grounds/npc/minestom/NpcPrepareResult$Ready;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHandle ()Lgg/grounds/npc/minestom/NpcHandle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/minestom/NpcPrepareResult$Rejected : gg/grounds/npc/minestom/NpcPrepareResult {
+	public fun <init> (Ljava/util/List;)V
+	public final fun getProblems ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/minestom/NpcRenderer {
+	public static final field INSTANCE Lgg/grounds/npc/minestom/NpcRenderer;
+	public static final fun prepare (Lgg/grounds/npc/minestom/NpcSpawnRequest;)Lgg/grounds/npc/minestom/NpcStart;
+	public static final fun prepare (Lgg/grounds/npc/minestom/NpcSpawnRequest;Lgg/grounds/npc/minestom/presentation/NpcPresentationLimits;)Lgg/grounds/npc/minestom/NpcStart;
+}
+
+public final class gg/grounds/npc/minestom/NpcSpawnRequest {
+	public static final field Companion Lgg/grounds/npc/minestom/NpcSpawnRequest$Companion;
+	public synthetic fun <init> (Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder (Lnet/minestom/server/instance/Instance;Lgg/grounds/npc/core/model/NpcModel;Lgg/grounds/npc/minestom/transform/NpcRenderTransform;)Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+	public final fun getConfig ()Lgg/grounds/npc/minestom/config/NpcRenderConfig;
+	public final fun getInstance ()Lnet/minestom/server/instance/Instance;
+	public final fun getMeshes ()Lgg/grounds/npc/minestom/spi/NpcMeshResolver;
+	public final fun getModel ()Lgg/grounds/npc/core/model/NpcModel;
+	public final fun getPublicationGuard ()Lgg/grounds/npc/minestom/spi/NpcPublicationGuard;
+	public final fun getSounds ()Lgg/grounds/npc/minestom/spi/NpcSoundSink;
+	public final fun getTransform ()Lgg/grounds/npc/minestom/transform/NpcRenderTransform;
+	public final fun toBuilder ()Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+}
+
+public final class gg/grounds/npc/minestom/NpcSpawnRequest$Builder {
+	public final fun build ()Lgg/grounds/npc/minestom/NpcSpawnRequest;
+	public final fun config (Lgg/grounds/npc/minestom/config/NpcRenderConfig;)Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+	public final fun instance (Lnet/minestom/server/instance/Instance;)Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+	public final fun meshes (Lgg/grounds/npc/minestom/spi/NpcMeshResolver;)Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+	public final fun model (Lgg/grounds/npc/core/model/NpcModel;)Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+	public final fun publicationGuard (Lgg/grounds/npc/minestom/spi/NpcPublicationGuard;)Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+	public final fun sounds (Lgg/grounds/npc/minestom/spi/NpcSoundSink;)Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+	public final fun transform (Lgg/grounds/npc/minestom/transform/NpcRenderTransform;)Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+}
+
+public final class gg/grounds/npc/minestom/NpcSpawnRequest$Companion {
+	public final fun builder (Lnet/minestom/server/instance/Instance;Lgg/grounds/npc/core/model/NpcModel;Lgg/grounds/npc/minestom/transform/NpcRenderTransform;)Lgg/grounds/npc/minestom/NpcSpawnRequest$Builder;
+}
+
+public abstract interface class gg/grounds/npc/minestom/NpcStart {
+	public abstract fun cancel ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun ready ()Ljava/util/concurrent/CompletionStage;
+}
+
+public final class gg/grounds/npc/minestom/config/NpcRenderConfig {
+	public static final field Companion Lgg/grounds/npc/minestom/config/NpcRenderConfig$Companion;
+	public synthetic fun <init> (Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder ()Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun getFarIntervalMillis ()J
+	public final fun getIdleClip ()Ljava/lang/String;
+	public final fun getMidDistance ()D
+	public final fun getMidIntervalMillis ()J
+	public final fun getMidRetention ()D
+	public final fun getNearDistance ()D
+	public final fun getNearIntervalMillis ()J
+	public final fun getNearRetention ()D
+	public final fun getRetentionDistance ()D
+	public final fun getVariationClip ()Ljava/lang/String;
+	public final fun getVariationDelayMillis ()J
+	public final fun getVariationMinDistance ()D
+	public final fun getVerticalDistance ()D
+	public final fun getViewDistance ()D
+	public final fun toBuilder ()Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+}
+
+public final class gg/grounds/npc/minestom/config/NpcRenderConfig$Builder {
+	public final fun build ()Lgg/grounds/npc/minestom/config/NpcRenderConfig;
+	public final fun farIntervalMillis (J)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun idleClip (Ljava/lang/String;)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun midDistance (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun midIntervalMillis (J)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun midRetention (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun nearDistance (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun nearIntervalMillis (J)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun nearRetention (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun retentionDistance (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun variationClip (Ljava/lang/String;)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun variationDelayMillis (J)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun variationMinDistance (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun verticalDistance (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun viewDistance (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+}
+
+public final class gg/grounds/npc/minestom/config/NpcRenderConfig$Companion {
+	public final fun builder ()Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+}
+
+public final class gg/grounds/npc/minestom/error/NpcOperationException : java/lang/IllegalStateException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCode ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/minestom/presentation/NpcPresentationChannel : java/lang/Enum {
+	public static final field FOLLOW_SHARED Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;
+	public static final field PRIVATE Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;
+	public static fun values ()[Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;
+}
+
+public abstract interface class gg/grounds/npc/minestom/presentation/NpcPresentationHandle {
+	public abstract fun applyHeadLook (DD)Ljava/util/concurrent/CompletionStage;
+	public abstract fun closeAsync ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun closed ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun followSharedClip ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun followSharedHeadLook ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun playClip (Ljava/lang/String;)Ljava/util/concurrent/CompletionStage;
+	public abstract fun publish ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun snapshot ()Lgg/grounds/npc/minestom/presentation/NpcPresentationSnapshot;
+	public abstract fun stopClip ()Ljava/util/concurrent/CompletionStage;
+}
+
+public final class gg/grounds/npc/minestom/presentation/NpcPresentationLimits {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public fun <init> (II)V
+	public synthetic fun <init> (IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lgg/grounds/npc/minestom/presentation/NpcPresentationLimits;
+	public static synthetic fun copy$default (Lgg/grounds/npc/minestom/presentation/NpcPresentationLimits;IIILjava/lang/Object;)Lgg/grounds/npc/minestom/presentation/NpcPresentationLimits;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxAdditionalParts ()I
+	public final fun getMaxPresentations ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/minestom/presentation/NpcPresentationOptions {
+	public static final field Companion Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Companion;
+	public synthetic fun <init> (Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder (Lnet/minestom/server/entity/Player;)Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;
+	public final fun getClock ()Lgg/grounds/npc/minestom/spi/NpcMonotonicClock;
+	public final fun getIdleClip ()Ljava/lang/String;
+	public final fun getPlayer ()Lnet/minestom/server/entity/Player;
+	public final fun getPublicationGuard ()Lgg/grounds/npc/minestom/spi/NpcPublicationGuard;
+	public final fun getSampleIntervalMillis ()J
+	public final fun getSounds ()Lgg/grounds/npc/minestom/spi/NpcViewerSoundSink;
+	public final fun toBuilder ()Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;
+}
+
+public final class gg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder {
+	public final fun build ()Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions;
+	public final fun clock (Lgg/grounds/npc/minestom/spi/NpcMonotonicClock;)Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;
+	public final fun idleClip (Ljava/lang/String;)Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;
+	public final fun player (Lnet/minestom/server/entity/Player;)Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;
+	public final fun publicationGuard (Lgg/grounds/npc/minestom/spi/NpcPublicationGuard;)Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;
+	public final fun sampleIntervalMillis (J)Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;
+	public final fun sounds (Lgg/grounds/npc/minestom/spi/NpcViewerSoundSink;)Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;
+}
+
+public final class gg/grounds/npc/minestom/presentation/NpcPresentationOptions$Companion {
+	public final fun builder (Lnet/minestom/server/entity/Player;)Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions$Builder;
+}
+
+public final class gg/grounds/npc/minestom/presentation/NpcPresentationPhase : java/lang/Enum {
+	public static final field ACTIVE Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;
+	public static final field CLOSED Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;
+	public static final field CLOSING Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;
+	public static final field PREPARING Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;
+	public static final field READY_HIDDEN Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;
+	public static fun values ()[Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;
+}
+
+public abstract interface class gg/grounds/npc/minestom/presentation/NpcPresentationResult {
+}
+
+public final class gg/grounds/npc/minestom/presentation/NpcPresentationResult$Ready : gg/grounds/npc/minestom/presentation/NpcPresentationResult {
+	public fun <init> (Lgg/grounds/npc/minestom/presentation/NpcPresentationHandle;)V
+	public final fun component1 ()Lgg/grounds/npc/minestom/presentation/NpcPresentationHandle;
+	public final fun copy (Lgg/grounds/npc/minestom/presentation/NpcPresentationHandle;)Lgg/grounds/npc/minestom/presentation/NpcPresentationResult$Ready;
+	public static synthetic fun copy$default (Lgg/grounds/npc/minestom/presentation/NpcPresentationResult$Ready;Lgg/grounds/npc/minestom/presentation/NpcPresentationHandle;ILjava/lang/Object;)Lgg/grounds/npc/minestom/presentation/NpcPresentationResult$Ready;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHandle ()Lgg/grounds/npc/minestom/presentation/NpcPresentationHandle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/minestom/presentation/NpcPresentationResult$Rejected : gg/grounds/npc/minestom/presentation/NpcPresentationResult {
+	public fun <init> (Ljava/util/List;)V
+	public final fun getProblems ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/minestom/presentation/NpcPresentationSnapshot {
+	public fun <init> (Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;Ljava/lang/String;D)V
+	public final fun component1 ()Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;
+	public final fun component2 ()Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;
+	public final fun component3 ()Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;
+	public final fun component4 ()Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()D
+	public final fun copy (Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;Ljava/lang/String;D)Lgg/grounds/npc/minestom/presentation/NpcPresentationSnapshot;
+	public static synthetic fun copy$default (Lgg/grounds/npc/minestom/presentation/NpcPresentationSnapshot;Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;Ljava/lang/String;DILjava/lang/Object;)Lgg/grounds/npc/minestom/presentation/NpcPresentationSnapshot;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnchor ()Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;
+	public final fun getClipId ()Ljava/lang/String;
+	public final fun getClipMode ()Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;
+	public final fun getClipSeconds ()D
+	public final fun getHeadMode ()Lgg/grounds/npc/minestom/presentation/NpcPresentationChannel;
+	public final fun getPhase ()Lgg/grounds/npc/minestom/presentation/NpcPresentationPhase;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class gg/grounds/npc/minestom/presentation/NpcPresentationStart {
+	public abstract fun cancel ()Ljava/util/concurrent/CompletionStage;
+	public abstract fun ready ()Ljava/util/concurrent/CompletionStage;
+}
+
+public abstract interface class gg/grounds/npc/minestom/spi/NpcMeshResolver {
+	public abstract fun resolve (Ljava/lang/String;)Lnet/minestom/server/item/ItemStack;
+}
+
+public abstract interface class gg/grounds/npc/minestom/spi/NpcMonotonicClock {
+	public abstract fun nanoTime ()J
+}
+
+public abstract interface class gg/grounds/npc/minestom/spi/NpcPublicationGuard {
+	public abstract fun runIfCurrent (Ljava/lang/Runnable;)Z
+}
+
+public abstract interface class gg/grounds/npc/minestom/spi/NpcSoundSink {
+	public abstract fun playNear (Lnet/minestom/server/instance/Instance;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/model/NpcClipSound;)V
+}
+
+public abstract interface class gg/grounds/npc/minestom/spi/NpcViewerSoundSink {
+	public abstract fun playFor (Lnet/minestom/server/entity/Player;Lgg/grounds/npc/core/math/NpcVector3;Lgg/grounds/npc/core/model/NpcClipSound;)V
+}
+
+public final class gg/grounds/npc/minestom/transform/NpcAnchorSnapshot {
+	public fun <init> (Lgg/grounds/npc/core/math/NpcTransform;Lgg/grounds/npc/core/math/NpcVector3;)V
+	public final fun component1 ()Lgg/grounds/npc/core/math/NpcTransform;
+	public final fun component2 ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun copy (Lgg/grounds/npc/core/math/NpcTransform;Lgg/grounds/npc/core/math/NpcVector3;)Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;
+	public static synthetic fun copy$default (Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;Lgg/grounds/npc/core/math/NpcTransform;Lgg/grounds/npc/core/math/NpcVector3;ILjava/lang/Object;)Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLookOrigin ()Lgg/grounds/npc/core/math/NpcVector3;
+	public final fun getRoot ()Lgg/grounds/npc/core/math/NpcTransform;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/minestom/transform/NpcDisplayTransforms {
+	public static final field INSTANCE Lgg/grounds/npc/minestom/transform/NpcDisplayTransforms;
+	public static final fun apply (Lnet/minestom/server/entity/metadata/display/AbstractDisplayMeta;Lgg/grounds/npc/core/math/NpcMatrix;)Z
+	public static final fun apply (Lnet/minestom/server/entity/metadata/display/AbstractDisplayMeta;Lgg/grounds/npc/core/math/NpcMatrix;Lgg/grounds/npc/core/math/NpcVector3;)Z
+	public static synthetic fun apply$default (Lnet/minestom/server/entity/metadata/display/AbstractDisplayMeta;Lgg/grounds/npc/core/math/NpcMatrix;Lgg/grounds/npc/core/math/NpcVector3;ILjava/lang/Object;)Z
+	public static final fun applyBounds (Lnet/minestom/server/entity/metadata/display/AbstractDisplayMeta;Lgg/grounds/npc/minestom/transform/NpcRenderTransform;Lgg/grounds/npc/core/model/NpcBounds;)Z
+	public static final fun applyBounds (Lnet/minestom/server/entity/metadata/display/AbstractDisplayMeta;Lgg/grounds/npc/minestom/transform/NpcRenderTransform;Lgg/grounds/npc/core/model/NpcBounds;Lgg/grounds/npc/core/math/NpcVector3;)Z
+	public static synthetic fun applyBounds$default (Lnet/minestom/server/entity/metadata/display/AbstractDisplayMeta;Lgg/grounds/npc/minestom/transform/NpcRenderTransform;Lgg/grounds/npc/core/model/NpcBounds;Lgg/grounds/npc/core/math/NpcVector3;ILjava/lang/Object;)Z
+	public static final fun applyModel (Lnet/minestom/server/entity/metadata/display/AbstractDisplayMeta;Lgg/grounds/npc/minestom/transform/NpcRenderTransform;Lgg/grounds/npc/core/math/NpcMatrix;)Z
+	public static final fun applyModel (Lnet/minestom/server/entity/metadata/display/AbstractDisplayMeta;Lgg/grounds/npc/minestom/transform/NpcRenderTransform;Lgg/grounds/npc/core/math/NpcMatrix;Lgg/grounds/npc/core/math/NpcVector3;)Z
+	public static synthetic fun applyModel$default (Lnet/minestom/server/entity/metadata/display/AbstractDisplayMeta;Lgg/grounds/npc/minestom/transform/NpcRenderTransform;Lgg/grounds/npc/core/math/NpcMatrix;Lgg/grounds/npc/core/math/NpcVector3;ILjava/lang/Object;)Z
+}
+
+public final class gg/grounds/npc/minestom/transform/NpcRenderTransform {
+	public fun <init> (Lgg/grounds/npc/core/math/NpcTransform;Lgg/grounds/npc/core/math/NpcTransform;)V
+	public synthetic fun <init> (Lgg/grounds/npc/core/math/NpcTransform;Lgg/grounds/npc/core/math/NpcTransform;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lgg/grounds/npc/core/math/NpcTransform;
+	public final fun component2 ()Lgg/grounds/npc/core/math/NpcTransform;
+	public final fun copy (Lgg/grounds/npc/core/math/NpcTransform;Lgg/grounds/npc/core/math/NpcTransform;)Lgg/grounds/npc/minestom/transform/NpcRenderTransform;
+	public static synthetic fun copy$default (Lgg/grounds/npc/minestom/transform/NpcRenderTransform;Lgg/grounds/npc/core/math/NpcTransform;Lgg/grounds/npc/core/math/NpcTransform;ILjava/lang/Object;)Lgg/grounds/npc/minestom/transform/NpcRenderTransform;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLocal ()Lgg/grounds/npc/core/math/NpcTransform;
+	public final fun getRoot ()Lgg/grounds/npc/core/math/NpcTransform;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/minestom/viewer/NpcViewerState {
+	public fun <init> ()V
+	public fun <init> (DZ)V
+	public synthetic fun <init> (DZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()Z
+	public final fun copy (DZ)Lgg/grounds/npc/minestom/viewer/NpcViewerState;
+	public static synthetic fun copy$default (Lgg/grounds/npc/minestom/viewer/NpcViewerState;DZILjava/lang/Object;)Lgg/grounds/npc/minestom/viewer/NpcViewerState;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHighlighted ()Z
+	public final fun getScaleMultiplier ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

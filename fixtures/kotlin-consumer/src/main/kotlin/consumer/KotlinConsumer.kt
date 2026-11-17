@@ -1,12 +1,19 @@
 package consumer
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.animation.NpcPoseSampler
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcBounds
+import gg.grounds.npc.core.model.NpcModel
+import gg.grounds.npc.core.model.NpcPart
 import gg.grounds.npc.minestom.*
+import gg.grounds.npc.minestom.NpcHandle
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
 import java.util.concurrent.CompletionStage
 import net.minestom.server.entity.Player
 
 fun gesture(parent: NpcHandle, player: Player): CompletionStage<Void> {
-    val start = NpcPresentations.prepare(parent, NpcPresentationOptions(player))
+    val start = parent.preparePresentation(NpcPresentationOptions.builder(player).build())
     return start.ready().thenCompose { result ->
         when (result) {
             is NpcPresentationResult.Ready ->
@@ -27,6 +34,15 @@ fun gesture(parent: NpcHandle, player: Player): CompletionStage<Void> {
 }
 
 fun main() {
+    listOf(
+            "npc-core" to NpcModel::class.java,
+            "npc-minestom" to gg.grounds.npc.minestom.NpcRenderer::class.java,
+        )
+        .forEach { (module, type) ->
+            val path = java.nio.file.Path.of(type.protectionDomain.codeSource.location.toURI())
+            println("NPC_ORIGIN $module $path")
+        }
+
     val model =
         NpcModel(
             "example:kotlin",

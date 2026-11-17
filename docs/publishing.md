@@ -18,7 +18,7 @@ For a local integration candidate:
 python3 tools/verify_public_artifacts.py
 ./gradlew -p fixtures/java-consumer run -PnpcRepository=file:///absolute/path/to/library-npc/.evidence/maven
 ./gradlew -p fixtures/kotlin-consumer run -PnpcRepository=file:///absolute/path/to/library-npc/.evidence/maven
-./gradlew -p examples/standalone-minestom test run --args=--smoke -PnpcRepository=file:///absolute/path/to/library-npc/.evidence/maven
+./gradlew -p examples/standalone-minestom test smoke -PnpcRepository=file:///absolute/path/to/library-npc/.evidence/maven
 ```
 
 The project owner selected MIT on 2026-11-12; see [licensing decision](license-decision.md).

@@ -1,6 +1,5 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
 import net.minestom.server.MinecraftServer
 import net.minestom.server.component.DataComponents
 import net.minestom.server.entity.EntityType
@@ -43,19 +42,19 @@ class AnimatedNpcRendererTest {
                 "grounds:npc_parts/test/worker/part_000",
                 meta.itemStack.get(DataComponents.ITEM_MODEL),
             )
-            handle.startAnimation(LocalId("wave"), 0)
-            handle.advanceAnimation(500)
+            handle.playClip(LocalId("wave"), 0)
+            handle.advanceClipTo(500)
             assertEquals(1.5, meta.translation.y(), 1e-6)
-            handle.advanceAnimation(1500)
+            handle.advanceClipTo(1500)
             assertEquals(1.0, meta.translation.y(), 1e-6)
-            handle.startAnimation(LocalId("hidden"), 0)
+            handle.playClip(LocalId("hidden"), 0)
             assertEquals(0.0, meta.scale.length(), 1e-6)
             assertTrue(meta.leftRotation.all { it.isFinite() })
             val player = fixture.player(net.minestom.server.coordinate.Pos(10.0, 140.0, 20.0))
             handle.applyViewerState(player, SceneViewerVisualState(highlighted = true))
             assertTrue(player.connection.flags(display.entityId).last() and 0x40 != 0)
             handle.close()
-            handle.advanceAnimation(2000)
+            handle.advanceClipTo(2000)
             assertTrue(display.isRemoved)
             assertNull(registry.rendererFor(model.id, AssetKind.PROP))
         }
@@ -81,12 +80,12 @@ class AnimatedNpcRendererTest {
                     )
                     .toCompletableFuture()
                     .join()
-            handle.startAnimation(LocalId("idle"), 0)
+            handle.playClip(LocalId("idle"), 0)
             // Flush the entity's batched metadata before isolating steady-state updates.
             fixture.instance.tick(0)
             player.connection.packets.clear()
             for (time in listOf(100L, 200L, 300L)) {
-                handle.advanceAnimation(time)
+                handle.advanceClipTo(time)
                 fixture.instance.tick(time)
             }
             val updates =

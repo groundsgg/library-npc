@@ -1,7 +1,21 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.animation.NpcBoneTrack
+import gg.grounds.npc.core.animation.NpcClip
+import gg.grounds.npc.core.animation.NpcInterpolation
+import gg.grounds.npc.core.animation.NpcKeyframe
+import gg.grounds.npc.core.animation.NpcLoopMode
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.core.model.NpcClipSound
+import gg.grounds.npc.core.model.NpcModel
 import gg.grounds.npc.minestom.NpcPresentationLifecycleTest.Companion.await
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.presentation.NpcPresentationChannel
+import gg.grounds.npc.minestom.presentation.NpcPresentationHandle
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult
+import gg.grounds.npc.minestom.presentation.NpcPresentationStart
+import gg.grounds.npc.minestom.spi.NpcMonotonicClock
 import java.util.concurrent.atomic.AtomicLong
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.metadata.display.ItemDisplayMeta
@@ -14,11 +28,11 @@ internal fun personalTestModel(voiced: Boolean = false): NpcModel {
     val moving =
         mapOf(
             "body" to
-                mapOf(
-                    "position" to
+                NpcBoneTrack(
+                    position =
                         listOf(
-                            NpcKeyframe(0.0, NpcVector3.ZERO, "linear"),
-                            NpcKeyframe(1.0, NpcVector3(0.0, 1.0, 0.0), "linear"),
+                            NpcKeyframe(0.0, NpcVector3.ZERO, NpcInterpolation.LINEAR),
+                            NpcKeyframe(1.0, NpcVector3(0.0, 1.0, 0.0), NpcInterpolation.LINEAR),
                         )
                 )
         )
@@ -28,9 +42,9 @@ internal fun personalTestModel(voiced: Boolean = false): NpcModel {
         base.bones,
         base.parts,
         mapOf(
-            "wave" to NpcClip("once", 1.0, moving),
-            "idle" to NpcClip("loop", 2.0, emptyMap()),
-            "loop" to NpcClip("loop", 1.0, moving),
+            "wave" to NpcClip(NpcLoopMode.ONCE, 1.0, moving),
+            "idle" to NpcClip(NpcLoopMode.LOOP, 2.0, emptyMap()),
+            "loop" to NpcClip(NpcLoopMode.LOOP, 1.0, moving),
         ),
         if (voiced)
             mapOf(
@@ -47,19 +61,19 @@ class NpcPresentationPlaybackTest {
     fun `private head follows real shared seek and pause until clip override`(env: Env) {
         val fixture = setup(env)
         try {
-            await(env, fixture.parent.startAnimation("wave", 250))
+            await(env, fixture.parent.playClip("wave", 250))
             val personal = fixture.open()
             await(env, personal.applyHeadLook(35.0, -10.0))
             assertEquals(NpcPresentationChannel.PRIVATE, personal.snapshot().headMode)
             assertEquals(NpcPresentationChannel.FOLLOW_SHARED, personal.snapshot().clipMode)
-            await(env, fixture.parent.advanceAnimation(100))
+            await(env, fixture.parent.advanceClipTo(100))
             fixture.clock.set(10_600_000_000)
             env.tick()
             assertEquals(0.1, personal.snapshot().clipSeconds, 0.000001)
             repeat(3) { env.tick() }
             assertEquals(0.1, personal.snapshot().clipSeconds, 0.000001)
             await(env, fixture.parent.applyHeadLook(-20.0, 10.0))
-            await(env, fixture.parent.advanceAnimation(400))
+            await(env, fixture.parent.advanceClipTo(400))
             env.tick()
             val privateHead = fixture.privateParts()[1].entityMeta as ItemDisplayMeta
             val commonHead = fixture.common[1].entityMeta as ItemDisplayMeta
@@ -114,7 +128,7 @@ class NpcPresentationPlaybackTest {
             assertEquals("idle", personal.snapshot().clipId)
             assertEquals(0.25, personal.snapshot().clipSeconds, 0.000001)
             assertEquals(NpcPresentationChannel.PRIVATE, personal.snapshot().clipMode)
-            await(env, fixture.parent.startAnimation("wave", 500))
+            await(env, fixture.parent.playClip("wave", 500))
             env.tick()
             assertEquals("idle", personal.snapshot().clipId)
             await(env, personal.playClip("loop"))
@@ -161,7 +175,8 @@ class NpcPresentationPlaybackTest {
         env.createPlayer(instance, Pos(1.0, 42.0, 0.0))
         val start =
             NpcRenderer.prepare(
-                NpcSpawnRequest(instance, personalTestModel(), NpcLifecycleTest.transform())
+                NpcSpawnRequest.builder(instance, personalTestModel(), NpcLifecycleTest.transform())
+                    .build()
             )
         val parent = (await(env, start.ready()) as NpcPrepareResult.Ready).handle
         await(env, parent.publish())
@@ -182,13 +197,11 @@ class NpcPresentationPlaybackTest {
 
         fun open(): NpcPresentationHandle {
             start =
-                NpcPresentations.prepare(
-                    parent,
-                    NpcPresentationOptions(
-                        player,
-                        idleClip = "idle",
-                        clock = NpcMonotonicClock(clock::get),
-                    ),
+                parent.preparePresentation(
+                    NpcPresentationOptions.builder(player)
+                        .idleClip("idle")
+                        .clock(NpcMonotonicClock(clock::get))
+                        .build()
                 )
             val handle = (await(env, start!!.ready()) as NpcPresentationResult.Ready).handle
             await(env, handle.publish())

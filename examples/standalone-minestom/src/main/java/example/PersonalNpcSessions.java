@@ -1,0 +1,116 @@
+package example;
+
+import gg.grounds.npc.minestom.*;
+import gg.grounds.npc.minestom.NpcHandle;
+import gg.grounds.npc.minestom.presentation.NpcPresentationHandle;
+import gg.grounds.npc.minestom.presentation.NpcPresentationOptions;
+import gg.grounds.npc.minestom.presentation.NpcPresentationResult;
+import gg.grounds.npc.minestom.presentation.NpcPresentationStart;
+import java.util.IdentityHashMap;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import net.minestom.server.entity.Player;
+
+/**
+ * Retains one presentation per concrete player connection and observes asynchronous cleanup.
+ *
+ * <p>The library owns rendering, private clocks and expiry; this helper owns only demo sessions.
+ * Identity keys are intentional: reconnecting with the same UUID creates a new Player and must not
+ * inherit an old connection's handle or viewer state. A close can race preparation, so each session
+ * also retains the start token before a ready handle exists.
+ */
+final class PersonalNpcSessions {
+  private final NpcHandle parent;
+  private final Function<Player, NpcPresentationOptions> options;
+  private final IdentityHashMap<Player, Session> sessions = new IdentityHashMap<>();
+
+  private static final class Session {
+    final AtomicBoolean closing = new AtomicBoolean();
+    final CompletableFuture<NpcPresentationStart> start = new CompletableFuture<>();
+    final CompletableFuture<NpcPresentationHandle> ready = new CompletableFuture<>();
+  }
+
+  PersonalNpcSessions(NpcHandle parent, Function<Player, NpcPresentationOptions> options) {
+    this.parent = parent;
+    this.options = options;
+  }
+
+  CompletionStage<NpcPresentationHandle> open(Player player) {
+    var session = new Session();
+    synchronized (sessions) {
+      if (sessions.containsKey(player))
+        return CompletableFuture.failedFuture(
+            new IllegalStateException("Close your current presentation first"));
+      sessions.put(player, session);
+    }
+    try {
+      var start = parent.preparePresentation(options.apply(player));
+      // A pending preparation still needs cancellation, even when ready() never yields a handle.
+      session.start.complete(start);
+      start
+          .ready()
+          .thenCompose(
+              result -> {
+                if (session.closing.get())
+                  return CompletableFuture.<NpcPresentationHandle>failedFuture(
+                      new CancellationException("Demo closed"));
+                if (!(result instanceof NpcPresentationResult.Ready ready))
+                  return CompletableFuture.<NpcPresentationHandle>failedFuture(
+                      new IllegalStateException(result.toString()));
+                var handle = ready.getHandle();
+                // Observe expiry/parent shutdown without initiating another close.
+                handle.closed().whenComplete((unused, error) -> forget(player, session));
+                // Publication replaces the common visual only for this concrete connection.
+                return handle.publish().thenApply(unused -> handle);
+              })
+          .whenComplete(
+              (handle, error) -> {
+                if (error == null && !session.closing.get()) session.ready.complete(handle);
+                else {
+                  start
+                      .cancel()
+                      .whenComplete(
+                          (unused, cleanup) -> {
+                            forget(player, session);
+                            session.ready.completeExceptionally(
+                                error != null ? error : new CancellationException("Demo closed"));
+                          });
+                }
+              });
+    } catch (Throwable error) {
+      session.start.completeExceptionally(error);
+      session.ready.completeExceptionally(error);
+      forget(player, session);
+    }
+    return session.ready.minimalCompletionStage();
+  }
+
+  CompletionStage<Void> with(
+      Player player, Function<NpcPresentationHandle, CompletionStage<Void>> action) {
+    Session session;
+    synchronized (sessions) {
+      session = sessions.get(player);
+    }
+    return session == null
+        ? CompletableFuture.failedFuture(new IllegalStateException("Use /personal first"))
+        : session.ready.thenCompose(action);
+  }
+
+  CompletionStage<Void> close(Player player) {
+    Session session;
+    synchronized (sessions) {
+      session = sessions.remove(player);
+    }
+    if (session == null) return CompletableFuture.completedFuture(null);
+    session.closing.set(true);
+    // Await removal before the library restores the parent's current shared pose for this player.
+    return session.start.thenCompose(NpcPresentationStart::cancel);
+  }
+
+  private void forget(Player player, Session session) {
+    synchronized (sessions) {
+      if (sessions.get(player) == session) sessions.remove(player);
+    }
+  }
+}

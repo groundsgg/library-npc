@@ -1,96 +1,47 @@
-# NPC API
+# NPC API contracts
 
-`npc-core` has immutable numeric definitions, a bounded JSON decoder and a pure
-pose sampler. It imports no Scene or Minecraft types. IDs are namespaced strings,
-vectors use authored model units and rotations use XYZ degrees. Clip sampling uses
-seconds; the renderer's externally driven clock uses elapsed milliseconds.
-The decoder evaluates no scripts or authored expressions.
-`NpcPoseSampler.prepare(model, partPostTransform)` caches an immutable generic part
-binding. Minestom supplies its mesh-basis correction there; the core has no
-Minecraft-specific coordinate choice. Read matrix elements with `get(index)` and
-compare with `contentEquals` without allocating array snapshots.
+The API is grouped by concepts. Core packages cover `model`, `animation`, `math`, `io` and `validation`; Minestom exposes lifecycle entrypoints at its root and focused `config`, `transform`, `viewer`, `spi`, `presentation` and `error` packages. Every supported entrypoint has KDoc. Generated reference: `./gradlew dokkaGenerate` → `build/dokka/html`.
 
-`npc-minestom` owns ItemDisplay entities and viewer metadata. A host calls
-`NpcRenderer.prepare(NpcSpawnRequest)` and retains the returned `NpcStart`
-immediately. `ready()` yields `Ready(handle)` or `Rejected(problems)`. Preparation
-attaches hidden parts; no viewer sees them until `handle.publish()` succeeds.
-A host generation guard must atomically check validity and run the publication
-operation. It is called outside the NPC ownership lock.
+## Models and sampling
 
-All handle commands return `CompletionStage<Void>` and are queued onto the owning
-instance scheduler. Hosts observe errors; commands are not guarantees of synchronous
-client rendering. The host advances clip time explicitly, without changing world
-age or server time. `applyTransform` waits for destination loading and relocation.
-The renderer keeps existing per-distance update cohorts and hysteresis.
+`NpcModelJson.decode(bytes, limits)` returns a complete `Success` or immutable `Failure.problems`; malformed fields have a stable code and JSON path. Byte overflow and invalid UTF-8 have distinct codes. Manual model construction uses the same semantic validator and throws `IllegalArgumentException` for invalid definitions.
 
-`NpcStart.cancel()` and `NpcHandle.closeAsync()` are idempotent and work without
-another scheduler tick. They reject queued commands, remove owned entities and
-wait for pending attachments/movement to drain. Retain that stage in the host's
-shutdown/unload drain. Cleanup failures complete it exceptionally. A ready result
-may race host invalidation; always use a generation guard and retain start ownership.
+Bone parents precede children. Limits are 256 bones, 1024 parts, 128 clips, 4096 keys per channel and 300 seconds per clip. Decode limits may be stricter, never larger. IDs are authored namespaced strings, coordinates use authored model units, and rotation channels use XYZ degrees. Parsing evaluates no expressions or scripts.
 
-`NpcMeshResolver` supplies item meshes, `NpcSoundSink` supplies sound delivery and
-`NpcRenderConfig` supplies view distances, timing and explicit idle clips.
-Default mesh resolution uses PAPER plus the namespaced item-model component.
-The default sound sink emits nothing. The library discovers no product assets.
+`NpcClip` maps bone IDs to `NpcBoneTrack(position, rotation, scale)`. Each channel is an immutable ordered key list. `NpcLoopMode` and `NpcInterpolation` replace string switches while JSON keeps the original values. `NpcPoseSampler.sample` accepts finite nonnegative seconds; null clip means rest, and an unknown clip is an input error. `prepare` caches a generic post-transform binding. The Minestom-facing item correction stays in the adapter.
 
-`applyViewerState` supports connection-specific scale and glow; state is attached
-to the actual Player connection and instance, not a reusable account UUID.
-Private clip/head channels use the separate additive presentation API below.
-`NpcAnchorSnapshot` exposes the immutable root and optional model-local head origin.
-Hosts choose dialogue text anchors separately.
+## Shared NPC lifecycle
 
-`NpcDisplayTransforms` exposes the shared affine/TRSR decomposition for placeholder
-bounds or model/world matrices. Its boolean reports changes after float
-serialization so unchanged fields do not restart interpolation. ItemDisplay mesh
-facing correction lives only in the renderer; it is absent from core poses.
+1. Build immutable `NpcSpawnRequest` with its owning instance, validated model and transform. Configure named options through its builder; `toBuilder` copies without changing the original.
+2. Call `NpcRenderer.prepare` and retain the returned `NpcStart` immediately.
+3. Observe `start.ready()` as `Ready(handle)` or `Rejected(problems)`. Parts remain hidden.
+4. Observe `handle.publish()`. A host generation guard must check validity and execute publication atomically and synchronously.
+5. At unload/shutdown, invalidate host generation and await `start.cancel()` or `handle.closeAsync()`. Retain that stage in the host drain even when no handle became ready.
 
+Command methods queue work onto the owning instance scheduler. Their returned `CompletionStage<Void>` observes server work, not completed client rendering. Argument failures are delivered through the command stage. A closed/unready runtime uses `NpcOperationException`; operational failures retain their cause. Configuration factories and manual numeric constructors validate synchronously.
 
-## Personal presentations (since0.2.0)
+`playClip(id)` starts at zero; `playClip(id, elapsedMillis)` chooses explicit clip-local time. The host calls `advanceClipTo(elapsedMillis)` with absolute nonnegative milliseconds, not frame deltas. Seeking backwards is supported. `stopClip()` stops the requested clip; `stopClipIfPlaying(id)` only stops a matching request. Shared clocks are not installed automatically and never change world age.
 
-Retain `NpcPresentations.prepare(parent, new NpcPresentationOptions(player))`
-immediately. Its `NpcPresentationStart` owns cancellation while preparation is
-pending. `ready()` yields `NpcPresentationResult.Ready` or `Rejected`; the Ready
-handle remains hidden until its queued `publish()` succeeds. Hosts must observe
-stages and retain `cancel()` in their shutdown drain. The common parent also owns
-all pending/active copies and retains their cleanup failures.
+`applyTransform` waits for destination chunk loading, relocation and still-owned private copies. Head yaw/pitch use finite degrees and affect only the head subtree. `applyViewerState` applies scale/glow to one concrete online connection in this instance. Scale is finite and in (0, 16].
 
-Clip and head start in `FOLLOW_SHARED`, using the actual common sample (including
-seek, pause and stop). `playClip` switches only the clip to `PRIVATE` and starts
-local monotonic time at zero. `applyHeadLook` switches only the head. A one-shot
-or `stopClip` enters the configured private idle, otherwise rest; it stays private.
-`followSharedClip` and `followSharedHeadLook` release their channels explicitly.
-The private task samples every 50 ms by default; no host advance calls are needed.
-`snapshot()` is diagnostic; `closed()` observes automatic expiry or runtime errors.
+`closed()` observes final cleanup without causing it. Close is idempotent, rejects queued commands, cancels owner tasks and drains accepted I/O before owned displays are removed. It does not require another instance tick. Cleanup failures remain exceptional stage completions. Callbacks/completion handlers are not invoked while ownership monitors are held.
 
-The default personal sound sink is silent. Supply `NpcViewerSoundSink` to deliver
-one-shot cues exclusively to its concrete Player, with no spatial fallback.
-Only explicit private clip starts emit cues. Reentry, snapshots, common movement,
-scale/glow and channel changes emit none. Existing shared sounds keep their
-existing spatial behavior. Removing a presentation does not stop already delivered
-client audio. Callback completion is drained without holding NPC locks.
+## Personal presentations
 
-Root/local transforms and that participant's scale/glow follow the common parent,
-without resetting private channels. A successful parent move waits for still-owned
-copies too. There is no private position/collider API. Only the owner sees the
-private group; observers retain the common group. Close removes private parts
-before restoring the current common pose, only for the still-valid connection and
-parent generation. A superseded lease cannot release a newer lease.
+`parent.preparePresentation(NpcPresentationOptions.builder(player).build())` returns a retained cancellation owner before asynchronous readiness. `ready()` produces hidden Ready or Rejected. Publication hides the common group only for that concrete connection. The shared parent owns all pending/active groups and their cleanup.
 
-Only one pending/active presentation per concrete parent/Player is admitted.
-Default `NpcPresentationLimits` are 32 presentations and 1024 additional parts;
-50-part models therefore admit 20 groups, and reject the 21st before hiding the
-common NPC. Use the additive `NpcRenderer.prepare(request, limits)` overload to
-raise limits deliberately. There is no full-player scan per private copy.
+Clip and head channels initially `FOLLOW_SHARED`, sampling the actual common pose including seeks/stops. Personal `playClip(id)` changes only the clip channel to `PRIVATE`, starts monotonic local time at zero and emits its explicit cue once. `applyHeadLook` changes only the head channel. `stopClip` enters configured private idle/rest and stays private. `followSharedClip` and `followSharedHeadLook` release channels explicitly.
 
-Distance/chunk reentry preserves the current private clock and sends no duplicate
-cue. Connection expiry is owned from reservation onward, including hidden starts.
-An instance departure is latched even if the same Player returns between samples.
-Active commands, sampling and sound delivery recheck the personal generation guard
-outside NPC monitors; denied work closes the private group. Disconnect and instance
-changes invalidate the handle through the owned departure listener/task. A new connection with the same UUID
-inherits nothing. Never transfer live handles, Player references or Entity IDs
-across servers/proxies.
+The default private interval is 50 ms; no host advance calls are needed. Default sound sinks are silent. Supply `NpcViewerSoundSink` for sound exclusively to this connection, never spatial fallback. Reentry, snapshots, movement, scale/glow and follow/stop operations do not replay sound. Already delivered client audio is not stopped by removing a presentation.
 
-Personal profiles above500ms currently retain the shared engine's500ms interpolation
-cap. The verified default remains50ms. See compatibility for deferred limitations.
+Root/local transforms and per-viewer scale/glow follow the shared parent without resetting private channels. There is no private position/collider API. Close removes private displays before restoring the current common pose for the still-valid parent/connection. Reservations use leases so an older cleanup cannot release a newer group.
+
+Default limits are 32 presentations and 1024 additional parts per parent. A 50-part model therefore admits 20 private groups. Admission checks happen before hiding the common NPC. Each personal group enumerates its own concrete connection, not all players.
+
+Reconnect with the same UUID, departure from the instance and backend/proxy transfer invalidate ownership. Never serialize or transport live handles, Player references or entity IDs. Resolve the NPC and prepare new ownership at the destination. A custom/delegating `NpcHandle` now implements/forwards `preparePresentation` directly; there is no hidden internal-capability cast.
+
+## Extension points
+
+Mesh resolution is synchronous during preparation; an exception rejects preparation and drains allocated parts. Default meshes are PAPER with the namespaced item-model component. Host sound callbacks run outside NPC monitors; their completion is included in relevant command/cleanup ownership. Generation guards execute their operation synchronously at most once and return true only when they did so.
+
+`NpcDisplayTransforms` exposes affine/TRSR projection for host placeholders and model matrices. Call on the owning scheduler. A true result means float-serialized fields changed; callers can restart interpolation once. This utility does not add the item-mesh facing correction.

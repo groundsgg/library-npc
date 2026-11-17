@@ -1,6 +1,15 @@
 package gg.grounds.npc.minestom
 
-import gg.grounds.npc.core.*
+import gg.grounds.npc.core.io.NpcDecodeResult
+import gg.grounds.npc.core.io.NpcModelJson
+import gg.grounds.npc.core.math.NpcVector3
+import gg.grounds.npc.minestom.config.NpcRenderConfig
+import gg.grounds.npc.minestom.internal.audience.NpcRenderPolicy
+import gg.grounds.npc.minestom.internal.lifecycle.NpcEngineHandle
+import gg.grounds.npc.minestom.internal.rendering.NpcItemDisplay
+import gg.grounds.npc.minestom.internal.rendering.NpcRenderEngine
+import gg.grounds.npc.minestom.spi.NpcSoundSink
+import gg.grounds.npc.minestom.viewer.NpcViewerState
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.MetadataDef
@@ -51,10 +60,10 @@ class NpcRenderPerformanceTest {
                 displays.all { replacement.connection.spawns(it.entityId).isEmpty() },
                 "A different connection must not inherit the old admission predicate",
             )
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             assertTrue(displays.all { replacement !in it.viewers })
             replacement.teleport(Pos(60.0, 0.0, 0.0)).join()
-            handle.advanceAnimation(1200)
+            handle.advanceClipTo(1200)
             assertTrue(displays.all { replacement in it.viewers })
             handle.close()
         }
@@ -69,7 +78,7 @@ class NpcRenderPerformanceTest {
             handle.applyViewerState(first, NpcViewerState(2.0, true))
             first.remove()
             val replacement = fixture.player(uuid = id)
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             for (display in fixture.instance.entities.filterIsInstance<NpcItemDisplay>()) {
                 val baseline = (display.entityMeta as ItemDisplayMeta).scale
                 val scales =
@@ -108,13 +117,13 @@ class NpcRenderPerformanceTest {
                     }
                 }
             }
-        return AnimatedNpcHandle(
+        return NpcRenderEngine(
                 lock,
                 model,
                 parts,
                 sceneTransform(),
                 NpcSoundSink { _, _, _ -> },
-                NpcRenderConfig(idleClip = "idle", variationClip = "idle2"),
+                NpcRenderConfig.builder().idleClip("idle").variationClip("idle2").build(),
             )
             .also { it.publishVisible() }
     }
@@ -127,9 +136,9 @@ class NpcRenderPerformanceTest {
             fixture.instance.entities.filterIsInstance<NpcItemDisplay>().forEach {
                 it.addViewer(player)
             }
-            handle.startAnimation("wave", 0)
+            handle.playClip("wave", 0)
             player.connection.packets.clear()
-            handle.advanceAnimation(500)
+            handle.advanceClipTo(500)
             val updates = player.connection.packets.filterIsInstance<EntityMetaDataPacket>()
             assertEquals(2, updates.size)
             updates.forEach {
@@ -186,10 +195,10 @@ class NpcRenderPerformanceTest {
             fixture.instance.entities.filterIsInstance<NpcItemDisplay>().forEach {
                 it.addViewer(player)
             }
-            handle.startAnimation("wave", 0)
+            handle.playClip("wave", 0)
             player.connection.packets.clear()
             for (tick in 1..20) {
-                handle.advanceAnimation(tick * 50L)
+                handle.advanceClipTo(tick * 50L)
                 val original = sceneTransform()
                 handle.applyTransform(
                     original.copy(
@@ -256,18 +265,18 @@ class NpcRenderPerformanceTest {
             player.connection.packets.clear()
             for (distance in listOf(66.0, 63.0, 70.0, 64.0)) {
                 player.teleport(Pos(distance, 0.0, 0.0)).join()
-                handle.advanceAnimation(500)
+                handle.advanceClipTo(500)
                 assertTrue(player in body.viewers, "Viewer dropped at $distance blocks")
             }
             assertTrue(player.connection.spawns(body.entityId).isEmpty())
             player.teleport(Pos(73.0, 0.0, 0.0)).join()
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             assertFalse(player in body.viewers)
             player.teleport(Pos(68.0, 0.0, 0.0)).join()
-            handle.advanceAnimation(1500)
+            handle.advanceClipTo(1500)
             assertFalse(player in body.viewers, "Retention must not admit a new viewer")
             player.teleport(Pos(60.0, 0.0, 0.0)).join()
-            handle.advanceAnimation(1750)
+            handle.advanceClipTo(1750)
             assertTrue(player in body.viewers)
             handle.close()
         }
@@ -280,9 +289,9 @@ class NpcRenderPerformanceTest {
             val handle = create(fixture)
             val body =
                 fixture.instance.entities.filterIsInstance<NpcItemDisplay>().minBy { it.entityId }
-            handle.startAnimation("wave", 0)
+            handle.playClip("wave", 0)
             player.connection.packets.clear()
-            for (tick in 1..20) handle.advanceAnimation(tick * 50L)
+            for (tick in 1..20) handle.advanceClipTo(tick * 50L)
             val updates = player.connection.packets.filterIsInstance<EntityMetaDataPacket>()
             assertEquals(4, updates.size, "Two animated parts should each update twice")
             assertEquals(
@@ -301,12 +310,12 @@ class NpcRenderPerformanceTest {
             val handle = create(fixture)
             val body =
                 fixture.instance.entities.filterIsInstance<NpcItemDisplay>().minBy { it.entityId }
-            handle.startAnimation("wave", 0)
+            handle.playClip("wave", 0)
             player.connection.packets.clear()
-            handle.advanceAnimation(250)
+            handle.advanceClipTo(250)
             assertTrue(player.connection.packets.filterIsInstance<EntityMetaDataPacket>().isEmpty())
             player.teleport(Pos(8.0, 0.0, 0.0)).join()
-            handle.advanceAnimation(300)
+            handle.advanceClipTo(300)
             assertEquals(
                 4,
                 (body.entityMeta as ItemDisplayMeta).transformationInterpolationDuration,
@@ -314,14 +323,14 @@ class NpcRenderPerformanceTest {
             assertEquals(1.0, (body.entityMeta as ItemDisplayMeta).translation.y(), 1e-6)
             player.teleport(Pos(50.0, 0.0, 0.0)).join()
             player.connection.packets.clear()
-            handle.advanceAnimation(600)
+            handle.advanceClipTo(600)
             // Rate transitions restore the current complete pose before the slower deadline.
             assertEquals(2, player.connection.packets.filterIsInstance<EntityMetaDataPacket>().size)
             assertEquals(1.3, (body.entityMeta as ItemDisplayMeta).translation.y(), 1e-6)
             player.connection.packets.clear()
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             assertTrue(player.connection.packets.filterIsInstance<EntityMetaDataPacket>().isEmpty())
-            handle.advanceAnimation(1100)
+            handle.advanceClipTo(1100)
             assertEquals(2, player.connection.packets.filterIsInstance<EntityMetaDataPacket>().size)
             assertEquals(
                 10,
@@ -340,10 +349,10 @@ class NpcRenderPerformanceTest {
             val displays = fixture.instance.entities.filterIsInstance<NpcItemDisplay>()
             assertTrue(displays.all { player in it.viewers })
             player.teleport(Pos(50.0, 33.0, 0.0)).join()
-            handle.startAnimation("wave", 0)
+            handle.playClip("wave", 0)
             assertTrue(displays.all { player !in it.viewers })
             player.connection.packets.clear()
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             assertTrue(player.connection.packets.filterIsInstance<EntityMetaDataPacket>().isEmpty())
             handle.close()
         }
@@ -358,8 +367,8 @@ class NpcRenderPerformanceTest {
             val displays = fixture.instance.entities.filterIsInstance<NpcItemDisplay>()
             assertTrue(displays.all { far !in it.viewers })
             far.connection.packets.clear()
-            handle.startAnimation("wave", 0)
-            handle.advanceAnimation(500)
+            handle.playClip("wave", 0)
+            handle.advanceClipTo(500)
             assertTrue(far.connection.packets.filterIsInstance<EntityMetaDataPacket>().isEmpty())
             handle.close()
         }
@@ -371,11 +380,11 @@ class NpcRenderPerformanceTest {
             val handle = create(fixture)
             val body =
                 fixture.instance.entities.filterIsInstance<NpcItemDisplay>().minBy { it.entityId }
-            handle.startAnimation("wave", 0)
-            handle.advanceAnimation(500)
+            handle.playClip("wave", 0)
+            handle.advanceClipTo(500)
             assertEquals(0.7, (body.entityMeta as ItemDisplayMeta).translation.y(), 1e-6)
             val player = fixture.player()
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             assertEquals(1.7, (body.entityMeta as ItemDisplayMeta).translation.y(), 1e-6)
             assertTrue(player in body.viewers)
             handle.close()
@@ -390,15 +399,15 @@ class NpcRenderPerformanceTest {
             fixture.instance.entities.filterIsInstance<NpcItemDisplay>().forEach {
                 it.addViewer(player)
             }
-            handle.startAnimation("idle", 0)
+            handle.playClip("idle", 0)
             player.connection.packets.clear()
             for (tick in 1..3) {
                 handle.applyHeadLook(tick * 0.5, 0.0)
-                handle.advanceAnimation(tick * 200L)
+                handle.advanceClipTo(tick * 200L)
             }
             assertTrue(player.connection.packets.filterIsInstance<EntityMetaDataPacket>().isEmpty())
             handle.applyHeadLook(2.0, 0.0)
-            handle.advanceAnimation(800)
+            handle.advanceClipTo(800)
             val updates = player.connection.packets.filterIsInstance<EntityMetaDataPacket>()
             assertEquals(1, updates.size, "Only the head subtree should change")
             handle.close()
@@ -412,16 +421,16 @@ class NpcRenderPerformanceTest {
             val handle = create(fixture)
             val body =
                 fixture.instance.entities.filterIsInstance<NpcItemDisplay>().minBy { it.entityId }
-            handle.startAnimation("wave", 0)
+            handle.playClip("wave", 0)
             handle.applyViewerState(player, NpcViewerState(2.0, true))
             player.teleport(Pos(0.0, 60.0, 0.0)).join()
-            handle.advanceAnimation(500)
+            handle.advanceClipTo(500)
             assertFalse(player in body.viewers)
             player.connection.packets.clear()
-            handle.advanceAnimation(1000)
+            handle.advanceClipTo(1000)
             assertTrue(player.connection.packets.filterIsInstance<EntityMetaDataPacket>().isEmpty())
             player.teleport(Pos.ZERO).join()
-            handle.advanceAnimation(1500)
+            handle.advanceClipTo(1500)
             assertTrue(player in body.viewers)
             val updates =
                 player.connection.packets.filterIsInstance<EntityMetaDataPacket>().filter {
@@ -446,7 +455,7 @@ class NpcRenderPerformanceTest {
             val player = fixture.player()
             val handle = create(fixture)
             val body = fixture.instance.entities.filterIsInstance<NpcItemDisplay>().first()
-            handle.stopAnimation(null)
+            handle.stopClip()
             player.teleport(Pos(0.0, 60.0, 0.0)).join()
             repeat(5) { fixture.instance.tick(it * 50L) }
             assertFalse(player in body.viewers)
@@ -465,10 +474,10 @@ class NpcRenderPerformanceTest {
             val head =
                 fixture.instance.entities.filterIsInstance<NpcItemDisplay>().maxBy { it.entityId }
             val meta = head.entityMeta as ItemDisplayMeta
-            handle.startAnimation("idle", 0)
+            handle.playClip("idle", 0)
             val before = meta.leftRotation.copyOf()
             handle.applyHeadLook(30.0, 0.0)
-            handle.stopAnimation("idle")
+            handle.stopClipIfPlaying("idle")
             assertFalse(
                 before.contentEquals(meta.leftRotation),
                 "Stopped NPC retained an old head target",
@@ -485,7 +494,7 @@ class NpcRenderPerformanceTest {
         RendererFixture().use { first ->
             RendererFixture().use { other ->
                 val player = first.player()
-                val policy = NpcRenderPolicy(NpcRenderConfig())
+                val policy = NpcRenderPolicy(NpcRenderConfig.builder().build())
                 assertTrue(policy.canView(player, first.instance, NpcVector3(0.0, 0.0, 0.0)))
                 assertFalse(policy.canView(player, other.instance, NpcVector3(0.0, 0.0, 0.0)))
             }
