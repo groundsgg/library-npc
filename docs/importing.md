@@ -171,3 +171,5 @@ Pack range decoding follows Mojang's [pack metadata specification](https://www.m
 Editor Box UV flags are accepted when explicit face rectangles are present. Missing face UVs are never inferred from `uv_offset`.
 
 Authored hitbox inflation is applied. Hitbox cubes or ancestors with rotation must be baked into model-space bounds; they are rejected with a field diagnostic. Configuration, bundle metadata and sound registry JSON are limited to 4 MiB before decoding. Generated resource entry/byte budgets are charged during compilation, including single-model imports.
+
+Explicit `anim_time_update` clocks are unsupported, including constant zero; the field must be absent or blank. Blend weight must be neutral (one), and supported start/loop delays must be zero.

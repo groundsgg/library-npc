@@ -22,8 +22,9 @@ internal object BlockbenchAnimations {
                                 value.asString.isBlank())
                     require(
                         absent ||
-                            c.number(value, "$.animations[$index].$field") ==
-                                if (field == "blend_weight") 1.0 else 0.0
+                            (field != "anim_time_update" &&
+                                c.number(value, "$.animations[$index].$field") ==
+                                    if (field == "blend_weight") 1.0 else 0.0)
                     ) {
                         "Unsupported non-neutral animation value: $field"
                     }

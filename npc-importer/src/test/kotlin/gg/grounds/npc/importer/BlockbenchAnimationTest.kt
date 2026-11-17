@@ -43,6 +43,24 @@ class BlockbenchAnimationTest {
     }
 
     @Test
+    fun rejectsExplicitAnimationClocksRatherThanSilentlyReplacingTheirTiming() {
+        for (clock in listOf("0", "1", "query.anim_time + query.delta_time")) {
+            val json = BlockbenchFixture.model()
+            val animation = BlockbenchFixture.animation("position", listOf(16.0, 0.0, 0.0))
+            animation.addProperty("anim_time_update", clock)
+            json.getAsJsonArray("animations").add(animation)
+            val error =
+                assertThrows(NpcImportException::class.java) {
+                    NpcBlockbenchImporter.importModel(
+                        BlockbenchFixture.write(temp.resolve("clock.bbmodel"), json),
+                        "demo:npc/cube",
+                    )
+                }
+            assertTrue(error.problems.first().path.endsWith("anim_time_update"))
+        }
+    }
+
+    @Test
     fun samplesAuthoredPositionInSecondsAndBlocks() {
         val json = BlockbenchFixture.model()
         json
