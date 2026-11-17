@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/groundsgg/library-npc/compare/v0.2.0...v1.0.0) (2026-11-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* redesign NPC library API
+
+### Code Refactoring
+
+* redesign NPC library API ([c9b45f9](https://github.com/groundsgg/library-npc/commit/c9b45f9a793d4281c3018f97b52a37fdf27d11ed))
+
 ## [0.2.0](https://github.com/groundsgg/library-npc/compare/v0.1.0...v0.2.0) (2026-11-12)
 
 
