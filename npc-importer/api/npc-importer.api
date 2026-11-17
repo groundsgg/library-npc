@@ -1,0 +1,33 @@
+public final class gg/grounds/npc/importer/NpcBlockbenchImporter {
+	public static final field INSTANCE Lgg/grounds/npc/importer/NpcBlockbenchImporter;
+	public static final fun importModel (Ljava/nio/file/Path;Ljava/lang/String;)Lgg/grounds/npc/importer/model/NpcImportedModel;
+}
+
+public final class gg/grounds/npc/importer/error/NpcImportException : java/lang/IllegalArgumentException {
+	public fun <init> (Ljava/util/List;)V
+	public final fun getProblems ()Ljava/util/List;
+}
+
+public final class gg/grounds/npc/importer/error/NpcImportProblem {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lgg/grounds/npc/importer/error/NpcImportProblem;
+	public static synthetic fun copy$default (Lgg/grounds/npc/importer/error/NpcImportProblem;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lgg/grounds/npc/importer/error/NpcImportProblem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getPath ()Ljava/lang/String;
+	public final fun getSource ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/importer/model/NpcImportedModel {
+	public final fun getModel ()Lgg/grounds/npc/core/model/NpcModel;
+	public final fun getModelJson ()[B
+	public final fun getResources ()Ljava/util/Map;
+}
+
