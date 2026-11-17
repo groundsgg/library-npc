@@ -34,7 +34,6 @@ internal object BlockbenchReader {
             require(meta["model_format"].asString in listOf("free", "generic")) {
                 "Only generic/free Blockbench projects are supported"
             }
-            require(meta["box_uv"]?.asBoolean != true) { "Box UV is unsupported" }
             val resources = linkedMapOf<String, ByteArray>()
             val textures =
                 BlockbenchTextures(context, path, inputRoot.toAbsolutePath().normalize(), id)

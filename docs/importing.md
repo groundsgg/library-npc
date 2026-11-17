@@ -167,3 +167,5 @@ Use `--json` for machine-readable diagnostics and `--debug` for technical failur
 For an output conflict, choose a fresh destination or remove only the output your build owns. For invisible geometry, check the model ID, pack verification, the client's pack acceptance and the selected Minecraft profile. Run the [original import example](../examples/standalone-minestom/README.md#import-an-original-blockbench-model) before investigating application-specific integration.
 
 Pack range decoding follows Mojang's [pack metadata specification](https://www.minecraft.net/en-us/article/minecraft-snapshot-25w31a): an upper major-only value, such as `97` or `[97]`, includes all minor versions of that major. An explicit `[97, 0]` upper bound excludes 97.1.
+
+Editor Box UV flags are accepted when explicit face rectangles are present. Missing face UVs are never inferred from `uv_offset`.

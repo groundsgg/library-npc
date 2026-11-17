@@ -29,6 +29,64 @@ class BlockbenchImportTest {
     }
 
     @Test
+    fun acceptsResolvedFaceUvsOnIndividuallyBoxMarkedCubes() {
+        val json = BlockbenchFixture.model()
+        val cube = json.getAsJsonArray("elements")[0].asJsonObject
+        cube.addProperty("box_uv", true)
+        val imported =
+            NpcBlockbenchImporter.importModel(
+                BlockbenchFixture.write(temp.resolve("resolved-box.bbmodel"), json),
+                "demo:npc/cube",
+            )
+        val native =
+            JsonParser.parseString(
+                    imported.resources.entries
+                        .single {
+                            it.key.startsWith("assets/demo/models/")
+                        }
+                        .value
+                        .toString(Charsets.UTF_8)
+                )
+                .asJsonObject
+        assertEquals(
+            JsonParser.parseString("[0,0,16,16]"),
+            native
+                .getAsJsonArray("elements")[0]
+                .asJsonObject
+                .getAsJsonObject("faces")
+                .getAsJsonObject("north")["uv"],
+        )
+        cube.getAsJsonObject("faces").getAsJsonObject("north").remove("uv")
+        assertThrows(NpcImportException::class.java) {
+            NpcBlockbenchImporter.importModel(
+                BlockbenchFixture.write(temp.resolve("missing-uv.bbmodel"), json),
+                "demo:npc/cube",
+            )
+        }
+    }
+
+    @Test
+    fun acceptsProjectBoxUvWhenFacesAreAlreadyResolved() {
+        val json = BlockbenchFixture.model()
+        json.getAsJsonObject("meta").addProperty("box_uv", true)
+        val cube = json.getAsJsonArray("elements")[0].asJsonObject
+        cube.addProperty("box_uv", true)
+        val imported =
+            NpcBlockbenchImporter.importModel(
+                BlockbenchFixture.write(temp.resolve("box-project.bbmodel"), json),
+                "demo:npc/cube",
+            )
+        assertEquals(1, imported.model.parts.size)
+        cube.getAsJsonObject("faces").getAsJsonObject("north").remove("uv")
+        assertThrows(NpcImportException::class.java) {
+            NpcBlockbenchImporter.importModel(
+                BlockbenchFixture.write(temp.resolve("missing-box-uv.bbmodel"), json),
+                "demo:npc/cube",
+            )
+        }
+    }
+
+    @Test
     fun preservesAuthoredPivotAndReflectedScale() {
         val json = BlockbenchFixture.model()
         val cube = json.getAsJsonArray("elements")[0].asJsonObject

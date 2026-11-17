@@ -106,9 +106,9 @@ internal class BlockbenchGeometry(
     private fun cube(e: JsonObject, parent: String?, hitbox: Boolean) =
         c.at("$.elements.${e["uuid"].asString}") {
             require((e["type"]?.asString ?: "cube") == "cube") { "Only cube geometry is supported" }
-            require(e["box_uv"]?.asBoolean != true) {
-                "Box UV is unsupported; export explicit face UVs"
-            }
+            // Generic projects can retain the editor's per-cube Box UV flag while
+            // saving explicit face rectangles. Consume those validated rectangles;
+            // deriving missing face UVs from uv_offset remains unsupported.
             val from = c.vector(e["from"], "$.elements.from")
             val to = c.vector(e["to"], "$.elements.to")
             val lo = (0..2).map { minOf(from[it], to[it]) }.toMutableList()
