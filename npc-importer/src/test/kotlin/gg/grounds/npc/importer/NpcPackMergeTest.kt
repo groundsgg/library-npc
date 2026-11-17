@@ -23,6 +23,36 @@ class NpcPackMergeTest {
             .build()
 
     @Test
+    fun readsMajorOnlyUpperBoundAndNormalizesLegacyCompatibilityFieldsForTheTarget() {
+        val metadata =
+            """{"pack":{"pack_format":60,"supported_formats":[60,97],"min_format":60,"max_format":97,"description":"Existing"},"overlays":{"entries":[{"formats":{"min_inclusive":60,"max_inclusive":97},"min_format":60,"max_format":97,"directory":"foreign"}]}}"""
+        val base =
+            PackFixture.zip(
+                temp.resolve("base.zip"),
+                mapOf(
+                    "pack.mcmeta" to metadata.toByteArray(),
+                    "foreign/assets/other/keep.txt" to byteArrayOf(1),
+                ),
+            )
+        val output = NpcModelImporter.compile(options(base), temp.resolve("output"))
+        NpcContentLoader.load(output.serverContent).verifyResourcePack(output.resourcePack)
+        val result =
+            JsonParser.parseString(
+                    String(PackFixture.read(output.resourcePack).getValue("pack.mcmeta"))
+                )
+                .asJsonObject
+        assertFalse(result.getAsJsonObject("pack").has("supported_formats"))
+        assertFalse(
+            result
+                .getAsJsonObject("overlays")
+                .getAsJsonArray("entries")[0]
+                .asJsonObject
+                .has("formats")
+        )
+        assertEquals("[97,1]", result.getAsJsonObject("pack")["max_format"].toString())
+    }
+
+    @Test
     fun mergesZipAndDirectoryPreservingForeignBytesAndDescription() {
         val files =
             mapOf(
@@ -110,7 +140,7 @@ class NpcPackMergeTest {
         metadata.add(
             "overlays",
             JsonParser.parseString(
-                """{"entries":[{"formats":{"min_inclusive":97,"max_inclusive":97},"directory":"overlay"}]}"""
+                """{"entries":[{"min_format":97,"max_format":97,"directory":"overlay"}]}"""
             ),
         )
         val base =

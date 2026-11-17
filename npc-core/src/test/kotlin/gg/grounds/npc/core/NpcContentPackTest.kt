@@ -26,6 +26,23 @@ class NpcContentPackTest {
         )
 
     @Test
+    fun acceptsModernMajorOnlyUpperBoundsAndModernForeignOverlays() {
+        val content = NpcContentLoader.load(fixture.zip(temp.resolve("content.zip")))
+        for (upper in listOf("97", "[97]")) {
+            val metadata =
+                """{"pack":{"min_format":[97,1],"max_format":$upper,"description":"valid"},"overlays":{"entries":[{"directory":"foreign","min_format":97,"max_format":97}]}}"""
+            content.verifyResourcePack(
+                pack(
+                    mapOf(
+                        "pack.mcmeta" to metadata.toByteArray(),
+                        "foreign/assets/other/keep.txt" to byteArrayOf(1),
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
     fun acceptsForeignAssetsAndDisjointSoundEntries() {
         val content = NpcContentLoader.load(fixture.zip(temp.resolve("content.zip")))
         content.verifyResourcePack(pack())
@@ -60,7 +77,7 @@ class NpcContentPackTest {
     fun rejectsWrongTargetAndActiveOverlayShadowing() {
         val content = NpcContentLoader.load(fixture.zip(temp.resolve("content.zip")))
         val metadata =
-            """{"pack":{"pack_format":97,"min_format":[97,1],"max_format":[97,1],"description":"test"},"overlays":{"entries":[{"formats":{"min_inclusive":97,"max_inclusive":97},"directory":"overlay"}]}}"""
+            """{"pack":{"pack_format":97,"min_format":[97,1],"max_format":[97,1],"description":"test"},"overlays":{"entries":[{"min_format":97,"max_format":97,"directory":"overlay"}]}}"""
         assertThrows(NpcContentException::class.java) {
             content.verifyResourcePack(
                 pack(

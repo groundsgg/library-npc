@@ -27,21 +27,63 @@ internal object PackComposer {
             val pack =
                 metadata.getAsJsonObject("pack") ?: JsonObject().also { metadata.add("pack", it) }
             val target = options.target
-            fun version(raw: JsonElement): Pair<Int, Int> =
-                if (raw.isJsonArray) {
-                    require(raw.asJsonArray.size() == 2)
-                    raw.asJsonArray[0].asBigDecimal.intValueExact() to
-                        raw.asJsonArray[1].asBigDecimal.intValueExact()
-                } else raw.asBigDecimal.intValueExact() to 0
+            fun version(raw: JsonElement, upper: Boolean = false): Pair<Int, Int> {
+                fun integer(value: JsonElement): Int {
+                    require(value.isJsonPrimitive && value.asJsonPrimitive.isNumber) {
+                        "Pack versions must be integers"
+                    }
+                    return value.asBigDecimal.intValueExact().also { require(it >= 0) }
+                }
+                if (!raw.isJsonArray) return integer(raw) to if (upper) Int.MAX_VALUE else 0
+                require(raw.asJsonArray.size() in 1..2) {
+                    "Pack version must have one or two integer components"
+                }
+                val minor =
+                    if (raw.asJsonArray.size() == 2) integer(raw.asJsonArray[1])
+                    else if (upper) Int.MAX_VALUE else 0
+                return integer(raw.asJsonArray[0]) to minor
+            }
             fun less(a: Pair<Int, Int>, b: Pair<Int, Int>) =
                 a.first < b.first || (a.first == b.first && a.second < b.second)
             if (options.basePack != null) {
-                val low = version(pack["min_format"] ?: pack["pack_format"])
-                val high = version(pack["max_format"] ?: pack["pack_format"])
+                val low = version(pack["min_format"] ?: error("Missing required min_format"))
+                val high = version(pack["max_format"] ?: error("Missing required max_format"), true)
                 val selected = target.major to target.minor
                 require(!less(selected, low) && !less(high, selected)) {
                     "Base pack does not support Minecraft ${target.version}"
                 }
+            }
+            // Only the selected modern target is emitted; legacy range fields no longer apply.
+            pack.remove("supported_formats")
+            metadata.getAsJsonObject("overlays")?.getAsJsonArray("entries")?.let { entries ->
+                val effective = JsonArray()
+                val selected = target.major to target.minor
+                for (raw in entries) {
+                    val entry = raw.asJsonObject.deepCopy()
+                    require(
+                        entry["directory"].asString.matches(Regex("[A-Za-z0-9_.-]+")) &&
+                            entry["directory"].asString !in setOf(".", "..")
+                    ) {
+                        "Invalid overlay directory"
+                    }
+                    val low = version(entry["min_format"] ?: error("Missing overlay min_format"))
+                    val high =
+                        version(entry["max_format"] ?: error("Missing overlay max_format"), true)
+                    require(!less(high, low)) { "Inverted overlay range" }
+                    if (!less(selected, low) && !less(high, selected)) {
+                        entry.remove("formats")
+                        entry.add(
+                            "min_format",
+                            ImportJson.gson.toJsonTree(listOf(target.major, target.minor)),
+                        )
+                        entry.add(
+                            "max_format",
+                            ImportJson.gson.toJsonTree(listOf(target.major, target.minor)),
+                        )
+                        effective.add(entry)
+                    }
+                }
+                metadata.getAsJsonObject("overlays").add("entries", effective)
             }
             pack.addProperty("pack_format", target.major)
             pack.add("min_format", ImportJson.gson.toJsonTree(listOf(target.major, target.minor)))

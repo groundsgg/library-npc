@@ -22,12 +22,8 @@ internal object ContentPackVerifier {
         ContentJson.at("pack.mcmeta") {
             val version = if (target == "26.2") Version(88, 0) else Version(97, 1)
             val pack = metadata.getAsJsonObject("pack")
-            val lower =
-                pack["min_format"]?.let(::version)
-                    ?: Version(ContentJson.integer(pack["pack_format"]), 0)
-            val upper =
-                pack["max_format"]?.let(::version)
-                    ?: Version(ContentJson.integer(pack["pack_format"]), 0)
+            val lower = version(pack["min_format"] ?: error("Missing required min_format"))
+            val upper = version(pack["max_format"] ?: error("Missing required max_format"), true)
             require(lower <= version && version <= upper) {
                 "Pack does not support content target $target"
             }
@@ -73,14 +69,23 @@ internal object ContentPackVerifier {
             compareValuesBy(this, other, Version::major, Version::minor)
     }
 
-    private fun version(value: JsonElement): Version =
+    private fun version(value: JsonElement, upper: Boolean = false): Version {
+        val major: Int
+        val minor: Int
         if (value.isJsonArray) {
-            require(value.asJsonArray.size() == 2)
-            Version(
-                ContentJson.integer(value.asJsonArray[0]),
-                ContentJson.integer(value.asJsonArray[1]),
-            )
-        } else Version(ContentJson.integer(value), 0)
+            val array = value.asJsonArray
+            require(array.size() in 1..2) { "Pack version must have one or two integer components" }
+            major = ContentJson.integer(array[0])
+            minor =
+                if (array.size() == 2) ContentJson.integer(array[1])
+                else if (upper) Int.MAX_VALUE else 0
+        } else {
+            major = ContentJson.integer(value)
+            minor = if (upper) Int.MAX_VALUE else 0
+        }
+        require(major >= 0 && minor >= 0) { "Negative pack version" }
+        return Version(major, minor)
+    }
 
     private fun checkShadows(
         metadata: JsonObject,
@@ -91,19 +96,11 @@ internal object ContentPackVerifier {
         metadata.getAsJsonObject("overlays")?.getAsJsonArray("entries")?.forEach { raw ->
             val entry = raw.asJsonObject
             val directory = ContentFiles.safeName(entry["directory"].asString)
-            val range = entry["formats"]
-            val active =
-                when {
-                    range == null ->
-                        version(entry["min_format"]) <= target &&
-                            target <= version(entry["max_format"])
-                    range.isJsonObject ->
-                        ContentJson.integer(range.asJsonObject["min_inclusive"]) <= target.major &&
-                            target.major <= ContentJson.integer(range.asJsonObject["max_inclusive"])
-                    range.isJsonArray ->
-                        range.asJsonArray.any { ContentJson.integer(it) == target.major }
-                    else -> ContentJson.integer(range) == target.major
-                }
+            require(directory.matches(Regex("[A-Za-z0-9_.-]+"))) { "Invalid overlay directory" }
+            val lower = version(entry["min_format"] ?: error("Missing overlay min_format"))
+            val upper = version(entry["max_format"] ?: error("Missing overlay max_format"), true)
+            require(lower <= upper) { "Inverted overlay range" }
+            val active = lower <= target && target <= upper
             if (active && expected.any { "$directory/$it" in files })
                 contentFailure(
                     "NPC_CONTENT_PACK",

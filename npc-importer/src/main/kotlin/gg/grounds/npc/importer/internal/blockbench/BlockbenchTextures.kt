@@ -70,7 +70,7 @@ internal class BlockbenchTextures(
         ) {
             "Texture must be a bounded PNG"
         }
-        ImageIO.createImageInputStream(ByteArrayInputStream(bytes)).use { input ->
+        javax.imageio.stream.MemoryCacheImageInputStream(ByteArrayInputStream(bytes)).use { input ->
             val reader = ImageIO.getImageReadersByFormatName("png").next()
             try {
                 reader.input = input

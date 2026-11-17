@@ -11,6 +11,32 @@ class BlockbenchTextureTest {
     @TempDir lateinit var temp: Path
 
     @Test
+    fun validationDoesNotCreateAnImageIoDiskCache() {
+        val source = BlockbenchFixture.write(temp.resolve("cube.bbmodel"))
+        val directory = Files.createDirectory(temp.resolve("image-cache"))
+        val previousDirectory = javax.imageio.ImageIO.getCacheDirectory()
+        val previousUseCache = javax.imageio.ImageIO.getUseCache()
+        java.nio.file.FileSystems.getDefault().newWatchService().use { watcher ->
+            directory.register(watcher, java.nio.file.StandardWatchEventKinds.ENTRY_CREATE)
+            javax.imageio.ImageIO.setCacheDirectory(directory.toFile())
+            javax.imageio.ImageIO.setUseCache(true)
+            try {
+                NpcBlockbenchImporter.importModel(
+                    source,
+                    "demo:npc/cube",
+                )
+                assertNull(
+                    watcher.poll(300, java.util.concurrent.TimeUnit.MILLISECONDS),
+                    "Model validation must not create disk cache files",
+                )
+            } finally {
+                javax.imageio.ImageIO.setCacheDirectory(previousDirectory)
+                javax.imageio.ImageIO.setUseCache(previousUseCache)
+            }
+        }
+    }
+
+    @Test
     fun readsRelativePngAndProducesEquivalentResources() {
         val embedded = BlockbenchFixture.model()
         val relative = embedded.deepCopy()
