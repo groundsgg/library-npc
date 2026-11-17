@@ -5,3 +5,19 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
+
+val importerVersionDirectory = layout.buildDirectory.dir("generated/importer-version")
+val generateImporterVersion by tasks.registering {
+    inputs.property("importerVersion", project.version.toString())
+    outputs.dir(importerVersionDirectory)
+    doLast {
+        val file =
+            importerVersionDirectory.get().file("gg/grounds/npc/importer/version.properties").asFile
+        file.parentFile.mkdirs()
+        file.writeText("version=${project.version}\n")
+    }
+}
+
+sourceSets.main { resources.srcDir(importerVersionDirectory) }
+
+tasks.processResources { dependsOn(generateImporterVersion) }

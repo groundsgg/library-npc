@@ -3,6 +3,51 @@ public final class gg/grounds/npc/importer/NpcBlockbenchImporter {
 	public static final fun importModel (Ljava/nio/file/Path;Ljava/lang/String;)Lgg/grounds/npc/importer/model/NpcImportedModel;
 }
 
+public final class gg/grounds/npc/importer/NpcModelImporter {
+	public static final field INSTANCE Lgg/grounds/npc/importer/NpcModelImporter;
+	public static final fun compile (Lgg/grounds/npc/importer/config/NpcImportOptions;Ljava/nio/file/Path;)Lgg/grounds/npc/importer/model/NpcImportOutput;
+	public static final fun validate (Lgg/grounds/npc/importer/config/NpcImportOptions;)Ljava/util/List;
+	public static final fun version ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/importer/config/NpcImportOptions {
+	public static final field Companion Lgg/grounds/npc/importer/config/NpcImportOptions$Companion;
+	public synthetic fun <init> (Lgg/grounds/npc/importer/config/NpcImportOptions$Builder;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder (Ljava/nio/file/Path;Ljava/lang/String;Lgg/grounds/npc/importer/config/NpcMinecraftTarget;)Lgg/grounds/npc/importer/config/NpcImportOptions$Builder;
+	public final fun getBasePack ()Ljava/nio/file/Path;
+	public final fun getConfig ()Ljava/nio/file/Path;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getInput ()Ljava/nio/file/Path;
+	public final fun getNamespace ()Ljava/lang/String;
+	public final fun getTarget ()Lgg/grounds/npc/importer/config/NpcMinecraftTarget;
+}
+
+public final class gg/grounds/npc/importer/config/NpcImportOptions$Builder {
+	public final fun basePack (Ljava/nio/file/Path;)Lgg/grounds/npc/importer/config/NpcImportOptions$Builder;
+	public final fun build ()Lgg/grounds/npc/importer/config/NpcImportOptions;
+	public final fun config (Ljava/nio/file/Path;)Lgg/grounds/npc/importer/config/NpcImportOptions$Builder;
+	public final fun description (Ljava/lang/String;)Lgg/grounds/npc/importer/config/NpcImportOptions$Builder;
+}
+
+public final class gg/grounds/npc/importer/config/NpcImportOptions$Companion {
+	public final fun builder (Ljava/nio/file/Path;Ljava/lang/String;Lgg/grounds/npc/importer/config/NpcMinecraftTarget;)Lgg/grounds/npc/importer/config/NpcImportOptions$Builder;
+}
+
+public final class gg/grounds/npc/importer/config/NpcMinecraftTarget : java/lang/Enum {
+	public static final field Companion Lgg/grounds/npc/importer/config/NpcMinecraftTarget$Companion;
+	public static final field MINECRAFT_26_2 Lgg/grounds/npc/importer/config/NpcMinecraftTarget;
+	public static final field MINECRAFT_26_3 Lgg/grounds/npc/importer/config/NpcMinecraftTarget;
+	public static final fun fromVersion (Ljava/lang/String;)Lgg/grounds/npc/importer/config/NpcMinecraftTarget;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getVersion ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lgg/grounds/npc/importer/config/NpcMinecraftTarget;
+	public static fun values ()[Lgg/grounds/npc/importer/config/NpcMinecraftTarget;
+}
+
+public final class gg/grounds/npc/importer/config/NpcMinecraftTarget$Companion {
+	public final fun fromVersion (Ljava/lang/String;)Lgg/grounds/npc/importer/config/NpcMinecraftTarget;
+}
+
 public final class gg/grounds/npc/importer/error/NpcImportException : java/lang/IllegalArgumentException {
 	public fun <init> (Ljava/util/List;)V
 	public final fun getProblems ()Ljava/util/List;
@@ -23,6 +68,14 @@ public final class gg/grounds/npc/importer/error/NpcImportProblem {
 	public final fun getSource ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class gg/grounds/npc/importer/model/NpcImportOutput {
+	public final fun getContentId ()Ljava/lang/String;
+	public final fun getManifest ()Ljava/nio/file/Path;
+	public final fun getPackFragment ()Ljava/nio/file/Path;
+	public final fun getResourcePack ()Ljava/nio/file/Path;
+	public final fun getServerContent ()Ljava/nio/file/Path;
 }
 
 public final class gg/grounds/npc/importer/model/NpcImportedModel {

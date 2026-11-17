@@ -9,6 +9,21 @@ import java.util.Locale
 import java.util.zip.ZipFile
 
 internal object ContentFiles {
+    fun snapshot(resources: Map<String, ByteArray>, limit: Int): Map<String, ByteArray> {
+        if (resources.size > 8192) contentFailure("NPC_CONTENT_LIMIT", "$", "Too many resources")
+        var size = 0L
+        val names = hashSetOf<String>()
+        for ((name, bytes) in resources) {
+            safeName(name)
+            if (!names.add(name.lowercase(Locale.ROOT)))
+                contentFailure("NPC_CONTENT_DUPLICATE", name, "Case-ambiguous resource")
+            size += bytes.size
+            if (size > limit)
+                contentFailure("NPC_CONTENT_LIMIT", name, "Resource byte limit exceeded")
+        }
+        return resources.mapValues { it.value.copyOf() }
+    }
+
     fun safeName(name: String): String {
         if (
             name.isEmpty() ||

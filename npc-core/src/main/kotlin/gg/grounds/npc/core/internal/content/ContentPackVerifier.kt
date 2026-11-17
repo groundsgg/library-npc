@@ -4,8 +4,11 @@ import com.google.gson.*
 import java.nio.file.Path
 
 internal object ContentPackVerifier {
-    fun verify(path: Path, target: String, contract: JsonObject) {
-        val files = ContentFiles.read(path, 256 * 1024 * 1024)
+    fun verify(path: Path, target: String, contract: JsonObject) =
+        verify(ContentFiles.read(path, 256 * 1024 * 1024), target, contract)
+
+    fun verify(resources: Map<String, ByteArray>, target: String, contract: JsonObject) {
+        val files = ContentFiles.snapshot(resources, 256 * 1024 * 1024)
         val metadata =
             ContentJson.parse(
                 files["pack.mcmeta"]

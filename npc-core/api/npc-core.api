@@ -127,6 +127,7 @@ public final class gg/grounds/npc/core/io/content/NpcContent {
 	public final fun getModels ()Ljava/util/Map;
 	public final fun getTarget ()Ljava/lang/String;
 	public final fun verifyResourcePack (Ljava/nio/file/Path;)V
+	public final fun verifyResourcePack (Ljava/util/Map;)V
 }
 
 public final class gg/grounds/npc/core/io/content/NpcContentException : java/lang/IllegalArgumentException {
@@ -137,6 +138,15 @@ public final class gg/grounds/npc/core/io/content/NpcContentException : java/lan
 public final class gg/grounds/npc/core/io/content/NpcContentLoader {
 	public static final field INSTANCE Lgg/grounds/npc/core/io/content/NpcContentLoader;
 	public static final fun load (Ljava/nio/file/Path;)Lgg/grounds/npc/core/io/content/NpcContent;
+	public static final fun load (Ljava/util/Map;)Lgg/grounds/npc/core/io/content/NpcContent;
+}
+
+public final class gg/grounds/npc/core/io/content/NpcResourceArchive {
+	public static final field INSTANCE Lgg/grounds/npc/core/io/content/NpcResourceArchive;
+	public static final fun read (Ljava/nio/file/Path;)Ljava/util/Map;
+	public static final fun read (Ljava/nio/file/Path;I)Ljava/util/Map;
+	public static final fun read (Ljava/nio/file/Path;II)Ljava/util/Map;
+	public static synthetic fun read$default (Ljava/nio/file/Path;IIILjava/lang/Object;)Ljava/util/Map;
 }
 
 public final class gg/grounds/npc/core/math/NpcMatrix {

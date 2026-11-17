@@ -31,4 +31,14 @@ internal constructor(
     public fun verifyResourcePack(path: Path) {
         ContentPackVerifier.verify(path, target, contract)
     }
+
+    /**
+     * Verify a bounded defensive snapshot of pack-relative files without temporary output files.
+     * Applies the same identity and effective-pack checks as the path overload.
+     *
+     * @throws NpcContentException if the pack violates this content's contract.
+     */
+    public fun verifyResourcePack(resources: Map<String, ByteArray>) {
+        ContentPackVerifier.verify(resources, target, contract)
+    }
 }

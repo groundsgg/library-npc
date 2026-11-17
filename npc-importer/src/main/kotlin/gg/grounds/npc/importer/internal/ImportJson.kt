@@ -23,6 +23,15 @@ internal class ImportContext(val source: String) {
             read()
         } catch (e: NpcImportException) {
             throw e
+        } catch (e: java.io.IOException) {
+            when (e) {
+                is com.google.gson.stream.MalformedJsonException,
+                is java.io.EOFException,
+                is java.nio.charset.CharacterCodingException,
+                is javax.imageio.IIOException ->
+                    fail(source, path, e.message ?: "Invalid encoded content")
+                else -> throw e
+            }
         } catch (e: Exception) {
             fail(source, path, e.message ?: "Invalid input")
         }

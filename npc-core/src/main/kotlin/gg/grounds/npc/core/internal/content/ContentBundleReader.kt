@@ -6,8 +6,10 @@ import gg.grounds.npc.core.io.content.NpcContent
 import java.nio.file.Path
 
 internal object ContentBundleReader {
-    fun load(path: Path): NpcContent {
-        val files = ContentFiles.read(path, 64 * 1024 * 1024)
+    fun load(path: Path): NpcContent = load(ContentFiles.read(path, 64 * 1024 * 1024))
+
+    fun load(resources: Map<String, ByteArray>): NpcContent {
+        val files = ContentFiles.snapshot(resources, 64 * 1024 * 1024)
         val raw =
             files["bundle.json"]
                 ?: contentFailure(

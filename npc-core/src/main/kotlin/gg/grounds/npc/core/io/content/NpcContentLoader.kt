@@ -15,4 +15,14 @@ public object NpcContentLoader {
     @JvmStatic
     @Throws(java.io.IOException::class)
     public fun load(path: Path): NpcContent = ContentBundleReader.load(path)
+
+    /**
+     * Load a defensive bounded snapshot of bundle-relative files, for in-memory build pipelines.
+     * Applies the same contract, checksum and model checks as directory/ZIP loading.
+     *
+     * @throws NpcContentException for invalid or oversized resource maps.
+     */
+    @JvmStatic
+    public fun load(resources: Map<String, ByteArray>): NpcContent =
+        ContentBundleReader.load(resources)
 }
