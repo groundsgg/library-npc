@@ -21,3 +21,5 @@ val generateImporterVersion by tasks.registering {
 sourceSets.main { resources.srcDir(importerVersionDirectory) }
 
 tasks.processResources { dependsOn(generateImporterVersion) }
+
+tasks.named("sourcesJar") { dependsOn(generateImporterVersion) }

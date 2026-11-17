@@ -1,0 +1,6 @@
+public final class gg/grounds/npc/cli/NpcCli {
+	public static final field INSTANCE Lgg/grounds/npc/cli/NpcCli;
+	public static final fun execute ([Ljava/lang/String;Ljava/io/PrintWriter;Ljava/io/PrintWriter;)I
+	public static final fun main ([Ljava/lang/String;)V
+}
+
