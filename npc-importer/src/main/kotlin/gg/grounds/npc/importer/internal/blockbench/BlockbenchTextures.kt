@@ -12,6 +12,7 @@ internal class BlockbenchTextures(
     private val source: Path,
     private val inputRoot: Path,
     private val id: String,
+    private val budget: ImportBudget,
 ) {
     fun read(root: JsonObject, resources: MutableMap<String, ByteArray>): List<String> {
         val textures = root.getAsJsonArray("textures") ?: error("Missing textures")
@@ -20,11 +21,17 @@ internal class BlockbenchTextures(
         val suffix = id.substringAfter(':').removePrefix("npc/")
         return textures.mapIndexed { index, raw ->
             context.at("$.textures[$index]") {
+                val allocation = "assets/$namespace/textures/item/npc/$suffix/texture_$index"
+                val maximum = budget.readLimit(allocation, 16 * 1024 * 1024, context.source)
                 val texture = raw.asJsonObject
                 val sourceValue = texture["source"]?.asString
                 val bytes =
                     if (sourceValue != null && sourceValue.startsWith("data:image/png;base64,")) {
-                        Base64.getDecoder().decode(sourceValue.substringAfter(','))
+                        val encoded = sourceValue.substringAfter(',')
+                        val padding = encoded.takeLast(2).count { it == '=' }
+                        if (encoded.length.toLong() * 3 / 4 - padding > maximum)
+                            budget.exceeded(allocation, context.source)
+                        Base64.getDecoder().decode(encoded)
                     } else {
                         require(sourceValue == null || !sourceValue.contains("://")) {
                             "Network textures are unsupported"
@@ -49,12 +56,14 @@ internal class BlockbenchTextures(
                         require(Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
                             "Texture file is missing"
                         }
-                        Files.newInputStream(path).use { it.readNBytes(16 * 1024 * 1024 + 1) }
+                        Files.newInputStream(path).use { it.readNBytes(maximum + 1) }
                     }
+                if (bytes.size > maximum) budget.exceeded(allocation, context.source)
                 validate(bytes)
                 val textureName =
                     "texture_${index.toString().padStart(3,'0')}_${ImportJson.hash(bytes)}"
                 val path = "item/npc/$suffix/$textureName"
+                budget.charge("assets/$namespace/textures/$path.png", bytes.size, context.source)
                 resources["assets/$namespace/textures/$path.png"] = bytes
                 "$namespace:$path"
             }

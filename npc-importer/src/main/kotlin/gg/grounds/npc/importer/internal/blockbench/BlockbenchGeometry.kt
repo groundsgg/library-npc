@@ -9,6 +9,7 @@ internal class BlockbenchGeometry(
     private val root: JsonObject,
     private val textures: List<String>,
     private val files: MutableMap<String, ByteArray>,
+    private val budget: ImportBudget,
 ) {
     val bones = JsonArray()
     val parts = JsonArray()
@@ -113,14 +114,30 @@ internal class BlockbenchGeometry(
             val to = c.vector(e["to"], "$.elements.to")
             val lo = (0..2).map { minOf(from[it], to[it]) }.toMutableList()
             val hi = (0..2).map { maxOf(from[it], to[it]) }.toMutableList()
-            if (hitbox) {
-                hitboxes.add(lo to hi)
-                return@at
-            }
             val inflate = c.number(e["inflate"], "$.elements.inflate", 0.0)
             for (axis in 0..2) {
                 lo[axis] -= inflate
                 hi[axis] += inflate
+            }
+            if (hitbox) {
+                c.at("$.elements.${e["uuid"].asString}.rotation") {
+                    require(c.vector(e["rotation"], "$.elements.rotation").all { it == 0.0 }) {
+                        "Rotated hitbox cubes are unsupported; bake hitbox bounds in model space"
+                    }
+                }
+                var ancestor = parent
+                while (ancestor != null) {
+                    val key = ancestor
+                    val bone = bones.first { it.asJsonObject["id"].asString == key }.asJsonObject
+                    c.at("$.groups.$key.rotation") {
+                        require(bone.getAsJsonArray("rotation").all { it.asDouble == 0.0 }) {
+                            "Rotated hitbox ancestors are unsupported; bake hitbox bounds in model space"
+                        }
+                    }
+                    ancestor = bone["parent"]?.takeUnless { it.isJsonNull }?.asString
+                }
+                hitboxes.add(lo to hi)
+                return@at
             }
             val sizes = (0..2).map { hi[it] - lo[it] }
             require(sizes.all { it in 0.0..48.0 }) { "Cube size exceeds native model range" }
@@ -184,8 +201,9 @@ internal class BlockbenchGeometry(
             val bytes = ImportJson.bytes(native)
             val path =
                 "npc_parts/$suffix/part_${parts.size().toString().padStart(3,'0')}_${ImportJson.hash(bytes)}"
+            budget.charge("assets/$namespace/models/$path.json", bytes.size, c.source)
             files["assets/$namespace/models/$path.json"] = bytes
-            files["assets/$namespace/items/$path.json"] =
+            val itemBytes =
                 ImportJson.bytes(
                     ImportJson.objectOf(
                         "model" to
@@ -195,6 +213,8 @@ internal class BlockbenchGeometry(
                             )
                     )
                 )
+            budget.charge("assets/$namespace/items/$path.json", itemBytes.size, c.source)
+            files["assets/$namespace/items/$path.json"] = itemBytes
             parts.add(
                 ImportJson.objectOf(
                     "bone" to parent,

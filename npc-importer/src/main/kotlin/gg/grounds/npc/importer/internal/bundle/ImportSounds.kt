@@ -10,10 +10,11 @@ internal object ImportSounds {
         sources: ImportSources,
         models: MutableMap<String, JsonObject>,
         files: MutableMap<String, ByteArray>,
+        budget: ImportBudget,
     ): JsonObject {
         val definitions = JsonObject()
         val sounds = sources.config.getAsJsonArray("sounds") ?: JsonArray()
-        val context = ImportContext("import configuration")
+        val context = ImportContext(sources.configSource)
         val declared = hashSetOf<String>()
         require(sounds.size() <= 256 * 128) { "Too many sound bindings" }
         for ((i, value) in sounds.withIndex()) context.at("$.sounds[$i]") {
@@ -51,7 +52,11 @@ internal object ImportSounds {
                     require(!Files.isSymbolicLink(parent)) { "Symlink sound input is unsupported" }
                     parent = parent.parent
                 }
-                val bytes = Files.newInputStream(path).use { it.readNBytes(16 * 1024 * 1024 + 1) }
+                val name =
+                    "assets/${key.substringBefore(':')}/sounds/${key.substringAfter(':')}.ogg"
+                val maximum = budget.readLimit(name, 16 * 1024 * 1024, context.source)
+                val bytes = Files.newInputStream(path).use { it.readNBytes(maximum + 1) }
+                if (bytes.size > maximum) budget.exceeded(name, context.source)
                 require(
                     bytes.size in 27..16 * 1024 * 1024 &&
                         bytes.copyOfRange(0, 4).contentEquals("OggS".toByteArray()) &&
@@ -59,12 +64,11 @@ internal object ImportSounds {
                 ) {
                     "Expected a bounded OGG file"
                 }
-                val name =
-                    "assets/${key.substringBefore(':')}/sounds/${key.substringAfter(':')}.ogg"
                 val previous = files[name]
                 require(previous == null || previous.contentEquals(bytes)) {
                     "Conflicting sound file $name"
                 }
+                budget.charge(name, bytes.size, context.source)
                 files[name] = bytes
                 val definition =
                     ImportJson.objectOf("sounds" to listOf(ImportJson.objectOf("name" to key)))
@@ -92,7 +96,16 @@ internal object ImportSounds {
             val registry = JsonObject()
             for ((key, value) in definitions.entrySet()) if (key.substringBefore(':') == namespace)
                 registry.add(key.substringAfter(':'), value)
-            files["assets/$namespace/sounds.json"] = ImportJson.bytes(registry)
+            val bytes = ImportJson.bytes(registry)
+            if (bytes.size > 4 * 1024 * 1024)
+                fail(
+                    context.source,
+                    "assets/$namespace/sounds.json",
+                    "Sound registry exceeds 4 MiB",
+                    "NPC_IMPORT_LIMIT",
+                )
+            budget.charge("assets/$namespace/sounds.json", bytes.size, context.source)
+            files["assets/$namespace/sounds.json"] = bytes
         }
         return definitions
     }

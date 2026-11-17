@@ -94,6 +94,29 @@ class NpcCliTest {
     }
 
     @Test
+    fun configurationErrorsAreBoundedAuthoredFieldDiagnostics() {
+        val input = source()
+        val config = temp.resolve("import.json")
+        val cases =
+            listOf(
+                "{\"schemaVersion\":1,\"models\":[]}" to "$.models",
+                "{\"schemaVersion\":1.5}" to "$.schemaVersion",
+                "{\"schemaVersion\":\"1\"}" to "$.schemaVersion",
+                "{\"schemaVersion\":1,\"models\":{\"cube.bbmodel\":17}}" to "$.models.cube.bbmodel",
+                "{\"schemaVersion\":1,\"sounds\":{}}" to "$.sounds",
+                ("{\"schemaVersion\":1}" + " ".repeat(4 * 1024 * 1024)) to "$",
+            )
+        for ((json, field) in cases) {
+            Files.writeString(config, json)
+            val result = run("validate", *options(input), "--config", config.toString(), "--json")
+            assertEquals(3, result.exit, result.error)
+            assertTrue(result.error.contains(config.toString()), result.error)
+            assertTrue(result.error.contains(field), result.error)
+            assertFalse(result.error.contains("NPC_CLI_INTERNAL"), result.error)
+        }
+    }
+
+    @Test
     fun leavesExistingOutputUntouchedOnFailure() {
         val input = source()
         val output = Files.createDirectory(temp.resolve("existing"))

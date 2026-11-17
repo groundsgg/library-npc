@@ -20,10 +20,20 @@ internal object PackComposer {
                     e.problems.map { NpcImportProblem(it.code, source, it.path, it.message) }
                 )
             }
+        fun metadata(bytes: ByteArray): JsonObject {
+            if (bytes.size > 4 * 1024 * 1024)
+                fail(
+                    source,
+                    "pack.mcmeta/sounds.json",
+                    "JSON resource exceeds 4 MiB",
+                    "NPC_IMPORT_LIMIT",
+                )
+            return context.parse(bytes)
+        }
         return context.at("pack.mcmeta") {
             val metadata =
                 if (options.basePack == null) JsonObject()
-                else context.parse(base["pack.mcmeta"] ?: error("Base pack metadata is missing"))
+                else metadata(base["pack.mcmeta"] ?: error("Base pack metadata is missing"))
             val pack =
                 metadata.getAsJsonObject("pack") ?: JsonObject().also { metadata.add("pack", it) }
             val target = options.target
@@ -90,19 +100,25 @@ internal object PackComposer {
             pack.add("max_format", ImportJson.gson.toJsonTree(listOf(target.major, target.minor)))
             if (options.description != null) pack.addProperty("description", options.description)
             else if (!pack.has("description")) pack.addProperty("description", "NPC models")
-            val result = base.toMutableMap()
+            val budget = ImportBudget()
+            val result = linkedMapOf<String, ByteArray>()
+            fun put(name: String, bytes: ByteArray) {
+                budget.charge(name, bytes.size, source)
+                result[name] = bytes
+            }
+            for ((name, bytes) in base) put(name, bytes)
             for ((name, bytes) in generated) {
                 val old = result[name]
-                if (old == null || old.contentEquals(bytes)) result[name] = bytes
+                if (old == null || old.contentEquals(bytes)) put(name, bytes)
                 else if (name.matches(Regex("assets/[^/]+/sounds\\.json"))) {
-                    val registry = context.parse(old)
-                    for ((key, definition) in context.parse(bytes).entrySet()) {
+                    val registry = metadata(old)
+                    for ((key, definition) in metadata(bytes).entrySet()) {
                         require(!registry.has(key) || registry[key] == definition) {
                             "Conflicting sound event $name:$key"
                         }
                         registry.add(key, definition)
                     }
-                    result[name] = ImportJson.bytes(registry)
+                    put(name, ImportJson.bytes(registry))
                 } else
                     fail(
                         source,
@@ -111,7 +127,7 @@ internal object PackComposer {
                         "NPC_IMPORT_COLLISION",
                     )
             }
-            result["pack.mcmeta"] = ImportJson.bytes(metadata)
+            put("pack.mcmeta", ImportJson.bytes(metadata))
             val baseIdentity =
                 if (options.basePack == null) null
                 else

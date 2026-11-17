@@ -29,6 +29,8 @@ internal object ContentJson {
 
     fun parse(bytes: ByteArray, path: String): JsonObject =
         at(path) {
+            if (bytes.size > 4 * 1024 * 1024)
+                contentFailure("NPC_CONTENT_LIMIT", path, "JSON resource exceeds 4 MiB")
             val text =
                 Charsets.UTF_8.newDecoder()
                     .onMalformedInput(CodingErrorAction.REPORT)

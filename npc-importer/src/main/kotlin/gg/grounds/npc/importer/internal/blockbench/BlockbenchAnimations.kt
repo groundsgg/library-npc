@@ -13,11 +13,20 @@ internal object BlockbenchAnimations {
             val name = animation["name"].asString
             require(!result.has(name)) { "Duplicate animation name: $name" }
             for (field in listOf("anim_time_update", "blend_weight", "start_delay", "loop_delay")) {
-                val v = animation[field]?.asString
-                require(
-                    v == null || v.isBlank() || v == "0" || (field == "blend_weight" && v == "1")
-                ) {
-                    "Unsupported animation expression: $field"
+                val value = animation[field]
+                c.at("$.animations[$index].$field") {
+                    val absent =
+                        value == null ||
+                            (value.isJsonPrimitive &&
+                                value.asJsonPrimitive.isString &&
+                                value.asString.isBlank())
+                    require(
+                        absent ||
+                            c.number(value, "$.animations[$index].$field") ==
+                                if (field == "blend_weight") 1.0 else 0.0
+                    ) {
+                        "Unsupported non-neutral animation value: $field"
+                    }
                 }
             }
             val loop = animation["loop"]?.asString ?: "once"

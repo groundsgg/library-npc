@@ -87,6 +87,41 @@ class BlockbenchImportTest {
     }
 
     @Test
+    fun authoredHitboxesApplyInflationAndRejectUnsupportedRotations() {
+        val json = BlockbenchFixture.model()
+        val cube = json.getAsJsonArray("elements")[0].asJsonObject.deepCopy()
+        cube.addProperty("uuid", "hit")
+        cube.add("from", JsonParser.parseString("[16,0,0]"))
+        cube.add("to", JsonParser.parseString("[32,16,16]"))
+        cube.addProperty("inflate", 1)
+        json.getAsJsonArray("elements").add(cube)
+        json
+            .getAsJsonArray("groups")
+            .add(
+                JsonParser.parseString(
+                    "{\"uuid\":\"hitbox\",\"name\":\"hitbox\",\"origin\":[0,0,0]}"
+                )
+            )
+        json
+            .getAsJsonArray("outliner")[0]
+            .asJsonObject
+            .getAsJsonArray("children")
+            .add(JsonParser.parseString("{\"uuid\":\"hitbox\",\"children\":[\"hit\"]}"))
+        fun import() =
+            NpcBlockbenchImporter.importModel(
+                BlockbenchFixture.write(temp.resolve("hitbox.bbmodel"), json),
+                "demo:npc/cube",
+            )
+        assertEquals(1.125, import().model.bounds.size.x)
+        for (target in listOf(cube, json.getAsJsonArray("groups")[0].asJsonObject)) {
+            target.add("rotation", JsonParser.parseString("[0,0,90]"))
+            val error = assertThrows(NpcImportException::class.java) { import() }
+            assertTrue(error.problems.first().path.contains("rotation"))
+            target.remove("rotation")
+        }
+    }
+
+    @Test
     fun preservesAuthoredPivotAndReflectedScale() {
         val json = BlockbenchFixture.model()
         val cube = json.getAsJsonArray("elements")[0].asJsonObject

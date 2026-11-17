@@ -16,5 +16,7 @@ public object NpcBlockbenchImporter {
     @JvmStatic
     @Throws(java.io.IOException::class)
     public fun importModel(source: Path, id: String): NpcImportedModel =
-        BlockbenchReader.read(source, id, source.toAbsolutePath().normalize().parent)
+        BlockbenchReader.read(source, id, source.toAbsolutePath().normalize().parent).let {
+            NpcImportedModel(it.model, it.modelJson, it.resources)
+        }
 }

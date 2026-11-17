@@ -12,6 +12,37 @@ class BlockbenchAnimationTest {
     @TempDir lateinit var temp: Path
 
     @Test
+    fun rejectsNonNeutralBlendWeightsWithTheirAuthoredField() {
+        for (weight in listOf("0", "0.0", "0.5", "2")) {
+            val json = BlockbenchFixture.model()
+            val animation = BlockbenchFixture.animation("rotation", listOf(0.0, 45.0, 0.0))
+            animation.addProperty("blend_weight", weight)
+            json.getAsJsonArray("animations").add(animation)
+            val error =
+                assertThrows(NpcImportException::class.java) {
+                    NpcBlockbenchImporter.importModel(
+                        BlockbenchFixture.write(temp.resolve("weight.bbmodel"), json),
+                        "demo:npc/cube",
+                    )
+                }
+            assertTrue(error.problems.first().path.endsWith("blend_weight"))
+        }
+        val json = BlockbenchFixture.model()
+        val animation = BlockbenchFixture.animation("rotation", listOf(0.0, 45.0, 0.0))
+        animation.addProperty("blend_weight", "1.0")
+        json.getAsJsonArray("animations").add(animation)
+        assertTrue(
+            NpcBlockbenchImporter.importModel(
+                    BlockbenchFixture.write(temp.resolve("neutral.bbmodel"), json),
+                    "demo:npc/cube",
+                )
+                .model
+                .animations
+                .containsKey("move")
+        )
+    }
+
+    @Test
     fun samplesAuthoredPositionInSecondsAndBlocks() {
         val json = BlockbenchFixture.model()
         json

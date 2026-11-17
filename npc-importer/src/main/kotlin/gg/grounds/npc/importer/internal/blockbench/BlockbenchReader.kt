@@ -5,11 +5,21 @@ import gg.grounds.npc.core.io.*
 import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.core.model.NpcModel
 import gg.grounds.npc.importer.internal.*
-import gg.grounds.npc.importer.model.NpcImportedModel
 import java.nio.file.*
 
+internal data class BlockbenchImport(
+    val model: NpcModel,
+    val modelJson: ByteArray,
+    val resources: Map<String, ByteArray>,
+)
+
 internal object BlockbenchReader {
-    fun read(source: Path, id: String, inputRoot: Path): NpcImportedModel {
+    fun read(
+        source: Path,
+        id: String,
+        inputRoot: Path,
+        budget: ImportBudget = ImportBudget(),
+    ): BlockbenchImport {
         val path = source.toAbsolutePath().normalize()
         val context = ImportContext(source.toString())
         if (Files.isSymbolicLink(path))
@@ -36,9 +46,15 @@ internal object BlockbenchReader {
             }
             val resources = linkedMapOf<String, ByteArray>()
             val textures =
-                BlockbenchTextures(context, path, inputRoot.toAbsolutePath().normalize(), id)
+                BlockbenchTextures(
+                        context,
+                        path,
+                        inputRoot.toAbsolutePath().normalize(),
+                        id,
+                        budget,
+                    )
                     .read(root, resources)
-            val geometry = BlockbenchGeometry(context, id, root, textures, resources)
+            val geometry = BlockbenchGeometry(context, id, root, textures, resources, budget)
             geometry.read()
             val bones = geometry.bones.map { it.asJsonObject["id"].asString }.toSet()
             val animations = BlockbenchAnimations.read(root, bones, version == "4.10", context)
@@ -57,8 +73,18 @@ internal object BlockbenchReader {
                     "animations" to animations,
                     "sounds" to emptyMap<String, Any>(),
                 )
+            fun encodedModel(): ByteArray =
+                ImportJson.bytes(json).also {
+                    if (it.size > 2 * 1024 * 1024)
+                        fail(
+                            context.source,
+                            "$",
+                            "Compiled model exceeds 2 MiB",
+                            "NPC_IMPORT_LIMIT",
+                        )
+                }
             fun decode(): NpcModel {
-                val decoded = NpcModelJson.decode(ImportJson.bytes(json))
+                val decoded = NpcModelJson.decode(encodedModel())
                 if (decoded is NpcDecodeResult.Success) return decoded.model
                 val problem = (decoded as NpcDecodeResult.Failure).problems.first()
                 fail(context.source, problem.path, problem.message)
@@ -83,7 +109,7 @@ internal object BlockbenchReader {
                 )
                 model = decode()
             }
-            NpcImportedModel(model, ImportJson.bytes(json), resources)
+            BlockbenchImport(model, encodedModel(), resources)
         }
     }
 }
