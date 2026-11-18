@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--repository", type=Path, default=ROOT / ".evidence/maven")
     parser.add_argument("--manifest", type=Path, default=ROOT / ".evidence/public-artifacts.json")
     parser.add_argument("--log", type=Path, action="append", default=[])
+    parser.add_argument("--modules", default="npc-core,npc-minestom", help="Exact expected loaded module group")
     args = parser.parse_args()
     version = args.version
     repository = args.repository.resolve()
@@ -24,7 +25,7 @@ def main():
         if manifest["version"] != version:
             raise ValueError("Manifest does not describe the selected version")
         for log in args.log:
-            verify_origins(manifest, log.read_text().splitlines())
+            verify_origins(manifest, log.read_text().splitlines(), tuple(args.modules.split(",")))
             print("NPC_CONSUMER_ORIGINS_OK " + str(log))
         return
     with tempfile.TemporaryDirectory(prefix='npc-consumer-origin-') as temporary:

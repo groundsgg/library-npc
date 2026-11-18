@@ -35,6 +35,24 @@ class ConsumerOriginsTest(unittest.TestCase):
                 lines.append(f'NPC_ORIGIN {module} {path}')
             self.assertEqual({'npc-core', 'npc-minestom'}, set(verify_origins(manifest, lines)))
 
+    def test_importer_and_cli_origins_are_required_when_selected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            selected = ('npc-core', 'npc-importer', 'npc-cli')
+            manifest = {'modules': {}}
+            lines = []
+            for module in selected:
+                path = Path(directory) / (module + '.jar')
+                payload = module.encode()
+                path.write_bytes(payload)
+                manifest['modules'][module] = {'sha256': hashlib.sha256(payload).hexdigest()}
+                lines.append(f'NPC_ORIGIN {module} {path}')
+            self.assertEqual(set(selected), set(verify_origins(manifest, lines, required_modules=selected)))
+            with self.assertRaises(ValueError):
+                verify_origins(manifest, lines[:-1], required_modules=selected)
+            (Path(directory) / 'npc-importer.jar').write_bytes(b'stale')
+            with self.assertRaises(ValueError):
+                verify_origins(manifest, lines, required_modules=selected)
+
 
 if __name__ == '__main__':
     unittest.main()

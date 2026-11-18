@@ -157,6 +157,7 @@ subprojects {
 }
 
 dependencies {
+    dokka(project(":npc-importer"))
     dokka(project(":npc-core"))
     dokka(project(":npc-minestom"))
 }

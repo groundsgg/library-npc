@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '25'
+          java-version: "25"
       - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew check apiCheck dokkaGenerate publishAllPublicationsToReviewRepository
       - run: python3 -m unittest discover -s tools -p '*_test.py'
@@ -27,3 +27,17 @@ jobs:
       - run: ./gradlew -p fixtures/kotlin-consumer run -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven" | tee .evidence/kotlin-consumer.log
       - run: python3 tools/verify_consumer_origin.py --log .evidence/java-consumer.log --log .evidence/kotlin-consumer.log
       - run: ./gradlew -p examples/standalone-minestom test smoke demoPack -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"
+      - name: Build and execute standalone CLI distribution
+        run: |
+          ./gradlew :npc-cli:installDist :npc-cli:assembleDist
+          npc-cli/build/install/npc-cli/bin/npc-cli --help
+      - name: Verify Java import API and CLI origins
+        run: |
+          ./gradlew -p fixtures/gradle-importer-consumer run -PnpcVersion="$(cat version.txt)" -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven" | tee .evidence/gradle-importer.log
+          python3 tools/verify_consumer_origin.py --modules npc-core,npc-importer,npc-cli --log .evidence/gradle-importer.log
+      - name: Verify independent Kotlin import API
+        run: |
+          ./gradlew -p fixtures/kotlin-importer-consumer run -PnpcVersion="$(cat version.txt)" -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven" | tee .evidence/kotlin-importer.log
+          python3 tools/verify_consumer_origin.py --modules npc-core,npc-importer --log .evidence/kotlin-importer.log
+      - name: Exercise startup and precompiled original model examples
+        run: ./gradlew -p examples/standalone-minestom smokeImported smokePrecompiled -PnpcVersion="$(cat version.txt)" -PnpcRepository="file://${GITHUB_WORKSPACE}/.evidence/maven"

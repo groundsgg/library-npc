@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "sounds": [
+    {
+      "model": "npc_demo:npc/bot",
+      "clip": "wave",
+      "key": "minecraft:entity.villager.yes",
+      "external": true,
+      "volume": 0.8,
+      "pitch": 1,
+      "radius": 12
+    }
+  ]
+}

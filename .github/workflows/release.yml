@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '25'
+          java-version: "25"
       - uses: gradle/actions/setup-gradle@v6
       - name: Resolve released packages from independent consumers
         run: |
@@ -38,3 +38,25 @@ jobs:
           ./gradlew -p fixtures/java-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
           ./gradlew -p fixtures/kotlin-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
           ./gradlew -p examples/standalone-minestom test smoke -PnpcVersion="$version" -PnpcRepository="$repository"
+          ./gradlew -p fixtures/gradle-importer-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
+          ./gradlew -p fixtures/kotlin-importer-consumer run -PnpcVersion="$version" -PnpcRepository="$repository"
+          ./gradlew -p examples/standalone-minestom smokeImported smokePrecompiled -PnpcVersion="$version" -PnpcRepository="$repository"
+
+  cli-distributions:
+    needs: [publish, verify-published-consumers]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Build CLI downloads from the release commit
+        run: ./gradlew :npc-cli:executableJar :npc-cli:assembleDist
+      - name: Attach CLI JAR and distributions without overwriting existing assets
+        run: gh release upload "$GITHUB_REF_NAME" npc-cli/build/libs/*-all.jar npc-cli/build/distributions/*

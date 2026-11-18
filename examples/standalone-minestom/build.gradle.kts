@@ -26,6 +26,8 @@ repositories {
             filter {
                 includeModule("gg.grounds", "npc-core")
                 includeModule("gg.grounds", "npc-minestom")
+                includeModule("gg.grounds", "npc-importer")
+                includeModule("gg.grounds", "npc-cli")
             }
         }
     }
@@ -37,6 +39,9 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
 dependencies {
     implementation(
         "gg.grounds:npc-minestom:${providers.gradleProperty("npcVersion").orElse(providers.fileContents(layout.projectDirectory.file("../../version.txt")).asText.map { it.trim() }).get()}"
+    )
+    implementation(
+        "gg.grounds:npc-importer:${providers.gradleProperty("npcVersion").orElse(providers.fileContents(layout.projectDirectory.file("../../version.txt")).asText.map { it.trim() }).get()}"
     )
     implementation("net.minestom:minestom:2026.10.07-26.2")
     runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
@@ -140,3 +145,108 @@ tasks.register<JavaExec>("smokeGroundsProfile") {
         )
     }
 }
+
+tasks.test {
+    systemProperty("npc.importSources", layout.projectDirectory.dir("models").asFile.absolutePath)
+    systemProperty("npc.importBase", layout.projectDirectory.dir("base-pack").asFile.absolutePath)
+}
+
+val npcCompiler = configurations.create("npcCompiler")
+
+dependencies {
+    add(
+        npcCompiler.name,
+        "gg.grounds:npc-cli:${providers.gradleProperty("npcVersion").orElse(providers.fileContents(layout.projectDirectory.file("../../version.txt")).asText.map { it.trim() }).get()}",
+    )
+}
+
+fun compileImportedExample(name: String, target: String) =
+    tasks.register<JavaExec>(name) {
+        classpath = npcCompiler
+        mainClass.set("gg.grounds.npc.cli.NpcCli")
+        val output = layout.buildDirectory.dir("imported/$target")
+        inputs.dir(layout.projectDirectory.dir("models"))
+        inputs.dir(layout.projectDirectory.dir("base-pack"))
+        inputs.property("target", target)
+        outputs.dir(output)
+        doFirst {
+            delete(output)
+            args(
+                "compile",
+                "--input",
+                layout.projectDirectory.dir("models").asFile.absolutePath,
+                "--namespace",
+                "npc_demo",
+                "--target",
+                target,
+                "--base-pack",
+                layout.projectDirectory.dir("base-pack").asFile.absolutePath,
+                "--config",
+                layout.projectDirectory.file("models/import.json").asFile.absolutePath,
+                "--output",
+                output.get().asFile.absolutePath,
+            )
+        }
+    }
+
+val compileDemoNpc = compileImportedExample("compileDemoNpc", "26.2")
+val compileGroundsDemoNpc = compileImportedExample("compileGroundsDemoNpc", "26.3")
+
+fun importedExample(name: String, grounds: Boolean, prepared: Boolean, smoke: Boolean) {
+    tasks.register<JavaExec>(name) {
+        dependsOn(if (smoke) smokeSources.classesTaskName else tasks.classes)
+        if (prepared) dependsOn(if (grounds) compileGroundsDemoNpc else compileDemoNpc)
+        mainClass.set(if (smoke) "example.ImportedNpcDemoSmoke" else "example.ImportedNpcDemo")
+        classpath =
+            if (smoke) smokeSources.runtimeClasspath else sourceSets.main.get().runtimeClasspath
+        systemProperty("npc.importTarget", if (grounds) "26.3" else "26.2")
+        systemProperty(
+            "npc.importSources",
+            layout.projectDirectory.dir("models").asFile.absolutePath,
+        )
+        systemProperty(
+            "npc.importBase",
+            layout.projectDirectory.dir("base-pack").asFile.absolutePath,
+        )
+        if (prepared)
+            systemProperty(
+                "npc.precompiledContent",
+                layout.buildDirectory
+                    .dir("imported/${if (grounds) "26.3" else "26.2"}")
+                    .get()
+                    .asFile
+                    .absolutePath,
+            )
+        if (grounds)
+            doFirst {
+                require(groundsClasspathFile.isPresent) {
+                    "Supply the complete Grounds 26.3 classpath file"
+                }
+                val local =
+                    file(groundsClasspathFile.get()).readText().trim().split(File.pathSeparator)
+                classpath =
+                    sourceSets.main.get().output +
+                        (if (smoke) smokeSources.output else files()) +
+                        files(local) +
+                        configurations.runtimeClasspath.get().filter {
+                            it.name.startsWith("npc-") || it.name.startsWith("kotlin-stdlib")
+                        }
+            }
+    }
+}
+
+importedExample("runImportedDemo", false, false, false)
+
+importedExample("runPrecompiledDemo", false, true, false)
+
+importedExample("runImportedGroundsDemo", true, false, false)
+
+importedExample("runPrecompiledGroundsDemo", true, true, false)
+
+importedExample("smokeImported", false, false, true)
+
+importedExample("smokePrecompiled", false, true, true)
+
+importedExample("smokeImportedGrounds", true, false, true)
+
+importedExample("smokePrecompiledGrounds", true, true, true)

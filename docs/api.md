@@ -45,3 +45,11 @@ Reconnect with the same UUID, departure from the instance and backend/proxy tran
 Mesh resolution is synchronous during preparation; an exception rejects preparation and drains allocated parts. Default meshes are PAPER with the namespaced item-model component. Host sound callbacks run outside NPC monitors; their completion is included in relevant command/cleanup ownership. Generation guards execute their operation synchronously at most once and return true only when they did so.
 
 `NpcDisplayTransforms` exposes affine/TRSR projection for host placeholders and model matrices. Call on the owning scheduler. A true result means float-serialized fields changed; callers can restart interpolation once. This utility does not add the item-mesh facing correction.
+
+## Prepared model content
+
+`NpcContentLoader.load(path)` reads a complete validated directory or ZIP and returns `NpcContent`: an immutable model map, target and Content ID. The map overload takes a bounded defensive snapshot for in-memory pipelines. `content.verifyResourcePack(path)` verifies dedicated asset hashes and contributed sound definitions while allowing unrelated pack assets. It does not activate a pack or replace per-connection readiness.
+
+`NpcResourceArchive.read(path)` is the shared bounded ZIP/directory reader for content pipelines. It rejects symlinks, ambiguous paths and expanded-size/entry overflow and returns caller-owned bytes. This avoids separate archive-validation implementations in the runtime and importer.
+
+`NpcModelImporter.compile(options, output)` and `validate(options)` share import and pack validation. `NpcBlockbenchImporter.importModel(path, id)` supports single-model tooling. The importer remains free of Minestom; the runtime can consume prepared data without it. See [importing](importing.md) for complete Java/Kotlin/CLI usage and ownership.
