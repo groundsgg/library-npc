@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/groundsgg/library-npc/compare/v1.0.0...v1.1.0) (2026-11-18)
+
+
+### Features
+
+* import NPC models and generate resourcepacks ([cc74ddb](https://github.com/groundsgg/library-npc/commit/cc74ddb687301ecf6a86a64fa7831821775a1cc1))
+
 ## [1.0.0](https://github.com/groundsgg/library-npc/compare/v0.2.0...v1.0.0) (2026-11-17)
 
 
