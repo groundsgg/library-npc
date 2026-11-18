@@ -4,18 +4,17 @@ These small Minestom applications demonstrate how to own an NPC from preparation
 Start with the shared scenario, then use two clients to explore private clip, head-look and sound
 channels. Both scenarios use the same neutral two-part model and resource pack.
 
-The shared/personal lifecycle uses the `1.0.0` API. The current source also includes importer examples and requires all modules from a matching importer-capable build; released `1.0.0` has no importer. The older `0.2.0` release uses
-different packages and methods; use its release-tag examples when consuming that version.
+These examples use released NPC `1.1.0`, including the importer and CLI. The rendering lifecycle retains the 1.0 API. Use the older release-tag examples with `0.2.0`.
 
 ## Import an original Blockbench model
 
 `models/bot.bbmodel` is original freely distributable source: a blue body, orange head, idle clip and one-second head wave. `models/import.json` declares its external Vanilla sound cue. `base-pack/` is a small independent pack used to demonstrate merging. Purchased models and a Grounds checkout are unnecessary.
 
-Build a matching local candidate once, using JDK 25:
+Use JDK 25 and configure [GitHub Packages credentials](../../docs/installation.md), then select the release:
 
 ```sh
-NPC_VERSION="$(cat version.txt)-local-SNAPSHOT"
-./gradlew -PversionOverride="$NPC_VERSION" publishAllPublicationsToReviewRepository :npc-cli:executableJar
+NPC_VERSION=1.1.0
+NPC_REPOSITORY=https://maven.pkg.github.com/groundsgg/library-npc
 ```
 
 Choose either loading path:
@@ -23,11 +22,11 @@ Choose either loading path:
 ```sh
 # Import the .bbmodel through the library API before accepting players.
 ./gradlew -p examples/standalone-minestom runImportedDemo \
-  -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven"
+  -PnpcVersion="$NPC_VERSION" -PnpcRepository="$NPC_REPOSITORY"
 
 # Compile through the published CLI in Gradle, then load only its prepared files.
 ./gradlew -p examples/standalone-minestom runPrecompiledDemo \
-  -PnpcVersion="$NPC_VERSION" -PnpcRepository="file:$PWD/.evidence/maven"
+  -PnpcVersion="$NPC_VERSION" -PnpcRepository="$NPC_REPOSITORY"
 ```
 
 Run one application at a time. Connect to `localhost:25574`, accept its pack and try `/npcwave`, `/npclook` and `/npcprivate`. Both modes use the same lifecycle/commands. `runPrecompiledDemo` first runs `compileDemoNpc`, whose generated output is `build/imported/26.2/`. The API startup mode owns a temporary compilation directory and removes it after its pack host and NPCs close. Editing the source requires restarting.
@@ -37,6 +36,14 @@ Read `ImportedNpcDemo.java` for bootstrap ownership, then `DemoImportedContent.j
 For the actual Grounds runtime profile, use `runImportedGroundsDemo` or `runPrecompiledGroundsDemo` with `-PgroundsClasspathFile=/absolute/path/to/classpath.local`. The target becomes 26.3 and its metadata uses 97.1. Synthetic verification uses `smokeImported`, `smokePrecompiled`, `smokeImportedGrounds` and `smokePrecompiledGrounds` on temporary ports.
 
 The complete [import guide](../../docs/importing.md) explains standalone CLI/JAR usage, base-pack conflicts, Java/Kotlin APIs, target selection and format limits. To retain only prepared runtime dependencies, copy the loader calls into your application and keep `npc-importer`/`npc-cli` in its build pipeline.
+
+When editing the library, select a separate local candidate before running the same tasks:
+
+```sh
+NPC_VERSION="$(cat version.txt)-local-SNAPSHOT"
+NPC_REPOSITORY="file:$PWD/.evidence/maven"
+./gradlew -PversionOverride="$NPC_VERSION" publishAllPublicationsToReviewRepository :npc-cli:executableJar
+```
 
 ## Run the shared example
 

@@ -1,6 +1,6 @@
 # Installation
 
-NPC 1.0.0 is published to GitHub Packages. It introduces the redesigned typed API;
+NPC 1.1.0 is published to GitHub Packages. It includes the typed rendering API, prepared-content loader, importer and CLI;
 0.2.0 consumers should follow the [migration guide](migration.md).
 
 ## Consume the published packages
@@ -25,12 +25,14 @@ repositories {
         filter {
             includeModule("gg.grounds", "npc-core")
             includeModule("gg.grounds", "npc-minestom")
+            includeModule("gg.grounds", "npc-importer")
+            includeModule("gg.grounds", "npc-cli")
         }
     }
 }
 
 dependencies {
-    implementation("gg.grounds:npc-minestom:1.0.0")
+    implementation("gg.grounds:npc-minestom:1.1.0")
     implementation("net.minestom:minestom:2026.10.07-26.2")
 }
 ```
@@ -38,7 +40,9 @@ dependencies {
 `npc-minestom` exposes core transitively and uses compile-only Minestom, so your
 host supplies its supported server version. Use Java 25 for the supported host.
 For platform-independent numeric definitions and sampling alone, use
-`gg.grounds:npc-core:1.0.0` instead. See [compatibility](compatibility.md).
+`gg.grounds:npc-core:1.1.0` instead. See [compatibility](compatibility.md).
+
+For startup imports add `gg.grounds:npc-importer:1.1.0`. A runtime loading prepared content needs no importer. Build pipelines can resolve `gg.grounds:npc-cli:1.1.0` on a Gradle `JavaExec` classpath or use the [standalone downloads](https://github.com/groundsgg/library-npc/releases/tag/v1.1.0). See [model imports](importing.md).
 
 ## Build a local Maven publication
 
@@ -57,12 +61,12 @@ repository and the version from `version.txt`:
 ./gradlew -p examples/standalone-minestom run -PnpcRepository="file:$PWD/.evidence/maven"
 ```
 
-An explicit `-PnpcVersion=1.0.0` also allows copying these independent projects
+An explicit `-PnpcVersion=1.1.0` also allows copying these independent projects
 outside the checkout, where no producer `version.txt` exists. To run against the
 published registry, select
 `-PnpcRepository=https://maven.pkg.github.com/groundsgg/library-npc` and configure
 the credentials above. Local publication does not publish a package or create a tag.
 
-The current Java/Kotlin examples use the 1.0.0 API. Use the older release-tag
+The current Java/Kotlin examples use the 1.1.0 API. Use the older release-tag
 fixtures when consuming 0.2.0. Anonymous Maven retrieval and Maven Central
 publication are not configured.
