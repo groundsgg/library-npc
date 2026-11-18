@@ -96,6 +96,11 @@ internal object NpcModelValidator {
             expect(clip in model.animations, path, "Unknown sound clip: $clip")
             id(sound.key, "$path.key", true)
             expect(
+                sound.durationMillis in 0..300_000,
+                "$path.durationMillis",
+                "Duration must be in 0..300000 milliseconds",
+            )
+            expect(
                 sound.volume.isFinite() && sound.volume > 0 && sound.volume <= 4,
                 "$path.volume",
                 "Volume must be finite and in (0, 4]",

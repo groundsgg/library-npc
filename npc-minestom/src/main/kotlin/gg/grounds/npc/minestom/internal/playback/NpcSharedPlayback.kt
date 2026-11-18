@@ -12,6 +12,7 @@ internal class NpcSharedPlayback(
     private val config: NpcRenderConfig,
     private val nearby: () -> Boolean,
     private val playSound: (String) -> Unit,
+    private val tryStart: (String, Long) -> Boolean = { _, _ -> true },
 ) {
     var requested: String? = null
     var elapsed = 0L
@@ -125,7 +126,7 @@ internal class NpcSharedPlayback(
             } else if (time >= nextVariation) {
                 nextVariation = time + config.variationDelayMillis
                 val near = nearby()
-                if (!near) {
+                if (!near && tryStart(config.variationClip!!, 0)) {
                     variationStarted = time
                     displayed = config.variationClip
                     seconds = 0.0

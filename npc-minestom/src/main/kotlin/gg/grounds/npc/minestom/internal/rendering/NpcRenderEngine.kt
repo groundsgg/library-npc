@@ -4,10 +4,12 @@ package gg.grounds.npc.minestom.internal.rendering
 import gg.grounds.npc.core.math.NpcVector3
 import gg.grounds.npc.core.model.NpcClipSound
 import gg.grounds.npc.core.model.NpcModel
+import gg.grounds.npc.minestom.NpcClipReservation
 import gg.grounds.npc.minestom.config.NpcRenderConfig
 import gg.grounds.npc.minestom.internal.audience.NpcViewerRegistry
 import gg.grounds.npc.minestom.internal.lifecycle.NpcEngineHandle
 import gg.grounds.npc.minestom.internal.movement.NpcMovementController
+import gg.grounds.npc.minestom.internal.playback.NpcClipPlaybackGate
 import gg.grounds.npc.minestom.internal.playback.NpcSharedPlayback
 import gg.grounds.npc.minestom.spi.NpcSoundSink
 import gg.grounds.npc.minestom.transform.NpcAnchorSnapshot
@@ -43,7 +45,28 @@ internal class NpcRenderEngine(
     private val renderer = NpcDisplayRenderer(model, displays)
     private var closed = false
     private var published = false
-    private val playback = NpcSharedPlayback(model, config, ::hasNearbyPlayer, ::playSound)
+    private val clipGate = NpcClipPlaybackGate(model, config.protectSoundPlayback)
+    private val playback =
+        NpcSharedPlayback(model, config, ::hasNearbyPlayer, ::playSound, clipGate::tryStart)
+
+    fun canStartClip(clip: String): Boolean = clipGate.canStart(clip)
+
+    fun reserveClip(
+        clip: String,
+        start: (String, Long) -> java.util.concurrent.CompletionStage<Void>,
+    ): NpcClipReservation? = clipGate.reserve(clip, start)
+
+    fun playReservedClip(clip: String, elapsedMillis: Long) {
+        update { if (!closed) startClip(clip, elapsedMillis) }
+    }
+
+    private fun startClip(clip: String, elapsedMillis: Long, beginHold: Boolean = true) {
+        playback.start(clip, elapsedMillis)
+        if (beginHold) clipGate.started(clip, elapsedMillis)
+        if (elapsedMillis == 0L) playSound(clip)
+        advance(elapsedMillis, true)
+    }
+
     private val elapsed
         get() = playback.elapsed
 
@@ -188,9 +211,9 @@ internal class NpcRenderEngine(
     override fun playClip(animation: String, elapsedMillis: Long) {
         update {
             if (closed) return
-            playback.start(animation, elapsedMillis)
-            if (elapsedMillis == 0L) playSound(animation)
-            advance(elapsedMillis, true)
+            require(animation in model.animations) { "Unknown NPC clip $animation" }
+            if (!clipGate.tryStart(animation, elapsedMillis)) return
+            startClip(animation, elapsedMillis, false)
         }
     }
 
@@ -330,6 +353,7 @@ internal class NpcRenderEngine(
         synchronized(lock) {
             if (closed) return
             closed = true
+            clipGate.close()
             visibilityTask.cancel()
             pendingSounds.clear()
             viewers.clear()

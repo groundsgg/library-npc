@@ -1,8 +1,14 @@
+public abstract interface class gg/grounds/npc/minestom/NpcClipReservation : java/lang/AutoCloseable {
+	public abstract fun close ()V
+	public abstract fun start (J)Ljava/util/concurrent/CompletionStage;
+}
+
 public abstract interface class gg/grounds/npc/minestom/NpcHandle {
 	public abstract fun advanceClipTo (J)Ljava/util/concurrent/CompletionStage;
 	public abstract fun applyHeadLook (DD)Ljava/util/concurrent/CompletionStage;
 	public abstract fun applyTransform (Lgg/grounds/npc/minestom/transform/NpcRenderTransform;)Ljava/util/concurrent/CompletionStage;
 	public abstract fun applyViewerState (Lnet/minestom/server/entity/Player;Lgg/grounds/npc/minestom/viewer/NpcViewerState;)Ljava/util/concurrent/CompletionStage;
+	public fun canStartClip (Ljava/lang/String;)Z
 	public abstract fun clearViewerState (Lnet/minestom/server/entity/Player;)Ljava/util/concurrent/CompletionStage;
 	public abstract fun closeAsync ()Ljava/util/concurrent/CompletionStage;
 	public abstract fun closed ()Ljava/util/concurrent/CompletionStage;
@@ -10,13 +16,16 @@ public abstract interface class gg/grounds/npc/minestom/NpcHandle {
 	public abstract fun playClip (Ljava/lang/String;J)Ljava/util/concurrent/CompletionStage;
 	public abstract fun preparePresentation (Lgg/grounds/npc/minestom/presentation/NpcPresentationOptions;)Lgg/grounds/npc/minestom/presentation/NpcPresentationStart;
 	public abstract fun publish ()Ljava/util/concurrent/CompletionStage;
+	public fun reserveClip (Ljava/lang/String;)Lgg/grounds/npc/minestom/NpcClipReservation;
 	public abstract fun snapshot ()Lgg/grounds/npc/minestom/transform/NpcAnchorSnapshot;
 	public abstract fun stopClip ()Ljava/util/concurrent/CompletionStage;
 	public abstract fun stopClipIfPlaying (Ljava/lang/String;)Ljava/util/concurrent/CompletionStage;
 }
 
 public final class gg/grounds/npc/minestom/NpcHandle$DefaultImpls {
+	public static fun canStartClip (Lgg/grounds/npc/minestom/NpcHandle;Ljava/lang/String;)Z
 	public static fun playClip (Lgg/grounds/npc/minestom/NpcHandle;Ljava/lang/String;)Ljava/util/concurrent/CompletionStage;
+	public static fun reserveClip (Lgg/grounds/npc/minestom/NpcHandle;Ljava/lang/String;)Lgg/grounds/npc/minestom/NpcClipReservation;
 }
 
 public abstract interface class gg/grounds/npc/minestom/NpcPrepareResult {
@@ -91,6 +100,7 @@ public final class gg/grounds/npc/minestom/config/NpcRenderConfig {
 	public final fun getNearDistance ()D
 	public final fun getNearIntervalMillis ()J
 	public final fun getNearRetention ()D
+	public final fun getProtectSoundPlayback ()Z
 	public final fun getRetentionDistance ()D
 	public final fun getVariationClip ()Ljava/lang/String;
 	public final fun getVariationDelayMillis ()J
@@ -110,6 +120,7 @@ public final class gg/grounds/npc/minestom/config/NpcRenderConfig$Builder {
 	public final fun nearDistance (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
 	public final fun nearIntervalMillis (J)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
 	public final fun nearRetention (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
+	public final fun protectSoundPlayback (Z)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
 	public final fun retentionDistance (D)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
 	public final fun variationClip (Ljava/lang/String;)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;
 	public final fun variationDelayMillis (J)Lgg/grounds/npc/minestom/config/NpcRenderConfig$Builder;

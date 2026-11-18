@@ -207,6 +207,14 @@ internal object NpcModelParser {
                                 at("$path.volume") { sound.get("volume").asDouble },
                                 at("$path.pitch") { sound.get("pitch").asDouble },
                                 at("$path.radius") { sound.get("radius").asDouble },
+                                at("$path.durationMillis") {
+                                    sound.get("durationMillis")?.let {
+                                        require(it.isJsonPrimitive && it.asJsonPrimitive.isNumber) {
+                                            "Duration must be an exact integer"
+                                        }
+                                        it.asBigDecimal.longValueExact()
+                                    } ?: 0L
+                                },
                             )
                         }
                 }
