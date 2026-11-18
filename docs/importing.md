@@ -2,16 +2,29 @@
 
 Use `npc-importer` in an application or `npc-cli` before deployment. Both paths use the same compiler and produce matching server data and client assets. Restart to adopt changed models.
 
-The importer is new in the current source tree. The published NPC 1.0.0 release contains the numeric and rendering APIs, but does not contain these importer/CLI modules. Use all modules from the same importer-capable build; source-build commands below create a separate local version.
+NPC 1.1.0 publishes all four modules. Use one matching version for all selected modules; the older 1.0.0 release has no importer or CLI.
 
-## Build the standalone tool
+## Download the released CLI
 
-Use JDK 25. From the library checkout:
+Use JDK 25 and an authenticated GitHub CLI, or download the executable JAR from the [1.1.0 release](https://github.com/groundsgg/library-npc/releases/tag/v1.1.0):
+
+```sh
+NPC_VERSION=1.1.0
+mkdir -p build/npc-tools
+gh release download "v$NPC_VERSION" --repo groundsgg/library-npc \
+  --pattern "npc-cli-$NPC_VERSION-all.jar" --dir build/npc-tools
+NPC_CLI="build/npc-tools/npc-cli-$NPC_VERSION-all.jar"
+```
+
+## Build from source instead
+
+When editing the library, build a separate local candidate from the checkout instead:
 
 ```sh
 NPC_VERSION="$(cat version.txt)-local-SNAPSHOT"
 ./gradlew -PversionOverride="$NPC_VERSION" :npc-cli:executableJar :npc-cli:assembleDist publishAllPublicationsToReviewRepository
-java -jar "npc-cli/build/libs/npc-cli-$NPC_VERSION-all.jar" --help
+NPC_CLI="npc-cli/build/libs/npc-cli-$NPC_VERSION-all.jar"
+java -jar "$NPC_CLI" --help
 ```
 
 The `-all.jar` includes its runtime dependencies. Application ZIP/TAR downloads in `npc-cli/build/distributions` provide Windows and Unix launch scripts. The normal Maven artifact `gg.grounds:npc-cli` can instead be resolved on a Gradle `JavaExec` classpath. Neither form requires Minestom.
@@ -21,10 +34,10 @@ The `-all.jar` includes its runtime dependencies. Application ZIP/TAR downloads 
 Save a Generic Model project as `.bbmodel`. Keep local texture files inside the input directory, or embed them in Blockbench. An input can be one file or a directory with subdirectories.
 
 ```sh
-java -jar "npc-cli/build/libs/npc-cli-$NPC_VERSION-all.jar" validate \
+java -jar "$NPC_CLI" validate \
   --input models/ --namespace my_plugin --target 26.3
 
-java -jar "npc-cli/build/libs/npc-cli-$NPC_VERSION-all.jar" compile \
+java -jar "$NPC_CLI" compile \
   --input models/ --namespace my_plugin --target 26.3 --output build/npc-content/
 ```
 
@@ -44,7 +57,7 @@ The content ID describes the generated models and client contributions. Output p
 ## Merge an existing resourcepack
 
 ```sh
-java -jar "npc-cli/build/libs/npc-cli-$NPC_VERSION-all.jar" compile \
+java -jar "$NPC_CLI" compile \
   --input models/ --namespace my_plugin --target 26.3 \
   --base-pack existing-pack.zip --output build/combined-npc-content/
 ```

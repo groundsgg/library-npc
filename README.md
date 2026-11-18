@@ -2,7 +2,7 @@
 
 Reusable numeric NPC models and Minestom rendering for Java and Kotlin. `npc-core` validates and samples immutable authored definitions; `npc-minestom` renders shared NPCs and optional connection-specific presentations. Core has no Minestom, Scene, Lobby or Grounds-service dependency.
 
-The released **1.0.0** API is available from GitHub Packages. It breaks source and JVM compatibility with 0.2.0; existing callers need the [migration guide](docs/migration.md). See [installation](docs/installation.md) for authenticated Maven consumption or build the source locally below.
+The released **1.1.0** API is available from GitHub Packages, including model imports and CLI tooling. It retains the 1.0 rendering API; callers migrating from 0.2.0 need the [migration guide](docs/migration.md). See [installation](docs/installation.md) for authenticated Maven consumption or build the source locally below.
 
 ## Build and use
 
@@ -24,9 +24,9 @@ Start with the [shared Java example](examples/standalone-minestom/src/main/java/
 
 ## Import your own models
 
-The current source adds `npc-importer` and `npc-cli` for generic Blockbench 5.0/4.10 models. One compiler serves startup API calls, an executable JAR and Gradle. It generates prepared server content and a complete resourcepack, and can merge an existing pack. Prepared runtime loading needs only `npc-core`.
+NPC 1.1.0 provides `npc-importer` and `npc-cli` for generic Blockbench 5.0/4.10 models. One compiler serves startup API calls, an executable JAR and Gradle. It generates prepared server content and a complete resourcepack, and can merge an existing pack. Prepared runtime loading needs only `npc-core`.
 
-These importer modules are not part of the older published 1.0.0 release. Use matching modules from an importer-capable build. Start with [model import and CLI usage](docs/importing.md), the [original animated example](examples/standalone-minestom/README.md#import-an-original-blockbench-model) and the [independent Gradle consumer](fixtures/gradle-importer-consumer).
+Use version `1.1.0` for all selected modules. The [release downloads](https://github.com/groundsgg/library-npc/releases/tag/v1.1.0) include the executable JAR and application distributions. Start with [model import and CLI usage](docs/importing.md), the [original animated example](examples/standalone-minestom/README.md#import-an-original-blockbench-model) and the [independent Gradle consumer](fixtures/gradle-importer-consumer).
 
 ## Numeric API
 
