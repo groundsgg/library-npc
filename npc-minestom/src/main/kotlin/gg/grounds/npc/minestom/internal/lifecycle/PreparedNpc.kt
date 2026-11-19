@@ -1,6 +1,7 @@
 package gg.grounds.npc.minestom.internal.lifecycle
 
 import gg.grounds.npc.core.validation.NpcProblem
+import gg.grounds.npc.minestom.NpcClipReservation
 import gg.grounds.npc.minestom.NpcHandle
 import gg.grounds.npc.minestom.NpcPrepareResult
 import gg.grounds.npc.minestom.NpcSpawnRequest
@@ -349,6 +350,20 @@ internal class PreparedNpc(
             owner?.followTransform() ?: CompletableFuture.completedFuture<Void>(null)
         }
     }
+
+    override fun canStartClip(clipId: String): Boolean =
+        synchronized(lock) {
+            !stopping && engine?.canStartClip(clipId) == true
+        }
+
+    override fun reserveClip(clipId: String): NpcClipReservation? =
+        synchronized(lock) {
+            if (stopping) null
+            else
+                engine?.reserveClip(clipId) { clip, time ->
+                    submit { it.playReservedClip(clip, time) }
+                }
+        }
 
     override fun playClip(clipId: String, elapsedMillis: Long) = submit {
         require(elapsedMillis >= 0)

@@ -57,3 +57,11 @@ KDoc is available in the IDE. `./gradlew dokkaGenerate` writes the aggregated re
 `apiCheck` compares the supported Kotlin/JVM API with checked-in snapshots. Intentional changes require reviewing the `apiDump` diff and migrating consumers. `formatKotlin` and `formatJava` format the library and examples.
 
 See [installation](docs/installation.md), [compatibility](docs/compatibility.md), [migration](docs/migration.md) and [publishing](docs/publishing.md). The library is MIT; [source provenance](docs/source-provenance.md), `LICENSE` and `NOTICE` explain the original extraction and dependency notices. No purchased models, animations or textures are published.
+
+Shared clip hosts can opt into audible-gesture admission using
+`NpcRenderConfig.builder().protectSoundPlayback(true)`. Model sound cues may carry
+an exact `durationMillis` value from 0 (unknown) to 300000. `reserveClip` gives a
+single-use lease before a host changes its animation clock; close unused leases
+and close after requesting a start. A queued start keeps its reservation until
+the owning scheduler processes it. `canStartClip` is advisory. The Scene adapter
+uses reservations for atomic multi-target admission.

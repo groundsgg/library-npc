@@ -22,6 +22,7 @@ package gg.grounds.npc.minestom.config
  *   when a model is available.
  * @property variationClip Optional shared idle-variation clip ID; null disables variation.
  * @property variationDelayMillis Shared variation delay in 50..3600000 milliseconds; default 20000.
+ * @property protectSoundPlayback Keep audible shared gestures from overlapping; default false.
  * @property variationMinDistance Positive world-block distance within which shared idle variation
  *   is suppressed; default 5.
  */
@@ -61,6 +62,11 @@ public class NpcRenderConfig private constructor(builder: Builder) {
      * Positive world-block distance within which shared idle variation is suppressed; default 5.
      */
     public val variationMinDistance: Double = builder.variationMinDistance
+
+    /**
+     * Preserve audible shared gestures and reserve starts atomically when enabled. Default false.
+     */
+    public val protectSoundPlayback: Boolean = builder.protectSoundPlayback
 
     init {
         listOf(
@@ -123,6 +129,7 @@ public class NpcRenderConfig private constructor(builder: Builder) {
             .variationClip(variationClip)
             .variationDelayMillis(variationDelayMillis)
             .variationMinDistance(variationMinDistance)
+            .protectSoundPlayback(protectSoundPlayback)
 
     /**
      * Shared factories and constants; Java entrypoints are exposed with their documented static
@@ -151,6 +158,12 @@ public class NpcRenderConfig private constructor(builder: Builder) {
         internal var variationClip: String? = null
         internal var variationDelayMillis: Long = 20_000
         internal var variationMinDistance: Double = 5.0
+        internal var protectSoundPlayback: Boolean = false
+
+        /** Enable non-overlapping shared sound playback; defaults to false. */
+        public fun protectSoundPlayback(value: Boolean): Builder = apply {
+            protectSoundPlayback = value
+        }
 
         /**
          * Configure admission radius in world blocks; default 64. Validation occurs at build;

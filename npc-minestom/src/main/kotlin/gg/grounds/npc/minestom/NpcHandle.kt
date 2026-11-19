@@ -32,6 +32,14 @@ public interface NpcHandle {
     /** Start a shared clip at zero milliseconds. Does not install an automatic clock driver. */
     public fun playClip(clipId: String): CompletionStage<Void> = playClip(clipId, 0)
 
+    /** Advisory shared-clip admission check; use reserveClip for an atomic admitted start. */
+    public fun canStartClip(clipId: String): Boolean = true
+
+    /**
+     * Reserve a shared clip before changing a host clock; null means busy, closed or unavailable.
+     */
+    public fun reserveClip(clipId: String): NpcClipReservation? = null
+
     /** Stop the requested shared clip and render the bind pose. */
     public fun stopClip(): CompletionStage<Void>
 
