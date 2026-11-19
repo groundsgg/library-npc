@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/groundsgg/library-npc/compare/v1.1.0...v2.0.0) (2026-11-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* preserve shared sound admission and clip duration
+
+### Features
+
+* preserve shared sound admission and clip duration ([d44062a](https://github.com/groundsgg/library-npc/commit/d44062a400e7b742e0bf6ea6f139ff0f2f364ab1))
+
 ## [1.1.0](https://github.com/groundsgg/library-npc/compare/v1.0.0...v1.1.0) (2026-11-18)
 
 
