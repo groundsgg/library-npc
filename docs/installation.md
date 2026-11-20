@@ -1,72 +1,10 @@
 # Installation
 
-NPC 1.1.0 is published to GitHub Packages. It includes the typed rendering API, prepared-content loader, importer and CLI;
-0.2.0 consumers should follow the [migration guide](migration.md).
+The maintained installation guide is in the central developer documentation:
 
-## Consume the published packages
+- [Install the published library](https://docs.grounds.gg/reference/libraries/npc/installation).
+- [Create your first NPC](https://docs.grounds.gg/reference/libraries/npc/getting-started).
+- [Build the library locally](https://docs.grounds.gg/reference/libraries/npc/advanced#build-the-library-locally).
 
-GitHub Packages requires authentication even for public Maven artifacts. Store
-`github.user` and a classic token with `read:packages` in your local
-`~/.gradle/gradle.properties` or CI secrets. Source builds themselves resolve only
-Maven Central and need no Grounds token.
-
-```kotlin
-repositories {
-    mavenCentral()
-    val npcArtifacts = maven {
-        url = uri("https://maven.pkg.github.com/groundsgg/library-npc")
-        credentials {
-            username = providers.gradleProperty("github.user").orNull
-            password = providers.gradleProperty("github.token").orNull
-        }
-    }
-    exclusiveContent {
-        forRepositories(npcArtifacts)
-        filter {
-            includeModule("gg.grounds", "npc-core")
-            includeModule("gg.grounds", "npc-minestom")
-            includeModule("gg.grounds", "npc-importer")
-            includeModule("gg.grounds", "npc-cli")
-        }
-    }
-}
-
-dependencies {
-    implementation("gg.grounds:npc-minestom:1.1.0")
-    implementation("net.minestom:minestom:2026.10.07-26.2")
-}
-```
-
-`npc-minestom` exposes core transitively and uses compile-only Minestom, so your
-host supplies its supported server version. Use Java 25 for the supported host.
-For platform-independent numeric definitions and sampling alone, use
-`gg.grounds:npc-core:1.1.0` instead. See [compatibility](compatibility.md).
-
-For startup imports add `gg.grounds:npc-importer:1.1.0`. A runtime loading prepared content needs no importer. Build pipelines can resolve `gg.grounds:npc-cli:1.1.0` on a Gradle `JavaExec` classpath or use the [standalone downloads](https://github.com/groundsgg/library-npc/releases/tag/v1.1.0). See [model imports](importing.md).
-
-## Build a local Maven publication
-
-With JDK 25 in the matching source checkout:
-
-```sh
-./gradlew check apiCheck dokkaGenerate publishAllPublicationsToReviewRepository
-```
-
-The independent consumers and example resolve the resulting `.evidence/maven`
-repository and the version from `version.txt`:
-
-```sh
-./gradlew -p fixtures/java-consumer run -PnpcRepository="file:$PWD/.evidence/maven"
-./gradlew -p fixtures/kotlin-consumer run -PnpcRepository="file:$PWD/.evidence/maven"
-./gradlew -p examples/standalone-minestom run -PnpcRepository="file:$PWD/.evidence/maven"
-```
-
-An explicit `-PnpcVersion=1.1.0` also allows copying these independent projects
-outside the checkout, where no producer `version.txt` exists. To run against the
-published registry, select
-`-PnpcRepository=https://maven.pkg.github.com/groundsgg/library-npc` and configure
-the credentials above. Local publication does not publish a package or create a tag.
-
-The current Java/Kotlin examples use the 1.1.0 API. Use the older release-tag
-fixtures when consuming 0.2.0. Anonymous Maven retrieval and Maven Central
-publication are not configured.
+Published NPC 2.0.0 modules are available from GitHub Packages. Ordinary consumers
+do not need to build this repository or publish local Maven artifacts first.
